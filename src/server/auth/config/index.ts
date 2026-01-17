@@ -1,4 +1,5 @@
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 import DiscordProvider from "next-auth/providers/discord";
 
 import { env } from "~/env";
@@ -31,6 +32,52 @@ declare module "next-auth" {
  */
 export const authConfig = {
   providers: [
+    // Credentials provider for email/password authentication
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        // Dynamic imports to avoid circular dependency
+        const { compare } = await import("bcryptjs");
+        const { eq } = await import("drizzle-orm");
+        const { db } = await import("~/server/db");
+        const { users } = await import("~/server/db/schema");
+        const { loginSchema } = await import("~/lib/validations/auth");
+
+        // Validate input
+        const parsed = loginSchema.safeParse(credentials);
+        if (!parsed.success) {
+          return null;
+        }
+
+        const { email, password } = parsed.data;
+
+        // Find user by email
+        const user = await db.query.users.findFirst({
+          where: eq(users.email, email),
+        });
+
+        if (!user?.password) {
+          return null;
+        }
+
+        // Verify password
+        const isValidPassword = await compare(password, user.password);
+        if (!isValidPassword) {
+          return null;
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+        };
+      },
+    }),
     // Only add Discord provider if credentials are configured
     ...(env.AUTH_DISCORD_ID && env.AUTH_DISCORD_SECRET
       ? [
@@ -40,15 +87,6 @@ export const authConfig = {
           }),
         ]
       : []),
-    /**
-     * ...add more providers here.
-     *
-     * Most other providers require a bit more work than the Discord provider. For example, the
-     * GitHub provider requires you to add the `refresh_token_expires_in` field to the Account
-     * model. Refer to the NextAuth.js docs for the provider you want to use. Example:
-     *
-     * @see https://next-auth.js.org/providers/github
-     */
   ],
   callbacks: {
     session: ({ session, token }) => ({
@@ -58,5 +96,18 @@ export const authConfig = {
         id: token.sub,
       },
     }),
+    jwt: ({ token, user }) => {
+      if (user) {
+        token.sub = user.id;
+      }
+      return token;
+    },
+  },
+  pages: {
+    signIn: "/login",
+    error: "/login",
+  },
+  session: {
+    strategy: "jwt",
   },
 } satisfies NextAuthConfig;

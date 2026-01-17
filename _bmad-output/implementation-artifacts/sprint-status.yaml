@@ -50,8 +50,8 @@ development_status:
   epic-0-retrospective: optional
 
   # Epic 1: Authentification & Gestion Compte
-  epic-1: backlog
-  1-1-inscription-utilisateur: backlog
+  epic-1: in-progress
+  1-1-inscription-utilisateur: done
   1-2-connexion-utilisateur: backlog
   1-3-reinitialisation-mot-de-passe: backlog
   1-4-gestion-profil-utilisateur: backlog
