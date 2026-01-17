@@ -23,3 +23,6 @@ export * from "./company";
 
 // Tender tables (Epic 3)
 export * from "./tenders";
+
+// Parsed data tables (Epic 4)
+export * from "./parsed-data";

@@ -100,8 +100,8 @@ development_status:
   epic-3-retrospective: optional
 
   # Epic 4: Parsing RC & Checklist Conformité
-  epic-4: backlog
-  4-1-parsing-automatique-du-rc: backlog
+  epic-4: in-progress
+  4-1-parsing-automatique-du-rc: done
   4-2-extraction-liste-documents-requis: backlog
   4-3-categorisation-des-requirements: backlog
   4-4-identification-format-soumission: backlog

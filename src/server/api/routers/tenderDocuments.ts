@@ -5,8 +5,9 @@ import { DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { tenderProjects, tenderDocuments, TENDER_DOCUMENT_TYPES } from "~/server/db/schema";
+import { tenderProjects, tenderDocuments, TENDER_DOCUMENT_TYPES, rcParsedData } from "~/server/db/schema";
 import { r2Client, R2_BUCKET } from "~/server/services/storage";
+import { inngest } from "~/server/inngest/client";
 
 /**
  * Maximum file size (10 MB)
@@ -181,6 +182,25 @@ export const tenderDocumentsRouter = createTRPCRouter({
           code: "INTERNAL_SERVER_ERROR",
           message: "Erreur lors de l'enregistrement du document",
         });
+      }
+
+      // Trigger RC parsing via Inngest (Story 4.1)
+      if (input.documentType === "rc") {
+        try {
+          await inngest.send({
+            name: "tender/rc.uploaded",
+            data: {
+              documentId: created.id,
+              tenderProjectId: input.tenderProjectId,
+              userId: ctx.session.user.id,
+              storageKey: input.storageKey,
+              timestamp: new Date().toISOString(),
+            },
+          });
+        } catch (error) {
+          console.error("[Inngest] Failed to send RC parsing event:", error);
+          // Don't fail the request - parsing will be retried manually
+        }
       }
 
       return created;
@@ -366,5 +386,113 @@ export const tenderDocumentsRouter = createTRPCRouter({
       });
 
       return { rcDocument };
+    }),
+
+  /**
+   * Retry RC parsing (Story 4.1)
+   */
+  retryParsing: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      // Get the document with project info
+      const document = await ctx.db.query.tenderDocuments.findFirst({
+        where: eq(tenderDocuments.id, input.id),
+        with: {
+          tenderProject: {
+            columns: { userId: true, id: true },
+          },
+        },
+      });
+
+      if (!document) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Document non trouvé",
+        });
+      }
+
+      // Verify ownership
+      if (document.tenderProject.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Accès non autorisé",
+        });
+      }
+
+      // Only allow retry for RC documents
+      if (document.documentType !== "rc") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Seuls les documents RC peuvent être analysés",
+        });
+      }
+
+      // Reset status to pending
+      await ctx.db
+        .update(tenderDocuments)
+        .set({
+          parsingStatus: "pending",
+          parsedAt: null,
+          updatedAt: new Date(),
+        })
+        .where(eq(tenderDocuments.id, input.id));
+
+      // Delete existing parsed data
+      await ctx.db
+        .delete(rcParsedData)
+        .where(eq(rcParsedData.tenderDocumentId, input.id));
+
+      // Trigger new parsing event
+      await inngest.send({
+        name: "tender/rc.uploaded",
+        data: {
+          documentId: document.id,
+          tenderProjectId: document.tenderProject.id,
+          userId: ctx.session.user.id,
+          storageKey: document.storageKey,
+          timestamp: new Date().toISOString(),
+        },
+      });
+
+      return { success: true };
+    }),
+
+  /**
+   * Get parsed RC data for a document (Story 4.1)
+   */
+  getParsedData: protectedProcedure
+    .input(z.object({ documentId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      // Get the document with project info
+      const document = await ctx.db.query.tenderDocuments.findFirst({
+        where: eq(tenderDocuments.id, input.documentId),
+        with: {
+          tenderProject: {
+            columns: { userId: true },
+          },
+        },
+      });
+
+      if (!document) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Document non trouvé",
+        });
+      }
+
+      // Verify ownership
+      if (document.tenderProject.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Accès non autorisé",
+        });
+      }
+
+      // Get parsed data
+      const parsedData = await ctx.db.query.rcParsedData.findFirst({
+        where: eq(rcParsedData.tenderDocumentId, input.documentId),
+      });
+
+      return { parsedData };
     }),
 });

@@ -46,6 +46,11 @@ export const env = createEnv({
     // Required for: automatic expiration date detection
     // Get your API key from https://platform.openai.com/api-keys
     OPENAI_API_KEY: z.string().optional(),
+    // Inngest - Background jobs (Story 4.1)
+    // Required for: RC parsing, document generation
+    // Get your keys from https://app.inngest.com
+    INNGEST_EVENT_KEY: z.string().optional(),
+    INNGEST_SIGNING_KEY: z.string().optional(),
   },
 
   /**
@@ -81,6 +86,8 @@ export const env = createEnv({
     STRIPE_BUSINESS_PRICE_ID: process.env.STRIPE_BUSINESS_PRICE_ID,
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    INNGEST_EVENT_KEY: process.env.INNGEST_EVENT_KEY,
+    INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

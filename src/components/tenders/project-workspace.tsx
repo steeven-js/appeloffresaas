@@ -69,6 +69,7 @@ import {
 } from "~/components/ui/alert-dialog";
 import { api } from "~/trpc/react";
 import { cn } from "~/lib/utils";
+import { RCParsingStatus } from "./rc-parsing-status";
 
 const MAX_FILE_SIZE_MB = 10;
 
@@ -1025,11 +1026,6 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
                             {(rcData.rcDocument.fileSize / 1024).toFixed(1)} Ko • Uploadé le{" "}
                             {new Date(rcData.rcDocument.createdAt).toLocaleDateString("fr-FR")}
                           </p>
-                          {rcData.rcDocument.parsingStatus === "pending" && (
-                            <Badge variant="secondary" className="mt-1">
-                              En attente d&apos;analyse
-                            </Badge>
-                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           <Button
@@ -1082,6 +1078,15 @@ export function ProjectWorkspace({ projectId }: ProjectWorkspaceProps) {
                           </AlertDialog>
                         </div>
                       </div>
+
+                      {/* RC Parsing Status (Story 4.1) */}
+                      {rcData.rcDocument.parsingStatus && rcData.rcDocument.parsingStatus !== "completed" && (
+                        <RCParsingStatus
+                          documentId={rcData.rcDocument.id}
+                          parsingStatus={rcData.rcDocument.parsingStatus}
+                          onStatusChange={() => void utils.tenderDocuments.getRC.invalidate()}
+                        />
+                      )}
 
                       {/* Replace RC */}
                       <div className="text-center">
