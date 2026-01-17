@@ -1,3 +1,100 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+@layer base {
+  :root {
+    /* Professional Trust Theme - Light Mode */
+    --background: 0 0% 100%;
+    --foreground: 215 19% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 19% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 19% 15%;
+
+    /* Primary: Professional Blue #0066CC */
+    --primary: 210 100% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: Slate Gray */
+    --secondary: 215 16% 95%;
+    --secondary-foreground: 215 19% 35%;
+
+    /* Muted: Light Slate */
+    --muted: 215 16% 95%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Accent: Success Green */
+    --accent: 142 71% 45%;
+    --accent-foreground: 0 0% 100%;
+
+    /* Destructive: Error Red */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 16% 90%;
+    --input: 215 16% 90%;
+    --ring: 210 100% 40%;
+
+    /* Chart colors for data visualization */
+    --chart-1: 210 100% 40%;
+    --chart-2: 142 71% 45%;
+    --chart-3: 215 16% 47%;
+    --chart-4: 38 92% 50%;
+    --chart-5: 262 83% 58%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* Professional Trust Theme - Dark Mode */
+    --background: 215 28% 9%;
+    --foreground: 210 20% 98%;
+
+    --card: 215 28% 12%;
+    --card-foreground: 210 20% 98%;
+
+    --popover: 215 28% 12%;
+    --popover-foreground: 210 20% 98%;
+
+    /* Primary: Lighter Blue for dark mode */
+    --primary: 210 100% 55%;
+    --primary-foreground: 215 28% 9%;
+
+    /* Secondary: Dark Slate */
+    --secondary: 215 20% 20%;
+    --secondary-foreground: 210 20% 98%;
+
+    /* Muted: Dark Slate */
+    --muted: 215 20% 20%;
+    --muted-foreground: 215 16% 65%;
+
+    /* Accent: Success Green */
+    --accent: 142 71% 45%;
+    --accent-foreground: 215 28% 9%;
+
+    /* Destructive: Error Red (darker for dark mode) */
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 20% 20%;
+    --input: 215 20% 20%;
+    --ring: 210 100% 55%;
+
+    /* Chart colors for dark mode */
+    --chart-1: 210 100% 60%;
+    --chart-2: 142 71% 50%;
+    --chart-3: 215 16% 60%;
+    --chart-4: 38 92% 55%;
+    --chart-5: 262 83% 65%;
+  }
+}
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
