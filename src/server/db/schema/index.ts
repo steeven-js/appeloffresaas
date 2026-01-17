@@ -1,36 +1,24 @@
-// Example model schema from the Drizzle docs
-// https://orm.drizzle.team/docs/sql-schema-declaration
-
-import { sql } from "drizzle-orm";
-import {
-  index,
-  pgTableCreator,
-  serial,
-  timestamp,
-  varchar,
-} from "drizzle-orm/pg-core";
+import { pgTableCreator } from "drizzle-orm/pg-core";
 
 /**
- * This is an example of how to use the multi-project schema feature of Drizzle ORM. Use the same
- * database instance for multiple projects.
+ * Multi-project schema feature of Drizzle ORM.
+ * All tables will be prefixed with `appeloffresaas_` to avoid conflicts
+ * when sharing a database instance across multiple projects.
  *
  * @see https://orm.drizzle.team/docs/goodies#multi-project-schema
  */
 export const createTable = pgTableCreator((name) => `appeloffresaas_${name}`);
 
-export const posts = createTable(
-  "post",
-  {
-    id: serial("id").primaryKey(),
-    name: varchar("name", { length: 256 }),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .default(sql`CURRENT_TIMESTAMP`)
-      .notNull(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).$onUpdate(
-      () => new Date(),
-    ),
-  },
-  (example) => ({
-    nameIndex: index("name_idx").on(example.name),
-  }),
-);
+/**
+ * Database Schema
+ *
+ * Tables will be added here as features are implemented:
+ * - Epic 1: users, accounts, sessions, verification_tokens (NextAuth)
+ * - Epic 2: company_profiles, documents, certifications
+ * - Epic 3: tender_projects, requirements
+ * - Epic 4: checklists, checklist_items
+ * - Epic 5: chat_sessions, chat_messages
+ * - Epic 6: document_versions
+ * - Epic 7: exports
+ * - Epic 8: alerts, notifications, analytics
+ */

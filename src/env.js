@@ -7,6 +7,10 @@ export const env = createEnv({
    * isn't built with invalid env vars.
    */
   server: {
+    // DATABASE_URL: Neon PostgreSQL connection string
+    // Required for: db:push, db:studio, and runtime database operations
+    // Optional for: build, typecheck (uses fallback URL)
+    // IMPORTANT: Must be set in production deployments!
     DATABASE_URL: z.string().url().optional(),
     NODE_ENV: z
       .enum(["development", "test", "production"])
