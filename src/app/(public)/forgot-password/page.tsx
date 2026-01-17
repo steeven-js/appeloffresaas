@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { auth } from "~/server/auth";
-import { LoginForm } from "~/components/auth/login-form";
+import { ForgotPasswordForm } from "~/components/auth/forgot-password-form";
 import {
   Card,
   CardContent,
@@ -13,11 +13,11 @@ import {
 } from "~/components/ui/card";
 
 export const metadata = {
-  title: "Connexion - Appel Offre SaaS",
-  description: "Connectez-vous à votre compte",
+  title: "Mot de passe oublié - Appel Offre SaaS",
+  description: "Réinitialisez votre mot de passe",
 };
 
-export default async function LoginPage() {
+export default async function ForgotPasswordPage() {
   const session = await auth();
 
   // Redirect if already logged in
@@ -29,30 +29,23 @@ export default async function LoginPage() {
     <main className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Connexion</CardTitle>
+          <CardTitle className="text-2xl font-bold">
+            Mot de passe oublié
+          </CardTitle>
           <CardDescription>
-            Entrez vos identifiants pour accéder à votre compte
+            Entrez votre adresse email pour recevoir un lien de réinitialisation
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <LoginForm />
+          <ForgotPasswordForm />
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-center text-sm text-muted-foreground">
             <Link
-              href="/forgot-password"
+              href="/login"
               className="font-medium text-primary underline-offset-4 hover:underline"
             >
-              Mot de passe oublié ?
-            </Link>
-          </div>
-          <div className="text-center text-sm text-muted-foreground">
-            Pas encore de compte ?{" "}
-            <Link
-              href="/register"
-              className="font-medium text-primary underline-offset-4 hover:underline"
-            >
-              Créer un compte
+              Retour à la connexion
             </Link>
           </div>
         </CardFooter>

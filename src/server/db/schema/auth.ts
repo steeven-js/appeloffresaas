@@ -89,3 +89,24 @@ export const verificationTokens = createTable(
   },
   (vt) => [primaryKey({ columns: [vt.identifier, vt.token] })]
 );
+
+/**
+ * Password reset tokens - for password recovery flow
+ */
+export const passwordResetTokens = createTable("password_reset_tokens", {
+  id: varchar("id", { length: 255 })
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  token: varchar("token", { length: 255 }).notNull().unique(),
+  expires: timestamp("expires", {
+    mode: "date",
+    withTimezone: true,
+  }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});

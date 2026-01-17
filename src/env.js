@@ -31,6 +31,10 @@ export const env = createEnv({
     R2_ACCESS_KEY_ID: z.string().optional(),
     R2_SECRET_ACCESS_KEY: z.string().optional(),
     R2_BUCKET_NAME: z.string().optional(),
+    // Resend - Transactional emails (Story 1.3)
+    // Required for: password reset, email verification
+    // Get your API key from https://resend.com/api-keys
+    RESEND_API_KEY: z.string().optional(),
   },
 
   /**
@@ -58,6 +62,7 @@ export const env = createEnv({
     R2_ACCESS_KEY_ID: process.env.R2_ACCESS_KEY_ID,
     R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY,
     R2_BUCKET_NAME: process.env.R2_BUCKET_NAME,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
