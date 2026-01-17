@@ -1,0 +1,54 @@
+import { timestamp, varchar, text } from "drizzle-orm/pg-core";
+import { createTable } from "./helpers";
+import { users } from "./auth";
+import { relations } from "drizzle-orm";
+
+/**
+ * Company Profiles table - stores company information for tender responses
+ * One company profile per user (1:1 relationship)
+ */
+export const companyProfiles = createTable("company_profiles", {
+  id: varchar("id", { length: 255 })
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: "cascade" }),
+  // Basic information
+  name: varchar("name", { length: 255 }),
+  siret: varchar("siret", { length: 14 }),
+  // Address
+  address: text("address"),
+  city: varchar("city", { length: 255 }),
+  postalCode: varchar("postal_code", { length: 10 }),
+  country: varchar("country", { length: 255 }).default("France"),
+  // Contact
+  phone: varchar("phone", { length: 20 }),
+  email: varchar("email", { length: 255 }),
+  website: varchar("website", { length: 255 }),
+  // Timestamps
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/**
+ * Relations for company profiles
+ */
+export const companyProfilesRelations = relations(companyProfiles, ({ one }) => ({
+  user: one(users, {
+    fields: [companyProfiles.userId],
+    references: [users.id],
+  }),
+}));
+
+/**
+ * Type exports for company profiles
+ */
+export type CompanyProfile = typeof companyProfiles.$inferSelect;
+export type NewCompanyProfile = typeof companyProfiles.$inferInsert;

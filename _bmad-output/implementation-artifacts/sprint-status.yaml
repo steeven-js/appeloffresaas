@@ -61,8 +61,8 @@ development_status:
   epic-1-retrospective: optional
 
   # Epic 2: Profil Entreprise & Coffre-fort Documents
-  epic-2: backlog
-  2-1-creation-profil-entreprise-de-base: backlog
+  epic-2: in-progress
+  2-1-creation-profil-entreprise-de-base: done
   2-2-gestion-informations-legales: backlog
   2-3-gestion-donnees-financieres: backlog
   2-4-gestion-certifications-qualifications: backlog

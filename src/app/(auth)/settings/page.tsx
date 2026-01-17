@@ -67,6 +67,25 @@ export default async function SettingsPage() {
 
         <Card>
           <CardHeader>
+            <CardTitle>Profil Entreprise</CardTitle>
+            <CardDescription>
+              Renseignez les informations de votre entreprise
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Ces informations seront utilisées pour pré-remplir vos réponses aux appels d&apos;offres.
+              </p>
+              <Button asChild>
+                <Link href="/profile/company">Gérer le profil</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle>Abonnement</CardTitle>
             <CardDescription>
               Gérez votre formule et consultez votre utilisation

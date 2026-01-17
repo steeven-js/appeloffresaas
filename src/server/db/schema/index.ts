@@ -17,3 +17,6 @@ export { createTable } from "./helpers";
 
 // Auth tables (Epic 1)
 export * from "./auth";
+
+// Company tables (Epic 2)
+export * from "./company";
