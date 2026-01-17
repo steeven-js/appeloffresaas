@@ -59,6 +59,63 @@ export const userRouter = createTRPCRouter({
   }),
 
   /**
+   * Get user subscription info with tier details and usage stats
+   */
+  getSubscription: protectedProcedure.query(async ({ ctx }) => {
+    const { eq } = await import("drizzle-orm");
+    const { users } = await import("~/server/db/schema");
+    const { getTierInfo, getUsagePercentage } = await import(
+      "~/lib/subscription-tiers"
+    );
+
+    const user = await ctx.db.query.users.findFirst({
+      where: eq(users.id, ctx.session.user.id),
+      columns: {
+        id: true,
+        subscriptionTier: true,
+        createdAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message: "Utilisateur non trouvé",
+      });
+    }
+
+    const tier = user.subscriptionTier;
+    const tierInfo = getTierInfo(tier);
+
+    // For MVP, usage is 0 since we don't have projects/documents tables yet
+    // These will be updated when Epic 2 and Epic 3 are implemented
+    const usage = {
+      projects: 0,
+      documents: 0,
+      teamMembers: 1, // The user themselves
+    };
+
+    // Calculate usage percentages
+    const teamMembersPercentage = tierInfo.limits.maxTeamMembers
+      ? Math.round((usage.teamMembers / tierInfo.limits.maxTeamMembers) * 100)
+      : null;
+
+    const usagePercentages = {
+      projects: getUsagePercentage(tier, "maxProjects", usage.projects),
+      documents: getUsagePercentage(tier, "maxDocuments", usage.documents),
+      teamMembers: teamMembersPercentage,
+    };
+
+    return {
+      tier,
+      tierInfo,
+      usage,
+      usagePercentages,
+      memberSince: user.createdAt,
+    };
+  }),
+
+  /**
    * Update user profile (name only)
    */
   updateProfile: protectedProcedure

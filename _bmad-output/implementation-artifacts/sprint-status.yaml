@@ -56,7 +56,7 @@ development_status:
   1-3-reinitialisation-mot-de-passe: done
   1-4-gestion-profil-utilisateur: done
   1-5-suppression-compte-rgpd: done
-  1-6-affichage-abonnement-limites: backlog
+  1-6-affichage-abonnement-limites: done
   1-7-upgrade-downgrade-abonnement-stripe: backlog
   epic-1-retrospective: optional
 

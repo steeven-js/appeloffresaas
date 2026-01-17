@@ -4,8 +4,18 @@ import {
   text,
   primaryKey,
   integer,
+  pgEnum,
 } from "drizzle-orm/pg-core";
 import { createTable } from "./helpers";
+
+/**
+ * Subscription tier enum - defines available subscription plans
+ */
+export const subscriptionTierEnum = pgEnum("subscription_tier", [
+  "FREE",
+  "PRO",
+  "BUSINESS",
+]);
 
 /**
  * Users table - NextAuth compatible with password field for credentials
@@ -23,6 +33,9 @@ export const users = createTable("users", {
   }),
   image: varchar("image", { length: 255 }),
   password: varchar("password", { length: 255 }), // bcrypt hash for credentials auth
+  subscriptionTier: subscriptionTierEnum("subscription_tier")
+    .default("FREE")
+    .notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

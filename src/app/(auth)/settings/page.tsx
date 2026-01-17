@@ -65,6 +65,25 @@ export default async function SettingsPage() {
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle>Abonnement</CardTitle>
+            <CardDescription>
+              Gérez votre formule et consultez votre utilisation
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-muted-foreground">
+                Consultez votre abonnement actuel, votre utilisation et comparez les formules disponibles.
+              </p>
+              <Button asChild>
+                <Link href="/billing">Gérer l&apos;abonnement</Link>
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="border-destructive">
           <CardHeader>
             <CardTitle className="text-destructive">Zone de danger</CardTitle>
