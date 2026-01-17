@@ -6,6 +6,7 @@ import { companyProfileRouter } from "~/server/api/routers/companyProfile";
 import { companyProjectReferencesRouter } from "~/server/api/routers/companyProjectReferences";
 import { companyTeamMembersRouter } from "~/server/api/routers/companyTeamMembers";
 import { healthRouter } from "~/server/api/routers/health";
+import { tenderProjectsRouter } from "~/server/api/routers/tenderProjects";
 import { userRouter } from "~/server/api/routers/user";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
@@ -23,6 +24,7 @@ export const appRouter = createTRPCRouter({
   companyProjectReferences: companyProjectReferencesRouter,
   companyTeamMembers: companyTeamMembersRouter,
   health: healthRouter,
+  tenderProjects: tenderProjectsRouter,
   user: userRouter,
 });
 

@@ -20,3 +20,6 @@ export * from "./auth";
 
 // Company tables (Epic 2)
 export * from "./company";
+
+// Tender tables (Epic 3)
+export * from "./tenders";
