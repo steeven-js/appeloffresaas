@@ -1,0 +1,1651 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppelOffreSaaS - Design Directions</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Base tokens */
+            --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+
+            /* Spacing */
+            --space-1: 4px;
+            --space-2: 8px;
+            --space-3: 12px;
+            --space-4: 16px;
+            --space-6: 24px;
+            --space-8: 32px;
+
+            /* Common */
+            --radius: 8px;
+            --radius-sm: 6px;
+            --radius-lg: 12px;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+
+        /* Direction 1: Professional Trust (Recommandée) */
+        .direction-1 {
+            --primary: #3B82F6;
+            --primary-hover: #2563EB;
+            --primary-foreground: #FFFFFF;
+            --success: #22C55E;
+            --warning: #F59E0B;
+            --destructive: #EF4444;
+            --background: #FFFFFF;
+            --foreground: #0F172A;
+            --muted: #F8FAFC;
+            --muted-foreground: #64748B;
+            --border: #E2E8F0;
+            --card: #FFFFFF;
+            --sidebar-bg: #F8FAFC;
+        }
+
+        /* Direction 2: Dark Professional */
+        .direction-2 {
+            --primary: #60A5FA;
+            --primary-hover: #3B82F6;
+            --primary-foreground: #0F172A;
+            --success: #4ADE80;
+            --warning: #FBBF24;
+            --destructive: #F87171;
+            --background: #0F172A;
+            --foreground: #F8FAFC;
+            --muted: #1E293B;
+            --muted-foreground: #94A3B8;
+            --border: #334155;
+            --card: #1E293B;
+            --sidebar-bg: #0F172A;
+        }
+
+        /* Direction 3: Soft Enterprise */
+        .direction-3 {
+            --primary: #6366F1;
+            --primary-hover: #4F46E5;
+            --primary-foreground: #FFFFFF;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --destructive: #EF4444;
+            --background: #FAFAFA;
+            --foreground: #18181B;
+            --muted: #F4F4F5;
+            --muted-foreground: #71717A;
+            --border: #E4E4E7;
+            --card: #FFFFFF;
+            --sidebar-bg: #FFFFFF;
+        }
+
+        /* Direction 4: Warm Trustworthy */
+        .direction-4 {
+            --primary: #0891B2;
+            --primary-hover: #0E7490;
+            --primary-foreground: #FFFFFF;
+            --success: #059669;
+            --warning: #D97706;
+            --destructive: #DC2626;
+            --background: #FFFBEB;
+            --foreground: #1C1917;
+            --muted: #FEF3C7;
+            --muted-foreground: #78716C;
+            --border: #FDE68A;
+            --card: #FFFFFF;
+            --sidebar-bg: #FEF3C7;
+        }
+
+        /* Direction 5: Minimal Monochrome */
+        .direction-5 {
+            --primary: #18181B;
+            --primary-hover: #27272A;
+            --primary-foreground: #FFFFFF;
+            --success: #22C55E;
+            --warning: #EAB308;
+            --destructive: #EF4444;
+            --background: #FFFFFF;
+            --foreground: #18181B;
+            --muted: #F4F4F5;
+            --muted-foreground: #71717A;
+            --border: #E4E4E7;
+            --card: #FFFFFF;
+            --sidebar-bg: #FAFAFA;
+        }
+
+        /* Direction 6: Government Blue */
+        .direction-6 {
+            --primary: #1D4ED8;
+            --primary-hover: #1E40AF;
+            --primary-foreground: #FFFFFF;
+            --success: #16A34A;
+            --warning: #CA8A04;
+            --destructive: #DC2626;
+            --background: #FFFFFF;
+            --foreground: #1E3A5F;
+            --muted: #EFF6FF;
+            --muted-foreground: #475569;
+            --border: #BFDBFE;
+            --card: #FFFFFF;
+            --sidebar-bg: #EFF6FF;
+        }
+
+        /* Direction 7: Modern Gradient */
+        .direction-7 {
+            --primary: #8B5CF6;
+            --primary-hover: #7C3AED;
+            --primary-foreground: #FFFFFF;
+            --success: #22D3EE;
+            --warning: #FBBF24;
+            --destructive: #F43F5E;
+            --background: #FFFFFF;
+            --foreground: #1E1B4B;
+            --muted: #F5F3FF;
+            --muted-foreground: #6B7280;
+            --border: #E9D5FF;
+            --card: #FFFFFF;
+            --sidebar-bg: linear-gradient(180deg, #F5F3FF 0%, #EDE9FE 100%);
+        }
+
+        /* Direction 8: High Contrast */
+        .direction-8 {
+            --primary: #2563EB;
+            --primary-hover: #1D4ED8;
+            --primary-foreground: #FFFFFF;
+            --success: #15803D;
+            --warning: #B45309;
+            --destructive: #B91C1C;
+            --background: #FFFFFF;
+            --foreground: #000000;
+            --muted: #F3F4F6;
+            --muted-foreground: #4B5563;
+            --border: #9CA3AF;
+            --card: #FFFFFF;
+            --sidebar-bg: #F9FAFB;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: #F1F5F9;
+            color: #1E293B;
+            line-height: 1.5;
+        }
+
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-bottom: 1px solid #E2E8F0;
+            padding: var(--space-4) var(--space-6);
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .nav h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #0F172A;
+        }
+
+        .nav-pills {
+            display: flex;
+            gap: var(--space-2);
+        }
+
+        .nav-pill {
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius);
+            border: 1px solid #E2E8F0;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .nav-pill:hover {
+            border-color: #3B82F6;
+            color: #3B82F6;
+        }
+
+        .nav-pill.active {
+            background: #3B82F6;
+            border-color: #3B82F6;
+            color: white;
+        }
+
+        .nav-pill.recommended::after {
+            content: " ★";
+            color: #FBBF24;
+        }
+
+        .nav-pill.active.recommended::after {
+            color: #FEF3C7;
+        }
+
+        /* Main content */
+        .main {
+            padding-top: 80px;
+            padding-bottom: var(--space-8);
+        }
+
+        .direction-info {
+            max-width: 1400px;
+            margin: 0 auto var(--space-6);
+            padding: 0 var(--space-6);
+        }
+
+        .direction-info h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: var(--space-2);
+        }
+
+        .direction-info p {
+            color: #64748B;
+            font-size: 15px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-left: var(--space-2);
+        }
+
+        .badge-recommended {
+            background: #FEF3C7;
+            color: #B45309;
+        }
+
+        /* Mockup Container */
+        .mockup-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 var(--space-6);
+        }
+
+        .mockup {
+            background: var(--background);
+            color: var(--foreground);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        /* Header */
+        .mockup-header {
+            height: 56px;
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 var(--space-6);
+        }
+
+        .mockup-logo {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+        }
+
+        .mockup-logo-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-foreground);
+            font-weight: 700;
+            font-size: 14px;
+        }
+
+        .mockup-logo-text {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .mockup-header-actions {
+            display: flex;
+            align-items: center;
+            gap: var(--space-4);
+        }
+
+        .mockup-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--muted);
+            border: 2px solid var(--border);
+        }
+
+        /* Layout */
+        .mockup-layout {
+            display: flex;
+            height: 600px;
+        }
+
+        /* Sidebar */
+        .mockup-sidebar {
+            width: 280px;
+            background: var(--sidebar-bg);
+            border-right: 1px solid var(--border);
+            padding: var(--space-4);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+        }
+
+        .sidebar-section {
+            padding: var(--space-3);
+        }
+
+        .sidebar-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--muted-foreground);
+            margin-bottom: var(--space-3);
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-3);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: background 0.15s;
+            font-size: 14px;
+        }
+
+        .sidebar-item:hover {
+            background: var(--muted);
+        }
+
+        .sidebar-item.active {
+            background: var(--primary);
+            color: var(--primary-foreground);
+        }
+
+        .sidebar-item-icon {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .sidebar-item-icon.complete { background: var(--success); }
+        .sidebar-item-icon.progress { background: var(--warning); }
+        .sidebar-item-icon.pending { background: var(--muted-foreground); }
+
+        /* Progress */
+        .sidebar-progress {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: var(--space-4);
+            border: 1px solid var(--border);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: var(--space-2);
+        }
+
+        .progress-label {
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .progress-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: var(--muted);
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 3px;
+            width: 67%;
+        }
+
+        /* Main Content */
+        .mockup-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--background);
+            min-width: 0;
+        }
+
+        .mockup-chat {
+            flex: 1;
+            padding: var(--space-6);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+        }
+
+        .chat-message {
+            max-width: 75%;
+            display: flex;
+            gap: var(--space-3);
+        }
+
+        .chat-message.assistant {
+            align-self: flex-start;
+        }
+
+        .chat-message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .chat-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .chat-avatar.ai {
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-foreground);
+            font-size: 14px;
+        }
+
+        .chat-avatar.human {
+            background: var(--muted);
+            border: 2px solid var(--border);
+        }
+
+        .chat-bubble {
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .chat-message.assistant .chat-bubble {
+            background: var(--muted);
+            border-bottom-left-radius: var(--radius-sm);
+        }
+
+        .chat-message.user .chat-bubble {
+            background: var(--primary);
+            color: var(--primary-foreground);
+            border-bottom-right-radius: var(--radius-sm);
+        }
+
+        .chat-input-area {
+            padding: var(--space-4) var(--space-6);
+            border-top: 1px solid var(--border);
+            background: var(--card);
+        }
+
+        .chat-input {
+            display: flex;
+            gap: var(--space-3);
+            align-items: center;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: var(--space-3) var(--space-4);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            font-size: 14px;
+            background: var(--background);
+            color: var(--foreground);
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
+        }
+
+        .btn {
+            padding: var(--space-3) var(--space-4);
+            border-radius: var(--radius);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.15s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: var(--primary-foreground);
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-hover);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--foreground);
+        }
+
+        .btn-outline:hover {
+            background: var(--muted);
+        }
+
+        /* Copilot Panel */
+        .mockup-copilot {
+            width: 320px;
+            background: var(--card);
+            border-left: 1px solid var(--border);
+            padding: var(--space-4);
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+        }
+
+        .copilot-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-bottom: var(--space-3);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .copilot-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .copilot-card {
+            background: var(--muted);
+            border-radius: var(--radius);
+            padding: var(--space-4);
+        }
+
+        .copilot-card-header {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin-bottom: var(--space-3);
+        }
+
+        .copilot-card-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .copilot-card-icon.warning {
+            background: color-mix(in srgb, var(--warning) 20%, transparent);
+            color: var(--warning);
+        }
+
+        .copilot-card-icon.success {
+            background: color-mix(in srgb, var(--success) 20%, transparent);
+            color: var(--success);
+        }
+
+        .copilot-card-title {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .copilot-card-content {
+            font-size: 13px;
+            color: var(--muted-foreground);
+            line-height: 1.5;
+        }
+
+        /* Document Preview */
+        .preview-section {
+            background: var(--background);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: var(--space-4);
+            margin-top: var(--space-2);
+        }
+
+        .preview-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-3);
+        }
+
+        .preview-title {
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .preview-badge {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: color-mix(in srgb, var(--success) 15%, transparent);
+            color: var(--success);
+        }
+
+        .preview-content {
+            font-size: 12px;
+            color: var(--muted-foreground);
+            line-height: 1.6;
+            font-family: var(--font-mono);
+        }
+
+        /* Color Palette Display */
+        .palette-display {
+            max-width: 1400px;
+            margin: var(--space-6) auto 0;
+            padding: 0 var(--space-6);
+        }
+
+        .palette-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: var(--space-3);
+            background: white;
+            padding: var(--space-4);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .palette-swatch {
+            text-align: center;
+        }
+
+        .palette-color {
+            height: 48px;
+            border-radius: var(--radius-sm);
+            margin-bottom: var(--space-2);
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+
+        .palette-name {
+            font-size: 12px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .palette-value {
+            font-size: 11px;
+            color: #6B7280;
+            font-family: var(--font-mono);
+        }
+
+        /* Hidden by default */
+        .direction-panel {
+            display: none;
+        }
+
+        .direction-panel.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <h1>AppelOffreSaaS - Design Directions</h1>
+        <div class="nav-pills">
+            <button class="nav-pill active recommended" data-direction="1">Professional Trust</button>
+            <button class="nav-pill" data-direction="2">Dark Professional</button>
+            <button class="nav-pill" data-direction="3">Soft Enterprise</button>
+            <button class="nav-pill" data-direction="4">Warm Trustworthy</button>
+            <button class="nav-pill" data-direction="5">Minimal Mono</button>
+            <button class="nav-pill" data-direction="6">Government Blue</button>
+            <button class="nav-pill" data-direction="7">Modern Gradient</button>
+            <button class="nav-pill" data-direction="8">High Contrast</button>
+        </div>
+    </nav>
+
+    <main class="main">
+        <!-- Direction 1: Professional Trust -->
+        <div class="direction-panel active" id="direction-1">
+            <div class="direction-info">
+                <h2>Direction 1: Professional Trust <span class="badge badge-recommended">Recommandee</span></h2>
+                <p>Palette bleue classique inspirant confiance et professionnalisme. Fond clair avec accents bleus. Equilibre entre modernite et serieux institutionnel.</p>
+            </div>
+            <div class="mockup-container">
+                <div class="mockup direction-1">
+                    <div class="mockup-header">
+                        <div class="mockup-logo">
+                            <div class="mockup-logo-icon">AO</div>
+                            <span class="mockup-logo-text">AppelOffreSaaS</span>
+                        </div>
+                        <div class="mockup-header-actions">
+                            <button class="btn btn-outline">Mes AO</button>
+                            <button class="btn btn-primary">Nouvel AO</button>
+                            <div class="mockup-avatar"></div>
+                        </div>
+                    </div>
+                    <div class="mockup-layout">
+                        <aside class="mockup-sidebar">
+                            <div class="sidebar-progress">
+                                <div class="progress-header">
+                                    <span class="progress-label">Completude</span>
+                                    <span class="progress-value">67%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill"></div>
+                                </div>
+                            </div>
+                            <div class="sidebar-section">
+                                <div class="sidebar-label">Sections</div>
+                                <div class="sidebar-item">
+                                    <span class="sidebar-item-icon complete"></span>
+                                    Profil entreprise
+                                </div>
+                                <div class="sidebar-item active">
+                                    <span class="sidebar-item-icon progress"></span>
+                                    Methodologie
+                                </div>
+                                <div class="sidebar-item">
+                                    <span class="sidebar-item-icon pending"></span>
+                                    References
+                                </div>
+                                <div class="sidebar-item">
+                                    <span class="sidebar-item-icon pending"></span>
+                                    Equipe projet
+                                </div>
+                                <div class="sidebar-item">
+                                    <span class="sidebar-item-icon pending"></span>
+                                    Offre financiere
+                                </div>
+                            </div>
+                        </aside>
+                        <div class="mockup-main">
+                            <div class="mockup-chat">
+                                <div class="chat-message assistant">
+                                    <div class="chat-avatar ai">IA</div>
+                                    <div class="chat-bubble">
+                                        Decrivez votre methodologie pour ce type de projet. Comment abordez-vous generalement la phase d'analyse des besoins ?
+                                    </div>
+                                </div>
+                                <div class="chat-message user">
+                                    <div class="chat-avatar human"></div>
+                                    <div class="chat-bubble">
+                                        Nous commencons par des ateliers de cadrage avec les parties prenantes cles pour identifier les besoins prioritaires.
+                                    </div>
+                                </div>
+                                <div class="chat-message assistant">
+                                    <div class="chat-avatar ai">IA</div>
+                                    <div class="chat-bubble">
+                                        Excellent ! Combien de temps durent generalement ces ateliers et qui y participe cote client ?
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chat-input-area">
+                                <div class="chat-input">
+                                    <input type="text" placeholder="Decrivez votre approche...">
+                                    <button class="btn btn-primary">Envoyer</button>
+                                </div>
+                            </div>
+                        </div>
+                        <aside class="mockup-copilot">
+                            <div class="copilot-header">
+                                <span class="copilot-title">Co-pilote</span>
+                            </div>
+                            <div class="copilot-card">
+                                <div class="copilot-card-header">
+                                    <span class="copilot-card-icon warning">!</span>
+                                    <span class="copilot-card-title">Suggestion</span>
+                                </div>
+                                <div class="copilot-card-content">
+                                    Le RC mentionne une exigence RSE. Pensez a inclure votre politique environnementale.
+                                </div>
+                            </div>
+                            <div class="copilot-card">
+                                <div class="copilot-card-header">
+                                    <span class="copilot-card-icon success">✓</span>
+                                    <span class="copilot-card-title">Generation</span>
+                                </div>
+                                <div class="copilot-card-content">
+                                    Section "Methodologie" mise a jour en temps reel.
+                                </div>
+                                <div class="preview-section">
+                                    <div class="preview-header">
+                                        <span class="preview-title">Apercu</span>
+                                        <span class="preview-badge">Actualise</span>
+                                    </div>
+                                    <div class="preview-content">
+                                        Notre methodologie debute par des ateliers de cadrage avec les parties prenantes cles...
+                                    </div>
+                                </div>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+            </div>
+            <div class="palette-display">
+                <div class="palette-grid">
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #3B82F6"></div>
+                        <div class="palette-name">Primary</div>
+                        <div class="palette-value">#3B82F6</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #22C55E"></div>
+                        <div class="palette-name">Success</div>
+                        <div class="palette-value">#22C55E</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #F59E0B"></div>
+                        <div class="palette-name">Warning</div>
+                        <div class="palette-value">#F59E0B</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #EF4444"></div>
+                        <div class="palette-name">Destructive</div>
+                        <div class="palette-value">#EF4444</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #FFFFFF; border-color: #E2E8F0"></div>
+                        <div class="palette-name">Background</div>
+                        <div class="palette-value">#FFFFFF</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #0F172A"></div>
+                        <div class="palette-name">Foreground</div>
+                        <div class="palette-value">#0F172A</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #F8FAFC"></div>
+                        <div class="palette-name">Muted</div>
+                        <div class="palette-value">#F8FAFC</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #E2E8F0"></div>
+                        <div class="palette-name">Border</div>
+                        <div class="palette-value">#E2E8F0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Direction 2: Dark Professional -->
+        <div class="direction-panel" id="direction-2">
+            <div class="direction-info">
+                <h2>Direction 2: Dark Professional</h2>
+                <p>Mode sombre elegant pour les sessions de travail prolongees. Reduit la fatigue oculaire tout en conservant un aspect premium et professionnel.</p>
+            </div>
+            <div class="mockup-container">
+                <div class="mockup direction-2">
+                    <div class="mockup-header">
+                        <div class="mockup-logo">
+                            <div class="mockup-logo-icon">AO</div>
+                            <span class="mockup-logo-text">AppelOffreSaaS</span>
+                        </div>
+                        <div class="mockup-header-actions">
+                            <button class="btn btn-outline">Mes AO</button>
+                            <button class="btn btn-primary">Nouvel AO</button>
+                            <div class="mockup-avatar"></div>
+                        </div>
+                    </div>
+                    <div class="mockup-layout">
+                        <aside class="mockup-sidebar">
+                            <div class="sidebar-progress">
+                                <div class="progress-header">
+                                    <span class="progress-label">Completude</span>
+                                    <span class="progress-value">67%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill"></div>
+                                </div>
+                            </div>
+                            <div class="sidebar-section">
+                                <div class="sidebar-label">Sections</div>
+                                <div class="sidebar-item">
+                                    <span class="sidebar-item-icon complete"></span>
+                                    Profil entreprise
+                                </div>
+                                <div class="sidebar-item active">
+                                    <span class="sidebar-item-icon progress"></span>
+                                    Methodologie
+                                </div>
+                                <div class="sidebar-item">
+                                    <span class="sidebar-item-icon pending"></span>
+                                    References
+                                </div>
+                                <div class="sidebar-item">
+                                    <span class="sidebar-item-icon pending"></span>
+                                    Equipe projet
+                                </div>
+                            </div>
+                        </aside>
+                        <div class="mockup-main">
+                            <div class="mockup-chat">
+                                <div class="chat-message assistant">
+                                    <div class="chat-avatar ai">IA</div>
+                                    <div class="chat-bubble">
+                                        Decrivez votre methodologie pour ce type de projet. Comment abordez-vous la phase d'analyse ?
+                                    </div>
+                                </div>
+                                <div class="chat-message user">
+                                    <div class="chat-avatar human"></div>
+                                    <div class="chat-bubble">
+                                        Ateliers de cadrage avec les parties prenantes cles pour identifier les besoins.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chat-input-area">
+                                <div class="chat-input">
+                                    <input type="text" placeholder="Decrivez votre approche...">
+                                    <button class="btn btn-primary">Envoyer</button>
+                                </div>
+                            </div>
+                        </div>
+                        <aside class="mockup-copilot">
+                            <div class="copilot-header">
+                                <span class="copilot-title">Co-pilote</span>
+                            </div>
+                            <div class="copilot-card">
+                                <div class="copilot-card-header">
+                                    <span class="copilot-card-icon warning">!</span>
+                                    <span class="copilot-card-title">Suggestion</span>
+                                </div>
+                                <div class="copilot-card-content">
+                                    Le RC mentionne une exigence RSE. Pensez a inclure votre politique environnementale.
+                                </div>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+            </div>
+            <div class="palette-display">
+                <div class="palette-grid">
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #60A5FA"></div>
+                        <div class="palette-name">Primary</div>
+                        <div class="palette-value">#60A5FA</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #4ADE80"></div>
+                        <div class="palette-name">Success</div>
+                        <div class="palette-value">#4ADE80</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #FBBF24"></div>
+                        <div class="palette-name">Warning</div>
+                        <div class="palette-value">#FBBF24</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #F87171"></div>
+                        <div class="palette-name">Destructive</div>
+                        <div class="palette-value">#F87171</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #0F172A"></div>
+                        <div class="palette-name">Background</div>
+                        <div class="palette-value">#0F172A</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #F8FAFC"></div>
+                        <div class="palette-name">Foreground</div>
+                        <div class="palette-value">#F8FAFC</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #1E293B"></div>
+                        <div class="palette-name">Muted</div>
+                        <div class="palette-value">#1E293B</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #334155"></div>
+                        <div class="palette-name">Border</div>
+                        <div class="palette-value">#334155</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Direction 3: Soft Enterprise -->
+        <div class="direction-panel" id="direction-3">
+            <div class="direction-info">
+                <h2>Direction 3: Soft Enterprise</h2>
+                <p>Palette indigo douce sur fond gris neutre. Approche enterprise moderne avec une touche de sophistication. Ideal pour les environnements corporatifs.</p>
+            </div>
+            <div class="mockup-container">
+                <div class="mockup direction-3">
+                    <div class="mockup-header">
+                        <div class="mockup-logo">
+                            <div class="mockup-logo-icon">AO</div>
+                            <span class="mockup-logo-text">AppelOffreSaaS</span>
+                        </div>
+                        <div class="mockup-header-actions">
+                            <button class="btn btn-outline">Mes AO</button>
+                            <button class="btn btn-primary">Nouvel AO</button>
+                            <div class="mockup-avatar"></div>
+                        </div>
+                    </div>
+                    <div class="mockup-layout">
+                        <aside class="mockup-sidebar">
+                            <div class="sidebar-progress">
+                                <div class="progress-header">
+                                    <span class="progress-label">Completude</span>
+                                    <span class="progress-value">67%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill"></div>
+                                </div>
+                            </div>
+                            <div class="sidebar-section">
+                                <div class="sidebar-label">Sections</div>
+                                <div class="sidebar-item">
+                                    <span class="sidebar-item-icon complete"></span>
+                                    Profil entreprise
+                                </div>
+                                <div class="sidebar-item active">
+                                    <span class="sidebar-item-icon progress"></span>
+                                    Methodologie
+                                </div>
+                                <div class="sidebar-item">
+                                    <span class="sidebar-item-icon pending"></span>
+                                    References
+                                </div>
+                            </div>
+                        </aside>
+                        <div class="mockup-main">
+                            <div class="mockup-chat">
+                                <div class="chat-message assistant">
+                                    <div class="chat-avatar ai">IA</div>
+                                    <div class="chat-bubble">
+                                        Decrivez votre methodologie pour ce type de projet.
+                                    </div>
+                                </div>
+                                <div class="chat-message user">
+                                    <div class="chat-avatar human"></div>
+                                    <div class="chat-bubble">
+                                        Ateliers de cadrage avec les parties prenantes.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chat-input-area">
+                                <div class="chat-input">
+                                    <input type="text" placeholder="Votre reponse...">
+                                    <button class="btn btn-primary">Envoyer</button>
+                                </div>
+                            </div>
+                        </div>
+                        <aside class="mockup-copilot">
+                            <div class="copilot-header">
+                                <span class="copilot-title">Co-pilote</span>
+                            </div>
+                            <div class="copilot-card">
+                                <div class="copilot-card-header">
+                                    <span class="copilot-card-icon success">✓</span>
+                                    <span class="copilot-card-title">Conforme</span>
+                                </div>
+                                <div class="copilot-card-content">
+                                    Section mise a jour avec succes.
+                                </div>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+            </div>
+            <div class="palette-display">
+                <div class="palette-grid">
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #6366F1"></div>
+                        <div class="palette-name">Primary</div>
+                        <div class="palette-value">#6366F1</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #10B981"></div>
+                        <div class="palette-name">Success</div>
+                        <div class="palette-value">#10B981</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #F59E0B"></div>
+                        <div class="palette-name">Warning</div>
+                        <div class="palette-value">#F59E0B</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #EF4444"></div>
+                        <div class="palette-name">Destructive</div>
+                        <div class="palette-value">#EF4444</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #FAFAFA"></div>
+                        <div class="palette-name">Background</div>
+                        <div class="palette-value">#FAFAFA</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #18181B"></div>
+                        <div class="palette-name">Foreground</div>
+                        <div class="palette-value">#18181B</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Direction 4: Warm Trustworthy -->
+        <div class="direction-panel" id="direction-4">
+            <div class="direction-info">
+                <h2>Direction 4: Warm Trustworthy</h2>
+                <p>Tons chauds ambre avec accents cyan. Atmosphere accueillante et rassurante. Differenciant par rapport aux interfaces B2B classiques.</p>
+            </div>
+            <div class="mockup-container">
+                <div class="mockup direction-4">
+                    <div class="mockup-header">
+                        <div class="mockup-logo">
+                            <div class="mockup-logo-icon">AO</div>
+                            <span class="mockup-logo-text">AppelOffreSaaS</span>
+                        </div>
+                        <div class="mockup-header-actions">
+                            <button class="btn btn-outline">Mes AO</button>
+                            <button class="btn btn-primary">Nouvel AO</button>
+                            <div class="mockup-avatar"></div>
+                        </div>
+                    </div>
+                    <div class="mockup-layout">
+                        <aside class="mockup-sidebar">
+                            <div class="sidebar-progress">
+                                <div class="progress-header">
+                                    <span class="progress-label">Completude</span>
+                                    <span class="progress-value">67%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill"></div>
+                                </div>
+                            </div>
+                            <div class="sidebar-section">
+                                <div class="sidebar-label">Sections</div>
+                                <div class="sidebar-item">
+                                    <span class="sidebar-item-icon complete"></span>
+                                    Profil entreprise
+                                </div>
+                                <div class="sidebar-item active">
+                                    <span class="sidebar-item-icon progress"></span>
+                                    Methodologie
+                                </div>
+                            </div>
+                        </aside>
+                        <div class="mockup-main">
+                            <div class="mockup-chat">
+                                <div class="chat-message assistant">
+                                    <div class="chat-avatar ai">IA</div>
+                                    <div class="chat-bubble">
+                                        Decrivez votre methodologie projet.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chat-input-area">
+                                <div class="chat-input">
+                                    <input type="text" placeholder="Votre reponse...">
+                                    <button class="btn btn-primary">Envoyer</button>
+                                </div>
+                            </div>
+                        </div>
+                        <aside class="mockup-copilot">
+                            <div class="copilot-header">
+                                <span class="copilot-title">Co-pilote</span>
+                            </div>
+                            <div class="copilot-card">
+                                <div class="copilot-card-header">
+                                    <span class="copilot-card-icon warning">!</span>
+                                    <span class="copilot-card-title">A completer</span>
+                                </div>
+                                <div class="copilot-card-content">
+                                    3 sections restantes avant export.
+                                </div>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+            </div>
+            <div class="palette-display">
+                <div class="palette-grid">
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #0891B2"></div>
+                        <div class="palette-name">Primary</div>
+                        <div class="palette-value">#0891B2</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #059669"></div>
+                        <div class="palette-name">Success</div>
+                        <div class="palette-value">#059669</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #D97706"></div>
+                        <div class="palette-name">Warning</div>
+                        <div class="palette-value">#D97706</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #FFFBEB"></div>
+                        <div class="palette-name">Background</div>
+                        <div class="palette-value">#FFFBEB</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #FEF3C7"></div>
+                        <div class="palette-name">Sidebar</div>
+                        <div class="palette-value">#FEF3C7</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Direction 5: Minimal Monochrome -->
+        <div class="direction-panel" id="direction-5">
+            <div class="direction-info">
+                <h2>Direction 5: Minimal Monochrome</h2>
+                <p>Noir et blanc avec couleurs d'accent minimales. Design epure et intemporel. Focus maximal sur le contenu sans distraction visuelle.</p>
+            </div>
+            <div class="mockup-container">
+                <div class="mockup direction-5">
+                    <div class="mockup-header">
+                        <div class="mockup-logo">
+                            <div class="mockup-logo-icon">AO</div>
+                            <span class="mockup-logo-text">AppelOffreSaaS</span>
+                        </div>
+                        <div class="mockup-header-actions">
+                            <button class="btn btn-outline">Mes AO</button>
+                            <button class="btn btn-primary">Nouvel AO</button>
+                            <div class="mockup-avatar"></div>
+                        </div>
+                    </div>
+                    <div class="mockup-layout">
+                        <aside class="mockup-sidebar">
+                            <div class="sidebar-progress">
+                                <div class="progress-header">
+                                    <span class="progress-label">Completude</span>
+                                    <span class="progress-value">67%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill"></div>
+                                </div>
+                            </div>
+                            <div class="sidebar-section">
+                                <div class="sidebar-label">Sections</div>
+                                <div class="sidebar-item">
+                                    <span class="sidebar-item-icon complete"></span>
+                                    Profil entreprise
+                                </div>
+                                <div class="sidebar-item active">
+                                    <span class="sidebar-item-icon progress"></span>
+                                    Methodologie
+                                </div>
+                            </div>
+                        </aside>
+                        <div class="mockup-main">
+                            <div class="mockup-chat">
+                                <div class="chat-message assistant">
+                                    <div class="chat-avatar ai">IA</div>
+                                    <div class="chat-bubble">
+                                        Decrivez votre methodologie.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chat-input-area">
+                                <div class="chat-input">
+                                    <input type="text" placeholder="Votre reponse...">
+                                    <button class="btn btn-primary">Envoyer</button>
+                                </div>
+                            </div>
+                        </div>
+                        <aside class="mockup-copilot">
+                            <div class="copilot-header">
+                                <span class="copilot-title">Co-pilote</span>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+            </div>
+            <div class="palette-display">
+                <div class="palette-grid">
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #18181B"></div>
+                        <div class="palette-name">Primary</div>
+                        <div class="palette-value">#18181B</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #22C55E"></div>
+                        <div class="palette-name">Success</div>
+                        <div class="palette-value">#22C55E</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #EAB308"></div>
+                        <div class="palette-name">Warning</div>
+                        <div class="palette-value">#EAB308</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #FFFFFF; border-color: #E4E4E7"></div>
+                        <div class="palette-name">Background</div>
+                        <div class="palette-value">#FFFFFF</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Direction 6: Government Blue -->
+        <div class="direction-panel" id="direction-6">
+            <div class="direction-info">
+                <h2>Direction 6: Government Blue</h2>
+                <p>Bleu institutionnel rappelant les chartes graphiques de l'Etat francais. Inspire confiance pour les marches publics. Serieux et officiel.</p>
+            </div>
+            <div class="mockup-container">
+                <div class="mockup direction-6">
+                    <div class="mockup-header">
+                        <div class="mockup-logo">
+                            <div class="mockup-logo-icon">AO</div>
+                            <span class="mockup-logo-text">AppelOffreSaaS</span>
+                        </div>
+                        <div class="mockup-header-actions">
+                            <button class="btn btn-outline">Mes AO</button>
+                            <button class="btn btn-primary">Nouvel AO</button>
+                            <div class="mockup-avatar"></div>
+                        </div>
+                    </div>
+                    <div class="mockup-layout">
+                        <aside class="mockup-sidebar">
+                            <div class="sidebar-progress">
+                                <div class="progress-header">
+                                    <span class="progress-label">Completude</span>
+                                    <span class="progress-value">67%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill"></div>
+                                </div>
+                            </div>
+                            <div class="sidebar-section">
+                                <div class="sidebar-label">Sections</div>
+                                <div class="sidebar-item">
+                                    <span class="sidebar-item-icon complete"></span>
+                                    Profil entreprise
+                                </div>
+                                <div class="sidebar-item active">
+                                    <span class="sidebar-item-icon progress"></span>
+                                    Methodologie
+                                </div>
+                            </div>
+                        </aside>
+                        <div class="mockup-main">
+                            <div class="mockup-chat">
+                                <div class="chat-message assistant">
+                                    <div class="chat-avatar ai">IA</div>
+                                    <div class="chat-bubble">
+                                        Decrivez votre methodologie pour ce marche public.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chat-input-area">
+                                <div class="chat-input">
+                                    <input type="text" placeholder="Votre reponse...">
+                                    <button class="btn btn-primary">Envoyer</button>
+                                </div>
+                            </div>
+                        </div>
+                        <aside class="mockup-copilot">
+                            <div class="copilot-header">
+                                <span class="copilot-title">Co-pilote</span>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+            </div>
+            <div class="palette-display">
+                <div class="palette-grid">
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #1D4ED8"></div>
+                        <div class="palette-name">Primary</div>
+                        <div class="palette-value">#1D4ED8</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #16A34A"></div>
+                        <div class="palette-name">Success</div>
+                        <div class="palette-value">#16A34A</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #EFF6FF"></div>
+                        <div class="palette-name">Sidebar</div>
+                        <div class="palette-value">#EFF6FF</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #1E3A5F"></div>
+                        <div class="palette-name">Foreground</div>
+                        <div class="palette-value">#1E3A5F</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Direction 7: Modern Gradient -->
+        <div class="direction-panel" id="direction-7">
+            <div class="direction-info">
+                <h2>Direction 7: Modern Gradient</h2>
+                <p>Violet moderne avec touches de gradient. Style startup tech contemporain. Peut etre percu comme moins serieux pour le secteur public.</p>
+            </div>
+            <div class="mockup-container">
+                <div class="mockup direction-7">
+                    <div class="mockup-header">
+                        <div class="mockup-logo">
+                            <div class="mockup-logo-icon">AO</div>
+                            <span class="mockup-logo-text">AppelOffreSaaS</span>
+                        </div>
+                        <div class="mockup-header-actions">
+                            <button class="btn btn-outline">Mes AO</button>
+                            <button class="btn btn-primary">Nouvel AO</button>
+                            <div class="mockup-avatar"></div>
+                        </div>
+                    </div>
+                    <div class="mockup-layout">
+                        <aside class="mockup-sidebar" style="background: linear-gradient(180deg, #F5F3FF 0%, #EDE9FE 100%)">
+                            <div class="sidebar-progress">
+                                <div class="progress-header">
+                                    <span class="progress-label">Completude</span>
+                                    <span class="progress-value">67%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill"></div>
+                                </div>
+                            </div>
+                            <div class="sidebar-section">
+                                <div class="sidebar-label">Sections</div>
+                                <div class="sidebar-item">
+                                    <span class="sidebar-item-icon complete"></span>
+                                    Profil entreprise
+                                </div>
+                                <div class="sidebar-item active">
+                                    <span class="sidebar-item-icon progress"></span>
+                                    Methodologie
+                                </div>
+                            </div>
+                        </aside>
+                        <div class="mockup-main">
+                            <div class="mockup-chat">
+                                <div class="chat-message assistant">
+                                    <div class="chat-avatar ai">IA</div>
+                                    <div class="chat-bubble">
+                                        Decrivez votre methodologie.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chat-input-area">
+                                <div class="chat-input">
+                                    <input type="text" placeholder="Votre reponse...">
+                                    <button class="btn btn-primary">Envoyer</button>
+                                </div>
+                            </div>
+                        </div>
+                        <aside class="mockup-copilot">
+                            <div class="copilot-header">
+                                <span class="copilot-title">Co-pilote</span>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+            </div>
+            <div class="palette-display">
+                <div class="palette-grid">
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #8B5CF6"></div>
+                        <div class="palette-name">Primary</div>
+                        <div class="palette-value">#8B5CF6</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #22D3EE"></div>
+                        <div class="palette-name">Success</div>
+                        <div class="palette-value">#22D3EE</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #F5F3FF"></div>
+                        <div class="palette-name">Sidebar Start</div>
+                        <div class="palette-value">#F5F3FF</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #EDE9FE"></div>
+                        <div class="palette-name">Sidebar End</div>
+                        <div class="palette-value">#EDE9FE</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Direction 8: High Contrast -->
+        <div class="direction-panel" id="direction-8">
+            <div class="direction-info">
+                <h2>Direction 8: High Contrast</h2>
+                <p>Contraste eleve pour accessibilite maximale. Conformite RGAA AAA. Ideal pour utilisateurs malvoyants ou environnements lumineux.</p>
+            </div>
+            <div class="mockup-container">
+                <div class="mockup direction-8">
+                    <div class="mockup-header">
+                        <div class="mockup-logo">
+                            <div class="mockup-logo-icon">AO</div>
+                            <span class="mockup-logo-text">AppelOffreSaaS</span>
+                        </div>
+                        <div class="mockup-header-actions">
+                            <button class="btn btn-outline">Mes AO</button>
+                            <button class="btn btn-primary">Nouvel AO</button>
+                            <div class="mockup-avatar"></div>
+                        </div>
+                    </div>
+                    <div class="mockup-layout">
+                        <aside class="mockup-sidebar">
+                            <div class="sidebar-progress">
+                                <div class="progress-header">
+                                    <span class="progress-label">Completude</span>
+                                    <span class="progress-value">67%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill"></div>
+                                </div>
+                            </div>
+                            <div class="sidebar-section">
+                                <div class="sidebar-label">Sections</div>
+                                <div class="sidebar-item">
+                                    <span class="sidebar-item-icon complete"></span>
+                                    Profil entreprise
+                                </div>
+                                <div class="sidebar-item active">
+                                    <span class="sidebar-item-icon progress"></span>
+                                    Methodologie
+                                </div>
+                            </div>
+                        </aside>
+                        <div class="mockup-main">
+                            <div class="mockup-chat">
+                                <div class="chat-message assistant">
+                                    <div class="chat-avatar ai">IA</div>
+                                    <div class="chat-bubble">
+                                        Decrivez votre methodologie pour ce projet.
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chat-input-area">
+                                <div class="chat-input">
+                                    <input type="text" placeholder="Votre reponse...">
+                                    <button class="btn btn-primary">Envoyer</button>
+                                </div>
+                            </div>
+                        </div>
+                        <aside class="mockup-copilot">
+                            <div class="copilot-header">
+                                <span class="copilot-title">Co-pilote</span>
+                            </div>
+                        </aside>
+                    </div>
+                </div>
+            </div>
+            <div class="palette-display">
+                <div class="palette-grid">
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #2563EB"></div>
+                        <div class="palette-name">Primary</div>
+                        <div class="palette-value">#2563EB</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #15803D"></div>
+                        <div class="palette-name">Success</div>
+                        <div class="palette-value">#15803D</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #000000"></div>
+                        <div class="palette-name">Foreground</div>
+                        <div class="palette-value">#000000</div>
+                    </div>
+                    <div class="palette-swatch">
+                        <div class="palette-color" style="background: #9CA3AF"></div>
+                        <div class="palette-name">Border</div>
+                        <div class="palette-value">#9CA3AF</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Direction switching
+        document.querySelectorAll('.nav-pill').forEach(pill => {
+            pill.addEventListener('click', () => {
+                // Update pills
+                document.querySelectorAll('.nav-pill').forEach(p => p.classList.remove('active'));
+                pill.classList.add('active');
+
+                // Update panels
+                const direction = pill.dataset.direction;
+                document.querySelectorAll('.direction-panel').forEach(panel => {
+                    panel.classList.remove('active');
+                });
+                document.getElementById(`direction-${direction}`).classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
