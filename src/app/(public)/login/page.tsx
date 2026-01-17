@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { auth } from "~/server/auth";
+import { LoginForm } from "~/components/auth/login-form";
 import {
   Card,
   CardContent,
@@ -30,13 +31,11 @@ export default async function LoginPage() {
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">Connexion</CardTitle>
           <CardDescription>
-            Connectez-vous à votre compte
+            Entrez vos identifiants pour accéder à votre compte
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-center text-sm text-muted-foreground">
-            La page de connexion sera implémentée dans la Story 1.2.
-          </p>
+          <LoginForm />
         </CardContent>
         <CardFooter className="flex flex-col space-y-4">
           <div className="text-center text-sm text-muted-foreground">

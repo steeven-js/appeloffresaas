@@ -52,7 +52,7 @@ development_status:
   # Epic 1: Authentification & Gestion Compte
   epic-1: in-progress
   1-1-inscription-utilisateur: done
-  1-2-connexion-utilisateur: backlog
+  1-2-connexion-utilisateur: done
   1-3-reinitialisation-mot-de-passe: backlog
   1-4-gestion-profil-utilisateur: backlog
   1-5-suppression-compte-rgpd: backlog
