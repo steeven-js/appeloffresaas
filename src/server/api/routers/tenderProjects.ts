@@ -1,9 +1,9 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { eq, desc, and, isNull } from "drizzle-orm";
+import { eq, desc, asc, and, isNull, sql } from "drizzle-orm";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { tenderProjects, TENDER_STATUS } from "~/server/db/schema";
+import { tenderProjects, tenderDocuments, TENDER_STATUS } from "~/server/db/schema";
 
 /**
  * Tender project input schema
@@ -46,6 +46,43 @@ function getDeadlineStatus(deadline: Date | null): "upcoming" | "urgent" | "pass
 }
 
 /**
+ * Calculate project completion percentage (Story 3.4)
+ * Based on key fields: deadline, buyer, reference, amount, RC document
+ */
+interface ProjectForCompletion {
+  submissionDeadline: Date | null;
+  buyerName: string | null;
+  reference: string | null;
+  estimatedAmount: number | null;
+  description: string | null;
+}
+
+function calculateCompletion(project: ProjectForCompletion, hasRCDocument: boolean): number {
+  let score = 0;
+  const maxScore = 6;
+
+  // Title is always present (required), counts as 1
+  score += 1;
+
+  // Deadline set (important)
+  if (project.submissionDeadline) score += 1;
+
+  // Buyer name set
+  if (project.buyerName) score += 1;
+
+  // Reference set
+  if (project.reference) score += 1;
+
+  // Estimated amount set
+  if (project.estimatedAmount) score += 1;
+
+  // RC document uploaded (important)
+  if (hasRCDocument) score += 1;
+
+  return Math.round((score / maxScore) * 100);
+}
+
+/**
  * Tender Projects router (Epic 3)
  */
 export const tenderProjectsRouter = createTRPCRouter({
@@ -81,15 +118,36 @@ export const tenderProjectsRouter = createTRPCRouter({
         conditions.push(eq(tenderProjects.status, status));
       }
 
+      // Sort by deadline (soonest first), nulls last, then by createdAt
       const projects = await ctx.db.query.tenderProjects.findMany({
         where: and(...conditions),
-        orderBy: [desc(tenderProjects.submissionDeadline), desc(tenderProjects.createdAt)],
+        orderBy: [
+          // Projects with deadlines first, sorted ascending (soonest first)
+          sql`CASE WHEN ${tenderProjects.submissionDeadline} IS NULL THEN 1 ELSE 0 END`,
+          asc(tenderProjects.submissionDeadline),
+          desc(tenderProjects.createdAt),
+        ],
       });
 
-      // Add deadline status to each project
+      // Get RC document status for each project (for completion calculation)
+      const projectIds = projects.map((p) => p.id);
+      const rcDocuments = projectIds.length > 0
+        ? await ctx.db.query.tenderDocuments.findMany({
+            where: and(
+              sql`${tenderDocuments.tenderProjectId} IN (${sql.join(projectIds.map(id => sql`${id}`), sql`, `)})`,
+              eq(tenderDocuments.documentType, "rc")
+            ),
+            columns: { tenderProjectId: true },
+          })
+        : [];
+
+      const projectsWithRC = new Set(rcDocuments.map((d) => d.tenderProjectId));
+
+      // Add deadline status and completion percentage to each project
       const projectsWithStatus = projects.map((project) => ({
         ...project,
         deadlineStatus: getDeadlineStatus(project.submissionDeadline),
+        completionPercentage: calculateCompletion(project, projectsWithRC.has(project.id)),
       }));
 
       return {

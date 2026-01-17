@@ -64,12 +64,71 @@ export const tenderProjects = createTable("tender_projects", {
 });
 
 /**
+ * Document types for tender projects
+ */
+export const TENDER_DOCUMENT_TYPES = [
+  "rc", // Règlement de Consultation
+  "cctp", // Cahier des Clauses Techniques Particulières
+  "ccap", // Cahier des Clauses Administratives Particulières
+  "bpu", // Bordereau des Prix Unitaires
+  "dpgf", // Décomposition du Prix Global et Forfaitaire
+  "acte_engagement", // Acte d'Engagement
+  "annexe", // Annexe
+  "autre", // Autre document
+] as const;
+
+export type TenderDocumentType = (typeof TENDER_DOCUMENT_TYPES)[number];
+
+/**
+ * Tender Documents table - stores documents associated with tender projects (Story 3.2)
+ * One-to-many relationship: one tender project can have multiple documents
+ */
+export const tenderDocuments = createTable("tender_documents", {
+  id: varchar("id", { length: 255 })
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  tenderProjectId: varchar("tender_project_id", { length: 255 })
+    .notNull()
+    .references(() => tenderProjects.id, { onDelete: "cascade" }),
+  // Document type
+  documentType: varchar("document_type", { length: 50 }).notNull(), // rc, cctp, ccap, etc.
+  // File information
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  originalName: varchar("original_name", { length: 255 }).notNull(),
+  mimeType: varchar("mime_type", { length: 100 }).notNull(),
+  fileSize: integer("file_size").notNull(), // in bytes
+  storageKey: varchar("storage_key", { length: 500 }).notNull(), // R2 storage key
+  // Parsing status (for Epic 4)
+  parsingStatus: varchar("parsing_status", { length: 20 }).default("pending"), // pending, processing, completed, failed
+  parsedAt: timestamp("parsed_at", { withTimezone: true }),
+  // Timestamps
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/**
  * Relations for tender projects
  */
-export const tenderProjectsRelations = relations(tenderProjects, ({ one }) => ({
+export const tenderProjectsRelations = relations(tenderProjects, ({ one, many }) => ({
   user: one(users, {
     fields: [tenderProjects.userId],
     references: [users.id],
+  }),
+  documents: many(tenderDocuments),
+}));
+
+/**
+ * Relations for tender documents
+ */
+export const tenderDocumentsRelations = relations(tenderDocuments, ({ one }) => ({
+  tenderProject: one(tenderProjects, {
+    fields: [tenderDocuments.tenderProjectId],
+    references: [tenderProjects.id],
   }),
 }));
 
@@ -78,3 +137,9 @@ export const tenderProjectsRelations = relations(tenderProjects, ({ one }) => ({
  */
 export type TenderProject = typeof tenderProjects.$inferSelect;
 export type NewTenderProject = typeof tenderProjects.$inferInsert;
+
+/**
+ * Type exports for tender documents
+ */
+export type TenderDocument = typeof tenderDocuments.$inferSelect;
+export type NewTenderDocument = typeof tenderDocuments.$inferInsert;

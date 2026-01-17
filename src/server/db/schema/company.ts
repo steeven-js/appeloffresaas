@@ -194,6 +194,59 @@ export const companyProjectReferences = createTable("company_project_references"
 });
 
 /**
+ * Document categories for the document vault (Story 2.9)
+ */
+export const DOCUMENT_CATEGORIES = [
+  "kbis",
+  "attestation_fiscale",
+  "attestation_sociale",
+  "assurance_rc",
+  "assurance_decennale",
+  "certification",
+  "reference_projet",
+  "cv",
+  "organigramme",
+  "bilan",
+  "autre",
+] as const;
+
+export type DocumentCategory = typeof DOCUMENT_CATEGORIES[number];
+
+/**
+ * Company Documents table - secure document vault (Story 2.8)
+ * One-to-many relationship: one company profile can have multiple documents
+ */
+export const companyDocuments = createTable("company_documents", {
+  id: varchar("id", { length: 255 })
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  companyProfileId: varchar("company_profile_id", { length: 255 })
+    .notNull()
+    .references(() => companyProfiles.id, { onDelete: "cascade" }),
+  // File information
+  fileName: varchar("file_name", { length: 255 }).notNull(),
+  originalName: varchar("original_name", { length: 255 }).notNull(),
+  mimeType: varchar("mime_type", { length: 100 }).notNull(),
+  fileSize: integer("file_size").notNull(), // Size in bytes
+  // Storage
+  storageKey: varchar("storage_key", { length: 500 }).notNull(), // R2 object key
+  // Categorization (Story 2.9)
+  category: varchar("category", { length: 50 }), // Document category
+  description: text("description"),
+  tags: text("tags"), // JSON array of tags
+  // Expiration tracking (Story 2.10)
+  expiryDate: date("expiry_date"),
+  // Timestamps
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/**
  * Relations for company profiles
  */
 export const companyProfilesRelations = relations(companyProfiles, ({ one, many }) => ({
@@ -205,6 +258,7 @@ export const companyProfilesRelations = relations(companyProfiles, ({ one, many 
   certifications: many(companyCertifications),
   teamMembers: many(companyTeamMembers),
   projectReferences: many(companyProjectReferences),
+  documents: many(companyDocuments),
 }));
 
 /**
@@ -248,6 +302,16 @@ export const companyProjectReferencesRelations = relations(companyProjectReferen
 }));
 
 /**
+ * Relations for documents
+ */
+export const companyDocumentsRelations = relations(companyDocuments, ({ one }) => ({
+  companyProfile: one(companyProfiles, {
+    fields: [companyDocuments.companyProfileId],
+    references: [companyProfiles.id],
+  }),
+}));
+
+/**
  * Type exports for company profiles
  */
 export type CompanyProfile = typeof companyProfiles.$inferSelect;
@@ -276,3 +340,9 @@ export type NewCompanyTeamMember = typeof companyTeamMembers.$inferInsert;
  */
 export type CompanyProjectReference = typeof companyProjectReferences.$inferSelect;
 export type NewCompanyProjectReference = typeof companyProjectReferences.$inferInsert;
+
+/**
+ * Type exports for documents
+ */
+export type CompanyDocument = typeof companyDocuments.$inferSelect;
+export type NewCompanyDocument = typeof companyDocuments.$inferInsert;

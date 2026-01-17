@@ -71,32 +71,32 @@ development_status:
   epic-1-5-retrospective: optional
 
   # Epic 2: Profil Entreprise & Coffre-fort Documents
-  epic-2: backlog
+  epic-2: done
   2-1-creation-profil-entreprise-de-base: done
-  2-2-gestion-informations-legales: backlog
-  2-3-gestion-donnees-financieres: backlog
-  2-4-gestion-certifications-qualifications: backlog
-  2-5-gestion-equipe-competences: backlog
-  2-6-gestion-references-projets: backlog
-  2-7-score-completude-profil: backlog
-  2-8-upload-documents-coffre-fort: backlog
-  2-9-categorisation-documents: backlog
-  2-10-dates-expiration-documents: backlog
-  2-11-detection-auto-date-expiration: backlog
-  2-12-consultation-telechargement-documents: backlog
-  2-13-suppression-documents: backlog
-  2-14-recherche-documents: backlog
+  2-2-gestion-informations-legales: done
+  2-3-gestion-donnees-financieres: done
+  2-4-gestion-certifications-qualifications: done
+  2-5-gestion-equipe-competences: done
+  2-6-gestion-references-projets: done
+  2-7-score-completude-profil: done
+  2-8-upload-documents-coffre-fort: done
+  2-9-categorisation-documents: done
+  2-10-dates-expiration-documents: done
+  2-11-detection-auto-date-expiration: done
+  2-12-consultation-telechargement-documents: done
+  2-13-suppression-documents: done
+  2-14-recherche-documents: done
   epic-2-retrospective: optional
 
   # Epic 3: Création Projet AO
-  epic-3: backlog
-  3-1-creation-nouveau-projet-ao: backlog
-  3-2-upload-reglement-de-consultation-rc: backlog
-  3-3-definition-deadline-soumission: backlog
-  3-4-liste-des-projets-ao-avec-statuts: backlog
-  3-5-archivage-projet-termine: backlog
-  3-6-duplication-projet-comme-template: backlog
-  3-7-suppression-projet-ao: backlog
+  epic-3: done
+  3-1-creation-nouveau-projet-ao: done
+  3-2-upload-reglement-de-consultation-rc: done
+  3-3-definition-deadline-soumission: done
+  3-4-liste-des-projets-ao-avec-statuts: done
+  3-5-archivage-projet-termine: done
+  3-6-duplication-projet-comme-template: done
+  3-7-suppression-projet-ao: done
   epic-3-retrospective: optional
 
   # Epic 4: Parsing RC & Checklist Conformité
