@@ -5,6 +5,7 @@ import { auth } from "~/server/auth";
 import { CompanyProfileForm } from "~/components/company/company-profile-form";
 import { FinancialDataForm } from "~/components/company/financial-data-form";
 import { CertificationsForm } from "~/components/company/certifications-form";
+import { TeamMembersForm } from "~/components/company/team-members-form";
 import {
   Card,
   CardContent,
@@ -74,6 +75,18 @@ export default async function CompanyProfilePage() {
           </CardHeader>
           <CardContent>
             <CertificationsForm />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Équipe & Compétences</CardTitle>
+            <CardDescription>
+              Les membres clés de votre équipe et leurs compétences pour les appels d&apos;offres
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <TeamMembersForm />
           </CardContent>
         </Card>
       </div>

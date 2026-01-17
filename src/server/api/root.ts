@@ -3,6 +3,7 @@ import { billingRouter } from "~/server/api/routers/billing";
 import { companyCertificationsRouter } from "~/server/api/routers/companyCertifications";
 import { companyFinancialRouter } from "~/server/api/routers/companyFinancial";
 import { companyProfileRouter } from "~/server/api/routers/companyProfile";
+import { companyTeamMembersRouter } from "~/server/api/routers/companyTeamMembers";
 import { healthRouter } from "~/server/api/routers/health";
 import { userRouter } from "~/server/api/routers/user";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
@@ -18,6 +19,7 @@ export const appRouter = createTRPCRouter({
   companyCertifications: companyCertificationsRouter,
   companyFinancial: companyFinancialRouter,
   companyProfile: companyProfileRouter,
+  companyTeamMembers: companyTeamMembersRouter,
   health: healthRouter,
   user: userRouter,
 });

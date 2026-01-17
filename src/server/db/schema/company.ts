@@ -110,6 +110,47 @@ export const companyCertifications = createTable("company_certifications", {
 });
 
 /**
+ * Team Members table - stores company team members and their competencies (Story 2.5)
+ * One-to-many relationship: one company profile can have multiple team members
+ */
+export const companyTeamMembers = createTable("company_team_members", {
+  id: varchar("id", { length: 255 })
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  companyProfileId: varchar("company_profile_id", { length: 255 })
+    .notNull()
+    .references(() => companyProfiles.id, { onDelete: "cascade" }),
+  // Personal information
+  firstName: varchar("first_name", { length: 100 }).notNull(),
+  lastName: varchar("last_name", { length: 100 }).notNull(),
+  email: varchar("email", { length: 255 }),
+  phone: varchar("phone", { length: 20 }),
+  // Professional information
+  role: varchar("role", { length: 255 }).notNull(), // e.g., "Chef de projet", "Ingénieur"
+  department: varchar("department", { length: 100 }), // Service/département
+  yearsOfExperience: integer("years_of_experience"), // Années d'expérience
+  // Competencies (stored as JSON array)
+  skills: text("skills"), // JSON array of skills: ["JavaScript", "React", "Node.js"]
+  // Education and certifications
+  education: text("education"), // Diplôme, formation
+  personalCertifications: text("personal_certifications"), // JSON array of certifications
+  // CV document reference (will be linked to document vault later)
+  cvDocumentId: varchar("cv_document_id", { length: 255 }),
+  // Biography/description
+  bio: text("bio"),
+  // Status
+  isKeyPerson: integer("is_key_person").default(0), // 1 = key person for tender responses
+  // Timestamps
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/**
  * Relations for company profiles
  */
 export const companyProfilesRelations = relations(companyProfiles, ({ one, many }) => ({
@@ -119,6 +160,7 @@ export const companyProfilesRelations = relations(companyProfiles, ({ one, many 
   }),
   financialData: many(companyFinancialData),
   certifications: many(companyCertifications),
+  teamMembers: many(companyTeamMembers),
 }));
 
 /**
@@ -142,6 +184,16 @@ export const companyCertificationsRelations = relations(companyCertifications, (
 }));
 
 /**
+ * Relations for team members
+ */
+export const companyTeamMembersRelations = relations(companyTeamMembers, ({ one }) => ({
+  companyProfile: one(companyProfiles, {
+    fields: [companyTeamMembers.companyProfileId],
+    references: [companyProfiles.id],
+  }),
+}));
+
+/**
  * Type exports for company profiles
  */
 export type CompanyProfile = typeof companyProfiles.$inferSelect;
@@ -158,3 +210,9 @@ export type NewCompanyFinancialData = typeof companyFinancialData.$inferInsert;
  */
 export type CompanyCertification = typeof companyCertifications.$inferSelect;
 export type NewCompanyCertification = typeof companyCertifications.$inferInsert;
+
+/**
+ * Type exports for team members
+ */
+export type CompanyTeamMember = typeof companyTeamMembers.$inferSelect;
+export type NewCompanyTeamMember = typeof companyTeamMembers.$inferInsert;
