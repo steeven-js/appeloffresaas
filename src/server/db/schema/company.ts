@@ -78,6 +78,38 @@ export const companyFinancialData = createTable(
 );
 
 /**
+ * Certifications table - stores company certifications and qualifications (Story 2.4)
+ * One-to-many relationship: one company profile can have multiple certifications
+ */
+export const companyCertifications = createTable("company_certifications", {
+  id: varchar("id", { length: 255 })
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  companyProfileId: varchar("company_profile_id", { length: 255 })
+    .notNull()
+    .references(() => companyProfiles.id, { onDelete: "cascade" }),
+  // Certification details
+  name: varchar("name", { length: 255 }).notNull(), // e.g., "ISO 9001", "Qualibat"
+  issuer: varchar("issuer", { length: 255 }), // Organisme certificateur
+  certificationNumber: varchar("certification_number", { length: 100 }), // Numéro de certificat
+  // Dates
+  obtainedDate: date("obtained_date"), // Date d'obtention
+  expiryDate: date("expiry_date"), // Date d'expiration
+  // Document reference (will be linked to document vault later)
+  documentId: varchar("document_id", { length: 255 }), // Reference to uploaded certificate
+  // Additional info
+  description: text("description"), // Notes or scope of certification
+  // Timestamps
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/**
  * Relations for company profiles
  */
 export const companyProfilesRelations = relations(companyProfiles, ({ one, many }) => ({
@@ -86,6 +118,7 @@ export const companyProfilesRelations = relations(companyProfiles, ({ one, many 
     references: [users.id],
   }),
   financialData: many(companyFinancialData),
+  certifications: many(companyCertifications),
 }));
 
 /**
@@ -94,6 +127,16 @@ export const companyProfilesRelations = relations(companyProfiles, ({ one, many 
 export const companyFinancialDataRelations = relations(companyFinancialData, ({ one }) => ({
   companyProfile: one(companyProfiles, {
     fields: [companyFinancialData.companyProfileId],
+    references: [companyProfiles.id],
+  }),
+}));
+
+/**
+ * Relations for certifications
+ */
+export const companyCertificationsRelations = relations(companyCertifications, ({ one }) => ({
+  companyProfile: one(companyProfiles, {
+    fields: [companyCertifications.companyProfileId],
     references: [companyProfiles.id],
   }),
 }));
@@ -109,3 +152,9 @@ export type NewCompanyProfile = typeof companyProfiles.$inferInsert;
  */
 export type CompanyFinancialData = typeof companyFinancialData.$inferSelect;
 export type NewCompanyFinancialData = typeof companyFinancialData.$inferInsert;
+
+/**
+ * Type exports for certifications
+ */
+export type CompanyCertification = typeof companyCertifications.$inferSelect;
+export type NewCompanyCertification = typeof companyCertifications.$inferInsert;

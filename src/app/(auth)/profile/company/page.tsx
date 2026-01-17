@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "~/server/auth";
 import { CompanyProfileForm } from "~/components/company/company-profile-form";
 import { FinancialDataForm } from "~/components/company/financial-data-form";
+import { CertificationsForm } from "~/components/company/certifications-form";
 import {
   Card,
   CardContent,
@@ -61,6 +62,18 @@ export default async function CompanyProfilePage() {
           </CardHeader>
           <CardContent>
             <FinancialDataForm />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Certifications & Qualifications</CardTitle>
+            <CardDescription>
+              ISO, Qualibat, RGE et autres certifications de votre entreprise
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CertificationsForm />
           </CardContent>
         </Card>
       </div>
