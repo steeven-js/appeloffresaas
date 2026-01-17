@@ -20,7 +20,7 @@ export function AppLayout({ children, sidebar, mobileHeader }: AppLayoutProps) {
       <div className="flex-1 flex">
         {/* Sidebar - hidden on mobile, visible on lg+ */}
         {sidebar && (
-          <aside className="hidden lg:flex w-[280px] flex-col border-r bg-muted/30">
+          <aside className="hidden lg:flex w-[280px] flex-col border-r bg-muted/30 h-screen sticky top-0">
             {sidebar}
           </aside>
         )}

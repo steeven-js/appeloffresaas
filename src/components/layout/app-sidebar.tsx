@@ -30,9 +30,9 @@ export function AppSidebar() {
   };
 
   return (
-    <div className="flex flex-col h-full">
+    <>
       {/* Logo */}
-      <div className="h-16 flex items-center px-6 border-b">
+      <div className="h-16 flex items-center px-6 border-b flex-shrink-0">
         <Link href="/dashboard" className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
             <span className="text-primary-foreground font-bold text-sm">A</span>
@@ -42,7 +42,7 @@ export function AppSidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-1">
+      <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.href);
@@ -64,6 +64,6 @@ export function AppSidebar() {
           );
         })}
       </nav>
-    </div>
+    </>
   );
 }

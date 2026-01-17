@@ -23,8 +23,8 @@ export default async function AuthLayout({ children }: AuthLayoutProps) {
     <div className="flex flex-col h-full">
       <AppSidebar />
 
-      {/* User dropdown menu */}
-      <div className="border-t p-2">
+      {/* User dropdown menu - fixed at bottom */}
+      <div className="border-t p-2 flex-shrink-0">
         <UserDropdown user={session.user} />
       </div>
     </div>
