@@ -110,3 +110,25 @@ export const passwordResetTokens = createTable("password_reset_tokens", {
     .defaultNow()
     .notNull(),
 });
+
+/**
+ * Email change tokens - for email change verification
+ */
+export const emailChangeTokens = createTable("email_change_tokens", {
+  id: varchar("id", { length: 255 })
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  newEmail: varchar("new_email", { length: 255 }).notNull(),
+  token: varchar("token", { length: 255 }).notNull().unique(),
+  expires: timestamp("expires", {
+    mode: "date",
+    withTimezone: true,
+  }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});

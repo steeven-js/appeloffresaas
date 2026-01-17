@@ -90,3 +90,51 @@ export async function sendPasswordResetEmail(
     `.trim(),
   });
 }
+
+export async function sendEmailChangeVerification(
+  newEmail: string,
+  verifyUrl: string
+): Promise<void> {
+  await sendEmail({
+    to: newEmail,
+    subject: "Confirmez votre nouvelle adresse email - Appel Offre SaaS",
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">Confirmation d'adresse email</h1>
+
+  <p>Bonjour,</p>
+
+  <p>Vous avez demandé à changer l'adresse email de votre compte Appel Offre SaaS vers cette adresse.</p>
+
+  <p style="margin: 32px 0;">
+    <a href="${verifyUrl}"
+       style="background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 500;">
+      Confirmer cette adresse email
+    </a>
+  </p>
+
+  <p style="color: #666; font-size: 14px;">
+    Ce lien expire dans <strong>1 heure</strong>.
+  </p>
+
+  <p style="color: #666; font-size: 14px;">
+    Si vous n'avez pas demandé ce changement, vous pouvez ignorer cet email en toute sécurité.
+  </p>
+
+  <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;">
+
+  <p style="color: #999; font-size: 12px;">
+    Cet email a été envoyé automatiquement par Appel Offre SaaS.<br>
+    Si vous avez des questions, contactez notre support.
+  </p>
+</body>
+</html>
+    `.trim(),
+  });
+}

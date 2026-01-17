@@ -50,6 +50,7 @@ export const authConfig = {
         // Validate input
         const parsed = loginSchema.safeParse(credentials);
         if (!parsed.success) {
+          console.log("[Auth] Invalid credentials format:", parsed.error.errors);
           return null;
         }
 
@@ -60,16 +61,24 @@ export const authConfig = {
           where: eq(users.email, email),
         });
 
-        if (!user?.password) {
+        if (!user) {
+          console.log("[Auth] User not found:", email);
+          return null;
+        }
+
+        if (!user.password) {
+          console.log("[Auth] User has no password (OAuth only?):", email);
           return null;
         }
 
         // Verify password
         const isValidPassword = await compare(password, user.password);
         if (!isValidPassword) {
+          console.log("[Auth] Invalid password for:", email);
           return null;
         }
 
+        console.log("[Auth] Login successful for:", email);
         return {
           id: user.id,
           email: user.email,

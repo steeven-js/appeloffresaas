@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { auth } from "~/server/auth";
@@ -61,7 +62,7 @@ export default async function DashboardPage() {
           <CardHeader>
             <CardTitle>Informations du compte</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-4">
             <dl className="space-y-2 text-sm">
               <div className="flex gap-2">
                 <dt className="font-medium">Email :</dt>
@@ -72,6 +73,9 @@ export default async function DashboardPage() {
                 <dd className="text-muted-foreground">{session.user.id}</dd>
               </div>
             </dl>
+            <Button variant="outline" asChild>
+              <Link href="/settings">Gérer mon compte</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>
