@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { Building, Settings, CreditCard, FileText, ArrowRight } from "lucide-react";
 
 import { auth } from "~/server/auth";
 import { Button } from "~/components/ui/button";
-import { LogoutButton } from "~/components/auth/logout-button";
 import {
   Card,
   CardContent,
@@ -17,68 +16,91 @@ export const metadata = {
   description: "Tableau de bord de vos projets d'appels d'offres",
 };
 
+const quickActions = [
+  {
+    title: "Profil Entreprise",
+    description: "Complétez les informations de votre entreprise",
+    href: "/profile/company",
+    icon: Building,
+  },
+  {
+    title: "Paramètres",
+    description: "Gérez votre compte et vos préférences",
+    href: "/settings",
+    icon: Settings,
+  },
+  {
+    title: "Facturation",
+    description: "Consultez votre abonnement et vos factures",
+    href: "/billing",
+    icon: CreditCard,
+  },
+];
+
 export default async function DashboardPage() {
+  // Session is guaranteed by (auth) layout
   const session = await auth();
 
-  // Redirect if not logged in
-  if (!session?.user) {
-    redirect("/login");
-  }
+  // TypeScript guard (layout already redirects if null)
+  if (!session?.user) return null;
 
   return (
-    <main className="min-h-screen bg-background p-8">
-      <div className="mx-auto max-w-4xl space-y-8">
+    <div className="p-6 lg:p-8">
+      <div className="space-y-8">
+        {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold">
+          <h1 className="text-2xl font-bold tracking-tight">
             Bienvenue{session.user.name ? `, ${session.user.name}` : ""} !
           </h1>
           <p className="text-muted-foreground">
-            Votre compte a été créé avec succès.
+            Voici un aperçu de votre espace de travail.
           </p>
         </div>
 
-        <Card>
+        {/* Quick Actions */}
+        <div>
+          <h2 className="text-lg font-semibold mb-4">Accès rapide</h2>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <Card key={action.href} className="hover:bg-muted/50 transition-colors">
+                  <Link href={action.href}>
+                    <CardHeader className="flex flex-row items-center gap-4 pb-2">
+                      <div className="p-2 rounded-md bg-primary/10">
+                        <Icon className="h-5 w-5 text-primary" />
+                      </div>
+                      <CardTitle className="text-base">{action.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <CardDescription>{action.description}</CardDescription>
+                    </CardContent>
+                  </Link>
+                </Card>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Coming Soon - Placeholder for future features */}
+        <Card className="border-dashed">
           <CardHeader>
-            <CardTitle>Prochaines étapes</CardTitle>
+            <div className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-muted-foreground" />
+              <CardTitle className="text-base">Mes Appels d&apos;Offres</CardTitle>
+            </div>
             <CardDescription>
-              Configurez votre profil entreprise pour commencer
+              Bientôt disponible : créez et gérez vos réponses aux appels d&apos;offres avec l&apos;aide de l&apos;IA.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-sm text-muted-foreground">
-              Le tableau de bord complet sera disponible dans les prochaines mises à jour.
-              Pour l&apos;instant, votre compte est prêt à être utilisé.
-            </p>
-            <div className="flex gap-4">
-              <Button variant="outline" disabled>
-                Créer mon profil entreprise (bientôt)
-              </Button>
-              <LogoutButton />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Informations du compte</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <dl className="space-y-2 text-sm">
-              <div className="flex gap-2">
-                <dt className="font-medium">Email :</dt>
-                <dd className="text-muted-foreground">{session.user.email}</dd>
-              </div>
-              <div className="flex gap-2">
-                <dt className="font-medium">ID :</dt>
-                <dd className="text-muted-foreground">{session.user.id}</dd>
-              </div>
-            </dl>
-            <Button variant="outline" asChild>
-              <Link href="/settings">Gérer mon compte</Link>
+          <CardContent>
+            <Button variant="outline" disabled>
+              <span>Créer un nouvel AO</span>
+              <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
           </CardContent>
         </Card>
       </div>
-    </main>
+    </div>
   );
 }

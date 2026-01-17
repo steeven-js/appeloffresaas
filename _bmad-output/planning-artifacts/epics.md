@@ -9,6 +9,8 @@ inputDocuments:
 workflowType: "epics-and-stories"
 project_name: "appeloffresaas"
 date: "2026-01-16"
+lastRevision: "2026-01-17"
+revisionNotes: "Added Epic 1.5 - Dashboard Shell & App Layout (6 stories)"
 ---
 
 # appeloffresaas - Epic Breakdown
@@ -248,7 +250,27 @@ This document provides the complete epic and story breakdown for appeloffresaas,
 
 ---
 
-### Epic 2: Profil Entreprise & Coffre-fort Documents
+### Epic 1.5: Dashboard Shell & App Layout
+
+**Objectif :** Implémenter le squelette SaaS de l'application avec une interface professionnelle (sidebar, navigation, dropdown utilisateur) conforme aux standards modernes.
+
+**Valeur Utilisateur :** Une expérience utilisateur cohérente et professionnelle dès la connexion, avec une navigation intuitive et un accès rapide à toutes les fonctionnalités.
+
+**Additional Requirements :** UX-1 (3-column layout), NFR-A2 (Responsive Design), Architecture Section 4.3 (Structure Patterns)
+
+**Scope :**
+
+- AppLayout wrapper pour pages authentifiées
+- AppSidebar avec navigation principale et modules
+- AppHeader avec breadcrumb et actions contextuelles
+- UserDropdown (profil, paramètres, thème, déconnexion)
+- Dashboard page avec métriques et actions rapides
+- Mobile responsive drawer
+- Breadcrumb et navigation contextuelle
+
+---
+
+## Epic 2: Profil Entreprise & Coffre-fort Documents
 
 **Objectif :** Les utilisateurs peuvent créer leur profil entreprise complet et stocker leurs documents administratifs récurrents.
 
@@ -415,19 +437,21 @@ Epic 0 (Foundation)
     │
     └──▶ Epic 1 (Auth & Compte)
               │
-              └──▶ Epic 2 (Profil & Coffre-fort)
+              └──▶ Epic 1.5 (Dashboard Shell & App Layout)  ← NEW
                         │
-                        └──▶ Epic 3 (Projet AO)
+                        └──▶ Epic 2 (Profil & Coffre-fort)
                                   │
-                                  └──▶ Epic 4 (Parsing RC)
+                                  └──▶ Epic 3 (Projet AO)
                                             │
-                                            └──▶ Epic 5 (Chat IA)
+                                            └──▶ Epic 4 (Parsing RC)
                                                       │
-                                                      └──▶ Epic 6 (Preview & Édition)
+                                                      └──▶ Epic 5 (Chat IA)
                                                                 │
-                                                                └──▶ Epic 7 (Export)
+                                                                └──▶ Epic 6 (Preview & Édition)
                                                                           │
-                                                                          └──▶ Epic 8 (Alertes & Intelligence)
+                                                                          └──▶ Epic 7 (Export)
+                                                                                    │
+                                                                                    └──▶ Epic 8 (Alertes & Intelligence)
 ```
 
 **Note :** Chaque epic est autonome et fonctionne indépendamment des epics suivants.
@@ -648,6 +672,194 @@ So that **I can access more features or reduce costs**.
 **When** I select a lower tier
 **Then** I see what features I will lose
 **And** the change takes effect at the end of the billing period
+
+---
+
+## Epic 1.5: Dashboard Shell & App Layout — Stories
+
+### Story 1.5.1: AppLayout Wrapper
+
+As a **logged-in user**,
+I want **a consistent application layout with sidebar and main content area**,
+So that **I can navigate the application efficiently with a professional SaaS experience**.
+
+**Acceptance Criteria:**
+
+**Given** I am logged in and navigate to any authenticated route
+**When** the page loads
+**Then** I see a layout with a fixed sidebar on the left (280px on desktop)
+**And** a main content area that fills the remaining space
+**And** the layout is responsive (sidebar collapses on smaller screens)
+
+**Given** I am on mobile (< 768px)
+**When** I view the application
+**Then** the sidebar is hidden by default
+**And** I can access navigation via a hamburger menu
+
+**Technical Notes:**
+- Create `components/layout/app-layout.tsx`
+- Use CSS Grid or Flexbox for layout structure
+- Implement with shadcn/ui Sheet component for mobile drawer
+
+---
+
+### Story 1.5.2: AppSidebar Navigation
+
+As a **logged-in user**,
+I want **a sidebar with clear navigation links and visual indicators**,
+So that **I can quickly access different sections of the application**.
+
+**Acceptance Criteria:**
+
+**Given** I am viewing the sidebar
+**When** I look at the navigation
+**Then** I see the application logo at the top
+**And** I see navigation links: Dashboard, Mes AO, Profil Entreprise, Documents, Paramètres
+**And** each link has an icon and label
+**And** the current page is highlighted
+
+**Given** I click a navigation link
+**When** the navigation completes
+**Then** I am taken to the corresponding page
+**And** the sidebar reflects the new active state
+
+**Given** I am on a page within a section
+**When** I view the sidebar
+**Then** the parent section is highlighted
+**And** I can see expandable sub-navigation if applicable
+
+**Technical Notes:**
+- Create `components/layout/app-sidebar.tsx`
+- Use Lucide icons for navigation items
+- Implement active state with `usePathname()` from next/navigation
+
+---
+
+### Story 1.5.3: UserDropdown Menu
+
+As a **logged-in user**,
+I want **a user dropdown menu in the sidebar**,
+So that **I can access my profile, settings, and logout quickly**.
+
+**Acceptance Criteria:**
+
+**Given** I am viewing the sidebar
+**When** I look at the bottom section
+**Then** I see my avatar (or initials), name, and email
+**And** I see a dropdown trigger (chevron or dots)
+
+**Given** I click on my user section
+**When** the dropdown opens
+**Then** I see options: Mon profil, Paramètres, Thème (clair/sombre), Déconnexion
+**And** each option has an appropriate icon
+
+**Given** I click "Thème"
+**When** I toggle the theme
+**Then** the application switches between light and dark mode
+**And** my preference is saved
+
+**Given** I click "Déconnexion"
+**When** I confirm
+**Then** I am logged out and redirected to the login page
+
+**Technical Notes:**
+- Create `components/layout/user-dropdown.tsx`
+- Use shadcn/ui DropdownMenu component
+- Integrate with next-themes for theme switching
+- Use signOut from next-auth for logout
+
+---
+
+### Story 1.5.4: Dashboard Page
+
+As a **logged-in user**,
+I want **a dashboard showing my key metrics and quick actions**,
+So that **I have an overview of my activity and can start tasks quickly**.
+
+**Acceptance Criteria:**
+
+**Given** I navigate to /dashboard
+**When** the page loads
+**Then** I see a welcome message with my name
+**And** I see key metrics cards: AO en cours, Documents stockés, Profil complétude
+**And** I see quick action buttons: Nouvel AO, Ajouter document
+
+**Given** I have active tender projects
+**When** I view the dashboard
+**Then** I see a list of my recent/active projects with status
+**And** I can click to navigate to each project
+
+**Given** I am a new user with no projects
+**When** I view the dashboard
+**Then** I see an empty state with onboarding guidance
+**And** I see a prominent CTA to create my first AO
+
+**Technical Notes:**
+- Update `app/(auth)/dashboard/page.tsx`
+- Create metric cards using shadcn/ui Card component
+- Implement quick actions with Button components
+
+---
+
+### Story 1.5.5: Mobile Responsive Drawer
+
+As a **mobile user**,
+I want **the sidebar to be accessible via a drawer on smaller screens**,
+So that **I can navigate the app comfortably on my phone or tablet**.
+
+**Acceptance Criteria:**
+
+**Given** I am on a screen < 1024px
+**When** I view the application
+**Then** the sidebar is hidden
+**And** I see a hamburger menu icon in the header area
+
+**Given** I tap the hamburger menu
+**When** the drawer opens
+**Then** I see the full sidebar content sliding in from the left
+**And** I see an overlay behind the drawer
+
+**Given** the drawer is open
+**When** I tap outside the drawer or press Escape
+**Then** the drawer closes smoothly
+
+**Given** I navigate to a new page via the drawer
+**When** the navigation completes
+**Then** the drawer closes automatically
+
+**Technical Notes:**
+- Use shadcn/ui Sheet component for the drawer
+- Implement with `useSidebar` context for state management
+- Add touch gestures support (swipe to close)
+
+---
+
+### Story 1.5.6: AppHeader avec Breadcrumb
+
+As a **logged-in user**,
+I want **a contextual header with breadcrumb navigation**,
+So that **I know where I am and can navigate back easily**.
+
+**Acceptance Criteria:**
+
+**Given** I am on a nested page (e.g., /dashboard/projects/123)
+**When** I view the header
+**Then** I see a breadcrumb showing: Dashboard > Mes AO > Nom du projet
+**And** each breadcrumb segment is clickable (except current)
+
+**Given** I am on mobile
+**When** I view the header
+**Then** I see the hamburger menu trigger on the left
+**And** I see a simplified breadcrumb (current page only or truncated)
+
+**Given** the page has contextual actions
+**When** I view the header
+**Then** I see action buttons on the right side (e.g., "Exporter", "Paramètres")
+
+**Technical Notes:**
+- Create `components/layout/app-header.tsx`
+- Use shadcn/ui Breadcrumb component
+- Implement with dynamic route parsing
 
 ---
 
@@ -1876,6 +2088,7 @@ So that **I can become more competitive**.
 | --------- | ------------------------------------ | -------------- | -------------- |
 | 0         | Foundation Projet                    | Infrastructure | 5              |
 | 1         | Authentification & Compte            | FR1-FR7        | 7              |
+| **1.5**   | **Dashboard Shell & App Layout**     | **UX-1, NFR-A2** | **6**        |
 | 2         | Profil Entreprise & Coffre Documents | FR8-FR21       | 14             |
 | 3         | Gestion Projets Appels d'Offres      | FR22-FR28      | 7              |
 | 4         | Parsing RC & Checklist               | FR29-FR35      | 8              |
@@ -1883,16 +2096,18 @@ So that **I can become more competitive**.
 | 6         | Preview & Édition Document           | FR44-FR50      | 7              |
 | 7         | Export & Préparation Soumission      | FR51-FR57      | 7              |
 | 8         | Alertes & Intelligence Données       | FR58-FR66      | 9              |
-| **Total** |                                      | **66 FRs**     | **72 Stories** |
+| **Total** |                                      | **66 FRs**     | **78 Stories** |
 
 ### Couverture
 
 - **66/66 FRs** couverts (100%)
 - **24 NFRs** intégrés dans les critères d'acceptation
-- **15 exigences additionnelles** de l'Architecture et UX intégrées
+- **15+ exigences additionnelles** de l'Architecture et UX intégrées
+- **Epic 1.5** ajouté pour le Dashboard Shell (UX-1: 3-column layout)
 
 ### Prochaines Étapes
 
-1. Validation finale de la couverture FR
-2. Approbation des epics et stories
-3. Début du sprint planning
+1. ~~Validation finale de la couverture FR~~
+2. ~~Approbation des epics et stories~~
+3. **Implémentation Epic 1.5** — Dashboard Shell & App Layout
+4. Continuation Epic 2+ après validation Epic 1.5

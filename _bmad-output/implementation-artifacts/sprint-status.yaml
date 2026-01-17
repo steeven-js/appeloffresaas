@@ -60,8 +60,18 @@ development_status:
   1-7-upgrade-downgrade-abonnement-stripe: done
   epic-1-retrospective: optional
 
+  # Epic 1.5: Dashboard Shell & App Layout
+  epic-1-5: done
+  1-5-1-applayout-wrapper: done
+  1-5-2-appsidebar-navigation: done
+  1-5-3-userdropdown-menu: done
+  1-5-4-dashboard-page: done
+  1-5-5-mobile-responsive-drawer: done
+  1-5-6-appheader-breadcrumb: done
+  epic-1-5-retrospective: optional
+
   # Epic 2: Profil Entreprise & Coffre-fort Documents
-  epic-2: in-progress
+  epic-2: backlog
   2-1-creation-profil-entreprise-de-base: done
   2-2-gestion-informations-legales: backlog
   2-3-gestion-donnees-financieres: backlog
