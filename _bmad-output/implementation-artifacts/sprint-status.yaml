@@ -41,12 +41,12 @@ story_location: _bmad-output/implementation-artifacts
 
 development_status:
   # Epic 0: Project Foundation
-  epic-0: in-progress
+  epic-0: done
   0-1-initialisation-projet-t3: done
   0-2-configuration-shadcn-ui-design-system: done
   0-3-configuration-base-de-donnees-neon: done
   0-4-configuration-services-cloud-upstash-r2: done
-  0-5-setup-deploiement-vercel-ci-cd: backlog
+  0-5-setup-deploiement-vercel-ci-cd: done
   epic-0-retrospective: optional
 
   # Epic 1: Authentification & Gestion Compte
