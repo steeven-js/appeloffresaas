@@ -4,6 +4,8 @@ workflowComplete: true
 inputDocuments:
   - prd.md
   - product-brief-appeloffresaas-2026-01-16.md
+lastRevision: 2026-01-17
+revisionNotes: Added Marketing Pages & Public User Flow (Section 13-14)
 ---
 
 # UX Design Specification appeloffresaas
@@ -1700,3 +1702,371 @@ L'application appeloffresaas est principalement utilisée sur desktop (préparat
 - [ ] Responsive testé sur 3 breakpoints minimum
 - [ ] Touch targets ≥ 44x44px vérifiés
 - [ ] Contrastes validés (texte ≥ 4.5:1)
+
+---
+
+## 13. Marketing Pages & Public User Flow
+
+### 13.1 Public vs Authenticated Experience
+
+**Deux expériences distinctes :**
+
+| Zone | URL Pattern | Layout | Objectif |
+|------|-------------|--------|----------|
+| **Marketing** | `/`, `/pricing`, `/features` | Landing layout (header + footer) | Conversion visiteur → utilisateur |
+| **Application** | `/dashboard`, `/billing`, `/profile/*` | App layout (sidebar 3 colonnes) | Productivité utilisateur |
+
+**Transition clé :**
+```
+Visiteur → Landing Page → Sign Up/Login → Onboarding → Dashboard
+```
+
+### 13.2 Header Navigation (Public)
+
+**Structure :**
+
+```
+┌──────────────────────────────────────────────────────────────────────────┐
+│  [Logo]     Fonctionnalités    Tarifs    Blog*    |  Connexion   [Essai] │
+└──────────────────────────────────────────────────────────────────────────┘
+        ↑              ↑           ↑         ↑            ↑          ↑
+      Home        Scroll/Link   Scroll    Future     /login    /register
+```
+*Blog prévu post-MVP
+
+**Comportement :**
+
+| Élément | Desktop | Mobile |
+|---------|---------|--------|
+| Logo | Cliquable → `/` | Cliquable → `/` |
+| Navigation | Liens horizontaux | Hamburger menu |
+| Connexion | Bouton ghost | Dans menu hamburger |
+| Essai gratuit | Bouton primary | Bouton sticky bottom |
+
+**États du Header :**
+
+- **Default** : Fond transparent sur hero
+- **Scrolled** : Fond `background` + shadow-sm (après 100px scroll)
+- **Mobile menu open** : Overlay plein écran
+
+**Composant : `MarketingHeader`**
+
+```tsx
+// Props
+interface MarketingHeaderProps {
+  transparent?: boolean;  // true sur hero
+  currentPage?: string;   // pour highlight nav active
+}
+
+// Structure
+<header className="fixed top-0 w-full z-50">
+  <nav className="container mx-auto px-4 h-16 flex items-center justify-between">
+    <Logo />
+    <NavLinks />  {/* hidden on mobile */}
+    <div className="flex items-center gap-4">
+      <Button variant="ghost" asChild><Link href="/login">Connexion</Link></Button>
+      <Button asChild><Link href="/register">Essai gratuit</Link></Button>
+    </div>
+    <MobileMenuTrigger />  {/* visible on mobile */}
+  </nav>
+</header>
+```
+
+### 13.3 Landing Page Structure
+
+**URL :** `/`
+
+**Sections (scroll vertical) :**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        HEADER (fixed)                           │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│                          HERO                                   │
+│   "Répondez aux appels d'offres 10x plus vite"                 │
+│   Sous-titre explicatif (1-2 lignes)                           │
+│   [Commencer gratuitement]  [Voir une démo]                    │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                       SOCIAL PROOF                              │
+│   "Utilisé par 500+ entreprises" | Logos clients | Stats       │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│                    FEATURES (3-4 cards)                         │
+│   ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐          │
+│   │ Parsing │  │ Chat IA │  │ Mémoire │  │ Export  │          │
+│   │   RC    │  │Co-pilote│  │Entreprise│ │  1-clic │          │
+│   └─────────┘  └─────────┘  └─────────┘  └─────────┘          │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                      HOW IT WORKS                               │
+│   1. Upload RC  →  2. Chat avec l'IA  →  3. Export dossier     │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│                        PRICING                                  │
+│   ┌─────────┐    ┌─────────┐    ┌─────────┐                   │
+│   │ Gratuit │    │   Pro   │    │Business │                   │
+│   │   0€    │    │  49€/m  │    │ 149€/m  │                   │
+│   │ 1 AO/m  │    │ 10 AO/m │    │Illimité │                   │
+│   └─────────┘    └─────────┘    └─────────┘                   │
+│                                                                 │
+├─────────────────────────────────────────────────────────────────┤
+│                     TESTIMONIALS                                │
+│   "Citation client" — Nom, Entreprise                          │
+├─────────────────────────────────────────────────────────────────┤
+│                       FINAL CTA                                 │
+│   "Prêt à gagner du temps ?"                                   │
+│   [Commencer gratuitement]                                     │
+├─────────────────────────────────────────────────────────────────┤
+│                        FOOTER                                   │
+│   Logo | Liens légaux | Contact | Réseaux sociaux              │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 13.4 Hero Section
+
+**Contenu :**
+
+| Élément | Contenu | Style |
+|---------|---------|-------|
+| **Titre** | "Répondez aux appels d'offres 10x plus vite" | text-4xl md:text-5xl lg:text-6xl font-bold |
+| **Sous-titre** | "L'IA qui analyse vos RC, pose les bonnes questions, et génère des dossiers conformes." | text-xl text-muted-foreground max-w-2xl |
+| **CTA Primary** | "Commencer gratuitement" | Button size="lg" → `/register` |
+| **CTA Secondary** | "Voir une démo" | Button variant="outline" size="lg" → video modal |
+
+**Visual :**
+
+- Background : Gradient subtil ou pattern géométrique
+- Illustration : Screenshot de l'app ou animation du chat IA
+- Responsive : Image masquée sur mobile, texte centré
+
+### 13.5 Features Section
+
+**4 Features clés :**
+
+| Feature | Icône | Titre | Description |
+|---------|-------|-------|-------------|
+| **Parsing RC** | FileSearch | Analyse automatique | Extrait les exigences du RC en 30 secondes |
+| **Chat IA** | MessageSquare | Co-pilote intelligent | Pose les bonnes questions, reformule vos réponses |
+| **Mémoire** | Brain | Zéro re-saisie | Se souvient de votre entreprise d'un AO à l'autre |
+| **Export** | Download | Dossier complet | ZIP conforme prêt à déposer en 1 clic |
+
+**Layout :**
+
+- Desktop : 4 colonnes grid
+- Tablet : 2x2 grid
+- Mobile : Stack vertical
+
+### 13.6 Pricing Section
+
+**Reprise des tiers existants :**
+
+| Plan | Prix | Features clés | CTA |
+|------|------|---------------|-----|
+| **Gratuit** | 0€ | 1 AO/mois, 10 docs | Commencer |
+| **Pro** | 49€/mois | 10 AO/mois, 100 docs, Support prioritaire | Essayer Pro |
+| **Business** | 149€/mois | Illimité, API, Account manager | Contacter |
+
+**Design :**
+
+- Card centrale (Pro) mise en avant : `border-primary`, badge "Populaire"
+- Toggle mensuel/annuel avec réduction affichée
+- Feature comparison en accordéon sous les cards
+
+### 13.7 Footer
+
+**Structure :**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  [Logo]                                                         │
+│  Plateforme IA pour appels d'offres                            │
+│                                                                 │
+│  Produit          Ressources        Légal           Contact    │
+│  - Fonctionnalités - Blog*          - CGU            - Email   │
+│  - Tarifs         - Documentation*  - Confidentialité- Twitter │
+│  - Changelog*     - API*            - Mentions légales         │
+│                                                                 │
+│  ─────────────────────────────────────────────────────────────  │
+│  © 2026 AppelOffre SaaS. Tous droits réservés.                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+*Éléments post-MVP
+
+### 13.8 Authentication Pages Design
+
+**Login Page (`/login`) :**
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│  ← Retour                                                       │
+├─────────────────────────────────────────────────────────────────┤
+│                                                                 │
+│                    [Logo]                                       │
+│                                                                 │
+│              Connexion à votre compte                          │
+│                                                                 │
+│   ┌─────────────────────────────────────────┐                  │
+│   │ Email                                   │                  │
+│   └─────────────────────────────────────────┘                  │
+│   ┌─────────────────────────────────────────┐                  │
+│   │ Mot de passe                       [👁] │                  │
+│   └─────────────────────────────────────────┘                  │
+│                                                                 │
+│   [ ] Se souvenir de moi        Mot de passe oublié ?          │
+│                                                                 │
+│   ┌─────────────────────────────────────────┐                  │
+│   │            Se connecter                  │                  │
+│   └─────────────────────────────────────────┘                  │
+│                                                                 │
+│   ─────────────── ou ───────────────                           │
+│                                                                 │
+│   Pas encore de compte ? Créer un compte                       │
+│                                                                 │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+**Register Page (`/register`) :**
+
+- Même layout que login
+- Champs : Nom, Email, Mot de passe, Confirmation
+- Checkbox CGU obligatoire
+- CTA : "Créer mon compte"
+
+**Pattern visuel (style Neon/Resend) :**
+
+- Split layout sur desktop : illustration gauche (40%) + formulaire droite (60%)
+- Mobile : formulaire seul, illustration en background subtil
+- Fond sombre ou gradient pour la partie illustration
+
+### 13.9 Public → App Transition Flow
+
+**User Journey complet :**
+
+```mermaid
+flowchart TD
+    A[Visiteur arrive sur /] --> B{Déjà connecté?}
+    B -->|Oui| C[Redirect → /dashboard]
+    B -->|Non| D[Voir Landing Page]
+
+    D --> E{Action utilisateur}
+    E -->|CTA "Essai gratuit"| F[/register]
+    E -->|"Connexion"| G[/login]
+    E -->|Scroll| H[Voir sections]
+
+    F --> I[Formulaire inscription]
+    I --> J{Inscription réussie?}
+    J -->|Oui| K[Email vérification envoyé]
+    J -->|Non| I
+
+    K --> L[/verify-email]
+    L --> M{Email vérifié?}
+    M -->|Oui| N[/dashboard + Onboarding]
+    M -->|Non| O[Attente ou renvoyer]
+
+    G --> P[Formulaire connexion]
+    P --> Q{Connexion réussie?}
+    Q -->|Oui| C
+    Q -->|Non| P
+
+    N --> R[Premier AO guidé]
+
+    style A fill:#e3f2fd
+    style C fill:#c8e6c9
+    style N fill:#c8e6c9
+```
+
+### 13.10 Route Protection Strategy
+
+**Middleware de protection :**
+
+| Route Pattern | Comportement | Redirect |
+|---------------|--------------|----------|
+| `/` | Public | - |
+| `/login`, `/register` | Public (redirect si connecté) | → `/dashboard` |
+| `/dashboard/**` | Protégé | → `/login` |
+| `/settings/**` | Protégé | → `/login` |
+| `/billing/**` | Protégé | → `/login` |
+| `/profile/**` | Protégé | → `/login` |
+
+### 13.11 Implementation Components
+
+**Nouveaux composants à créer :**
+
+| Composant | Emplacement | Description |
+|-----------|-------------|-------------|
+| `MarketingHeader` | `components/marketing/` | Header public avec nav |
+| `MarketingFooter` | `components/marketing/` | Footer public |
+| `HeroSection` | `components/marketing/` | Hero de la landing |
+| `FeaturesSection` | `components/marketing/` | Grille features |
+| `PricingSection` | `components/marketing/` | Tableau pricing |
+| `TestimonialsSection` | `components/marketing/` | Carousel témoignages |
+| `CTASection` | `components/marketing/` | CTA final |
+
+**Layouts à créer :**
+
+| Layout | Usage | Structure |
+|--------|-------|-----------|
+| `MarketingLayout` | Pages publiques | Header + children + Footer |
+| `AuthLayout` | Login/Register | Split illustration + form |
+| `AppLayout` | Dashboard, etc. | Sidebar + Header + Main (existant) |
+
+### 13.12 Mobile Navigation (Public)
+
+**Comportement hamburger menu :**
+
+```
+┌─────────────────────────────────────────┐
+│  [Logo]                           [☰]   │
+└─────────────────────────────────────────┘
+                    ↓ (click)
+┌─────────────────────────────────────────┐
+│  [Logo]                           [✕]   │
+├─────────────────────────────────────────┤
+│                                         │
+│     Fonctionnalités                     │
+│     Tarifs                              │
+│     Blog                                │
+│                                         │
+│     ─────────────────────────           │
+│                                         │
+│     Connexion                           │
+│     [    Essai gratuit    ]             │
+│                                         │
+└─────────────────────────────────────────┘
+```
+
+- Animation : slide-in from right ou fade
+- Overlay : backdrop blur + opacity
+- Close : click outside, bouton X, ou navigation
+
+---
+
+## 14. Implementation Priorities Update
+
+### 14.1 Phase 0 : Marketing Foundation (NEW)
+
+**Priorité P0 — Avant toute feature business :**
+
+| Tâche | Composants | Effort |
+|-------|------------|--------|
+| MarketingLayout | Header, Footer | 0.5j |
+| Landing Page | Hero, Features, Pricing, CTA | 1j |
+| Auth Pages Redesign | AuthLayout, Login, Register | 0.5j |
+| Route Protection | Middleware, redirects | 0.25j |
+
+**Total Phase 0 : ~2.25 jours**
+
+### 14.2 Ordre d'implémentation recommandé
+
+1. **MarketingLayout** — Structure de base
+2. **MarketingHeader** — Navigation publique
+3. **MarketingFooter** — Pied de page
+4. **HeroSection** — Impact immédiat
+5. **FeaturesSection** — Value proposition
+6. **PricingSection** — Conversion (réutilise TierComparison)
+7. **AuthLayout** — Pages login/register redesign
+8. **Route protection** — Sécurité des accès
+
+Cette phase doit être complétée avant de continuer les Epics métier (2+).

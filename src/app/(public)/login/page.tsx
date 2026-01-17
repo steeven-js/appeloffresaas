@@ -3,14 +3,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "~/server/auth";
 import { LoginForm } from "~/components/auth/login-form";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
+import { AuthLayout } from "~/components/auth/auth-layout";
 
 export const metadata = {
   title: "Connexion - Appel Offre SaaS",
@@ -26,37 +19,29 @@ export default async function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Connexion</CardTitle>
-          <CardDescription>
-            Entrez vos identifiants pour accéder à votre compte
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <LoginForm />
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <div className="text-center text-sm text-muted-foreground">
-            <Link
-              href="/forgot-password"
-              className="font-medium text-primary underline-offset-4 hover:underline"
-            >
-              Mot de passe oublié ?
-            </Link>
-          </div>
-          <div className="text-center text-sm text-muted-foreground">
-            Pas encore de compte ?{" "}
-            <Link
-              href="/register"
-              className="font-medium text-primary underline-offset-4 hover:underline"
-            >
-              Créer un compte
-            </Link>
-          </div>
-        </CardFooter>
-      </Card>
-    </main>
+    <AuthLayout
+      title="Connexion à votre compte"
+      subtitle="Entrez vos identifiants pour accéder à votre espace"
+    >
+      <LoginForm />
+
+      <div className="mt-6 space-y-4 text-center text-sm">
+        <Link
+          href="/forgot-password"
+          className="text-primary hover:underline underline-offset-4"
+        >
+          Mot de passe oublié ?
+        </Link>
+        <div className="text-muted-foreground">
+          Pas encore de compte ?{" "}
+          <Link
+            href="/register"
+            className="text-primary font-medium hover:underline underline-offset-4"
+          >
+            Créer un compte
+          </Link>
+        </div>
+      </div>
+    </AuthLayout>
   );
 }

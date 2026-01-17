@@ -3,14 +3,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "~/server/auth";
 import { RegisterForm } from "~/components/auth/register-form";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "~/components/ui/card";
+import { AuthLayout } from "~/components/auth/auth-layout";
 
 export const metadata = {
   title: "Créer un compte - Appel Offre SaaS",
@@ -26,29 +19,21 @@ export default async function RegisterPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold">Créer un compte</CardTitle>
-          <CardDescription>
-            Entrez vos informations pour créer votre compte
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <RegisterForm />
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-4">
-          <div className="text-center text-sm text-muted-foreground">
-            Vous avez déjà un compte ?{" "}
-            <Link
-              href="/login"
-              className="font-medium text-primary underline-offset-4 hover:underline"
-            >
-              Se connecter
-            </Link>
-          </div>
-        </CardFooter>
-      </Card>
-    </main>
+    <AuthLayout
+      title="Créer votre compte"
+      subtitle="Commencez gratuitement à préparer vos appels d'offres"
+    >
+      <RegisterForm />
+
+      <div className="mt-6 text-center text-sm text-muted-foreground">
+        Vous avez déjà un compte ?{" "}
+        <Link
+          href="/login"
+          className="text-primary font-medium hover:underline underline-offset-4"
+        >
+          Se connecter
+        </Link>
+      </div>
+    </AuthLayout>
   );
 }
