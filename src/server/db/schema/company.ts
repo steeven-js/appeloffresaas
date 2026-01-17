@@ -1,4 +1,4 @@
-import { timestamp, varchar, text } from "drizzle-orm/pg-core";
+import { timestamp, varchar, text, integer, date } from "drizzle-orm/pg-core";
 import { createTable } from "./helpers";
 import { users } from "./auth";
 import { relations } from "drizzle-orm";
@@ -19,6 +19,12 @@ export const companyProfiles = createTable("company_profiles", {
   // Basic information
   name: varchar("name", { length: 255 }),
   siret: varchar("siret", { length: 14 }),
+  // Legal information (Story 2.2)
+  legalForm: varchar("legal_form", { length: 50 }), // SAS, SARL, SA, EURL, etc.
+  capitalSocial: integer("capital_social"), // Capital in euros
+  nafCode: varchar("naf_code", { length: 10 }), // Code NAF/APE (ex: 6201Z)
+  creationDate: date("creation_date"), // Date de création entreprise
+  rcsCity: varchar("rcs_city", { length: 255 }), // Ville d'immatriculation RCS
   // Address
   address: text("address"),
   city: varchar("city", { length: 255 }),

@@ -17,7 +17,30 @@ import {
   FormLabel,
   FormMessage,
 } from "~/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import { api } from "~/trpc/react";
+
+// Formes juridiques françaises courantes
+const LEGAL_FORMS = [
+  { value: "SAS", label: "SAS - Société par Actions Simplifiée" },
+  { value: "SASU", label: "SASU - SAS Unipersonnelle" },
+  { value: "SARL", label: "SARL - Société à Responsabilité Limitée" },
+  { value: "EURL", label: "EURL - Entreprise Unipersonnelle à RL" },
+  { value: "SA", label: "SA - Société Anonyme" },
+  { value: "SNC", label: "SNC - Société en Nom Collectif" },
+  { value: "EI", label: "EI - Entreprise Individuelle" },
+  { value: "EIRL", label: "EIRL - Entreprise Individuelle à RL" },
+  { value: "AUTO", label: "Auto-entrepreneur / Micro-entreprise" },
+  { value: "SCOP", label: "SCOP - Société Coopérative" },
+  { value: "ASSOCIATION", label: "Association loi 1901" },
+  { value: "OTHER", label: "Autre" },
+] as const;
 
 const companyProfileSchema = z.object({
   name: z.string().max(255, "Le nom ne peut pas dépasser 255 caractères").optional(),
@@ -26,10 +49,22 @@ const companyProfileSchema = z.object({
     .regex(/^(\d{14})?$/, "Le SIRET doit contenir exactement 14 chiffres")
     .optional()
     .or(z.literal("")),
+  // Legal information (Story 2.2)
+  legalForm: z.string().max(50).optional(),
+  capitalSocial: z.coerce.number().int().positive().optional().nullable(),
+  nafCode: z
+    .string()
+    .regex(/^(\d{4}[A-Z])?$/, "Le code NAF doit être au format 1234A")
+    .optional()
+    .or(z.literal("")),
+  creationDate: z.string().optional().nullable(),
+  rcsCity: z.string().max(255).optional(),
+  // Address
   address: z.string().optional(),
   city: z.string().max(255).optional(),
   postalCode: z.string().max(10).optional(),
   country: z.string().max(255).optional(),
+  // Contact
   phone: z.string().max(20).optional(),
   email: z.string().email("Email invalide").optional().or(z.literal("")),
   website: z.string().url("URL invalide").optional().or(z.literal("")),
@@ -47,10 +82,18 @@ export function CompanyProfileForm() {
     defaultValues: {
       name: "",
       siret: "",
+      // Legal information
+      legalForm: "",
+      capitalSocial: null,
+      nafCode: "",
+      creationDate: null,
+      rcsCity: "",
+      // Address
       address: "",
       city: "",
       postalCode: "",
       country: "France",
+      // Contact
       phone: "",
       email: "",
       website: "",
@@ -63,10 +106,18 @@ export function CompanyProfileForm() {
       form.reset({
         name: data.profile.name ?? "",
         siret: data.profile.siret ?? "",
+        // Legal information
+        legalForm: data.profile.legalForm ?? "",
+        capitalSocial: data.profile.capitalSocial ?? null,
+        nafCode: data.profile.nafCode ?? "",
+        creationDate: data.profile.creationDate ?? null,
+        rcsCity: data.profile.rcsCity ?? "",
+        // Address
         address: data.profile.address ?? "",
         city: data.profile.city ?? "",
         postalCode: data.profile.postalCode ?? "",
         country: data.profile.country ?? "France",
+        // Contact
         phone: data.profile.phone ?? "",
         email: data.profile.email ?? "",
         website: data.profile.website ?? "",
@@ -164,6 +215,138 @@ export function CompanyProfileForm() {
                 </FormControl>
                 <FormDescription>
                   14 chiffres sans espaces
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {/* Legal Information Section (Story 2.2) */}
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium">Informations légales</h3>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="legalForm"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Forme juridique</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    value={field.value ?? ""}
+                    disabled={upsertMutation.isPending}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Sélectionner..." />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {LEGAL_FORMS.map((form) => (
+                        <SelectItem key={form.value} value={form.value}>
+                          {form.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="capitalSocial"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Capital social (€)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="10000"
+                      disabled={upsertMutation.isPending}
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        field.onChange(value === "" ? null : parseInt(value, 10));
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <FormField
+              control={form.control}
+              name="nafCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Code NAF/APE</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="6201Z"
+                      maxLength={5}
+                      disabled={upsertMutation.isPending}
+                      {...field}
+                      onChange={(e) => {
+                        // Force uppercase for the letter
+                        field.onChange(e.target.value.toUpperCase());
+                      }}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Format: 4 chiffres + 1 lettre
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="creationDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Date de création</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      disabled={upsertMutation.isPending}
+                      {...field}
+                      value={field.value ?? ""}
+                      onChange={(e) => {
+                        field.onChange(e.target.value || null);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <FormField
+            control={form.control}
+            name="rcsCity"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Ville d&apos;immatriculation RCS</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Paris"
+                    disabled={upsertMutation.isPending}
+                    {...field}
+                    value={field.value ?? ""}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Ville du registre du commerce et des sociétés
                 </FormDescription>
                 <FormMessage />
               </FormItem>

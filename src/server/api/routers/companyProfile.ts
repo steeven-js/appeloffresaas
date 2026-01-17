@@ -15,15 +15,32 @@ const siretSchema = z
   .or(z.literal(""));
 
 /**
+ * NAF code validation regex - format like 6201Z
+ */
+const nafCodeSchema = z
+  .string()
+  .regex(/^(\d{4}[A-Z])?$/, "Le code NAF doit être au format 1234A")
+  .optional()
+  .or(z.literal(""));
+
+/**
  * Company profile input schema
  */
 const companyProfileSchema = z.object({
   name: z.string().max(255).optional(),
   siret: siretSchema,
+  // Legal information (Story 2.2)
+  legalForm: z.string().max(50).optional(),
+  capitalSocial: z.number().int().positive().optional().nullable(),
+  nafCode: nafCodeSchema,
+  creationDate: z.string().optional().nullable(), // ISO date string
+  rcsCity: z.string().max(255).optional(),
+  // Address
   address: z.string().optional(),
   city: z.string().max(255).optional(),
   postalCode: z.string().max(10).optional(),
   country: z.string().max(255).optional(),
+  // Contact
   phone: z.string().max(20).optional(),
   email: z.string().email("Email invalide").max(255).optional().or(z.literal("")),
   website: z.string().url("URL invalide").max(255).optional().or(z.literal("")),
@@ -35,6 +52,11 @@ const companyProfileSchema = z.object({
 function calculateCompleteness(profile: {
   name?: string | null;
   siret?: string | null;
+  legalForm?: string | null;
+  capitalSocial?: number | null;
+  nafCode?: string | null;
+  creationDate?: string | null;
+  rcsCity?: string | null;
   address?: string | null;
   city?: string | null;
   postalCode?: string | null;
@@ -44,11 +66,12 @@ function calculateCompleteness(profile: {
 }): number {
   let score = 0;
   const weights = {
-    name: 20,
-    siret: 20,
-    addressComplete: 30, // address + city + postalCode
+    name: 15,
+    siret: 15,
+    legalInfo: 20, // legalForm + capitalSocial + nafCode + creationDate
+    addressComplete: 25, // address + city + postalCode
     contact: 15, // phone or email
-    website: 15,
+    website: 10,
   };
 
   if (profile.name?.trim()) {
@@ -58,6 +81,16 @@ function calculateCompleteness(profile: {
   if (profile.siret?.trim()) {
     score += weights.siret;
   }
+
+  // Legal info completeness (Story 2.2)
+  const legalFields = [
+    profile.legalForm,
+    profile.capitalSocial != null ? String(profile.capitalSocial) : null,
+    profile.nafCode,
+    profile.creationDate,
+  ];
+  const filledLegalFields = legalFields.filter((f) => f && String(f).trim()).length;
+  score += Math.round((filledLegalFields / 4) * weights.legalInfo);
 
   // Address completeness (all three fields required for full points)
   const addressFields = [profile.address, profile.city, profile.postalCode];
@@ -111,10 +144,18 @@ export const companyProfileRouter = createTRPCRouter({
       const cleanInput = {
         name: input.name?.trim() ? input.name.trim() : null,
         siret: input.siret?.trim() ? input.siret.trim() : null,
+        // Legal information (Story 2.2)
+        legalForm: input.legalForm?.trim() ? input.legalForm.trim() : null,
+        capitalSocial: input.capitalSocial ?? null,
+        nafCode: input.nafCode?.trim() ? input.nafCode.trim() : null,
+        creationDate: input.creationDate ?? null,
+        rcsCity: input.rcsCity?.trim() ? input.rcsCity.trim() : null,
+        // Address
         address: input.address?.trim() ? input.address.trim() : null,
         city: input.city?.trim() ? input.city.trim() : null,
         postalCode: input.postalCode?.trim() ? input.postalCode.trim() : null,
         country: input.country?.trim() ? input.country.trim() : null,
+        // Contact
         phone: input.phone?.trim() ? input.phone.trim() : null,
         email: input.email?.trim() ? input.email.trim() : null,
         website: input.website?.trim() ? input.website.trim() : null,
