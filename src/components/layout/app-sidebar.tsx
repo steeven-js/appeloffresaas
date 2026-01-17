@@ -39,12 +39,34 @@ export function AppSidebar() {
     return pathname.startsWith(href);
   };
 
+  const toggleButton = (
+    <Tooltip delayDuration={0}>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={toggle}
+          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+        >
+          {isCollapsed ? (
+            <PanelLeft className="h-4 w-4" />
+          ) : (
+            <PanelLeftClose className="h-4 w-4" />
+          )}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent side="right">
+        {isCollapsed ? "Développer" : "Réduire"}
+      </TooltipContent>
+    </Tooltip>
+  );
+
   return (
     <div className="flex flex-col h-full">
-      {/* Logo */}
+      {/* Header with Logo and Toggle */}
       <div className={cn(
         "h-16 flex items-center border-b",
-        isCollapsed ? "justify-center px-2" : "px-6"
+        isCollapsed ? "flex-col justify-center gap-1 px-2 py-2" : "justify-between px-4"
       )}>
         <Link href="/dashboard" className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
@@ -54,6 +76,8 @@ export function AppSidebar() {
             <span className="font-semibold text-lg">AppelOffre</span>
           )}
         </Link>
+        {isCollapsed && <div className="w-full border-t my-1" />}
+        {toggleButton}
       </div>
 
       {/* Navigation */}
@@ -95,31 +119,6 @@ export function AppSidebar() {
           return <div key={item.href}>{linkContent}</div>;
         })}
       </nav>
-
-      {/* Toggle button */}
-      <div className={cn(
-        "border-t",
-        isCollapsed ? "p-2" : "p-4"
-      )}>
-        <Button
-          variant="ghost"
-          size={isCollapsed ? "icon" : "sm"}
-          onClick={toggle}
-          className={cn(
-            "text-muted-foreground hover:text-foreground",
-            isCollapsed ? "w-full" : "w-full justify-start gap-3"
-          )}
-        >
-          {isCollapsed ? (
-            <PanelLeft className="h-5 w-5" />
-          ) : (
-            <>
-              <PanelLeftClose className="h-5 w-5" />
-              <span>Réduire</span>
-            </>
-          )}
-        </Button>
-      </div>
     </div>
   );
 }
