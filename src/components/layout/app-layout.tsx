@@ -1,8 +1,4 @@
-"use client";
-
 import { AppHeader } from "./app-header";
-import { useSidebar } from "./sidebar-context";
-import { cn } from "~/lib/utils";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -11,8 +7,6 @@ interface AppLayoutProps {
 }
 
 export function AppLayout({ children, sidebar, mobileHeader }: AppLayoutProps) {
-  const { isCollapsed } = useSidebar();
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Mobile header - visible only on mobile */}
@@ -26,12 +20,7 @@ export function AppLayout({ children, sidebar, mobileHeader }: AppLayoutProps) {
       <div className="flex-1 flex">
         {/* Sidebar - hidden on mobile, visible on lg+ */}
         {sidebar && (
-          <aside
-            className={cn(
-              "hidden lg:flex flex-col border-r bg-muted/30 transition-all duration-300",
-              isCollapsed ? "w-[68px]" : "w-[280px]"
-            )}
-          >
+          <aside className="hidden lg:flex w-[280px] flex-col border-r bg-muted/30">
             {sidebar}
           </aside>
         )}
