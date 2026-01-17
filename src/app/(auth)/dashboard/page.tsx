@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "~/server/auth";
 import { Button } from "~/components/ui/button";
+import { LogoutButton } from "~/components/auth/logout-button";
 import {
   Card,
   CardContent,
@@ -51,11 +52,7 @@ export default async function DashboardPage() {
               <Button variant="outline" disabled>
                 Créer mon profil entreprise (bientôt)
               </Button>
-              <form action="/api/auth/signout" method="POST">
-                <Button type="submit" variant="ghost">
-                  Se déconnecter
-                </Button>
-              </form>
+              <LogoutButton />
             </div>
           </CardContent>
         </Card>
