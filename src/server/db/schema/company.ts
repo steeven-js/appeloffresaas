@@ -1,4 +1,4 @@
-import { timestamp, varchar, text, integer, date } from "drizzle-orm/pg-core";
+import { timestamp, varchar, text, integer, date, bigint, uniqueIndex } from "drizzle-orm/pg-core";
 import { createTable } from "./helpers";
 import { users } from "./auth";
 import { relations } from "drizzle-orm";
@@ -44,12 +44,57 @@ export const companyProfiles = createTable("company_profiles", {
 });
 
 /**
+ * Financial Data table - stores yearly financial information (Story 2.3)
+ * One-to-many relationship: one company profile can have multiple years of data
+ */
+export const companyFinancialData = createTable(
+  "company_financial_data",
+  {
+    id: varchar("id", { length: 255 })
+      .notNull()
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    companyProfileId: varchar("company_profile_id", { length: 255 })
+      .notNull()
+      .references(() => companyProfiles.id, { onDelete: "cascade" }),
+    // Year for this financial data
+    year: integer("year").notNull(),
+    // Financial metrics
+    revenue: bigint("revenue", { mode: "number" }), // Chiffre d'affaires in euros
+    netIncome: bigint("net_income", { mode: "number" }), // Résultat net in euros
+    employeeCount: integer("employee_count"), // Effectif
+    // Timestamps
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [
+    // Unique constraint: one record per year per company
+    uniqueIndex("company_year_unique_idx").on(table.companyProfileId, table.year),
+  ]
+);
+
+/**
  * Relations for company profiles
  */
-export const companyProfilesRelations = relations(companyProfiles, ({ one }) => ({
+export const companyProfilesRelations = relations(companyProfiles, ({ one, many }) => ({
   user: one(users, {
     fields: [companyProfiles.userId],
     references: [users.id],
+  }),
+  financialData: many(companyFinancialData),
+}));
+
+/**
+ * Relations for financial data
+ */
+export const companyFinancialDataRelations = relations(companyFinancialData, ({ one }) => ({
+  companyProfile: one(companyProfiles, {
+    fields: [companyFinancialData.companyProfileId],
+    references: [companyProfiles.id],
   }),
 }));
 
@@ -58,3 +103,9 @@ export const companyProfilesRelations = relations(companyProfiles, ({ one }) => 
  */
 export type CompanyProfile = typeof companyProfiles.$inferSelect;
 export type NewCompanyProfile = typeof companyProfiles.$inferInsert;
+
+/**
+ * Type exports for financial data
+ */
+export type CompanyFinancialData = typeof companyFinancialData.$inferSelect;
+export type NewCompanyFinancialData = typeof companyFinancialData.$inferInsert;

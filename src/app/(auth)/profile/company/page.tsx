@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import { auth } from "~/server/auth";
 import { CompanyProfileForm } from "~/components/company/company-profile-form";
+import { FinancialDataForm } from "~/components/company/financial-data-form";
 import {
   Card,
   CardContent,
@@ -48,6 +49,18 @@ export default async function CompanyProfilePage() {
           </CardHeader>
           <CardContent>
             <CompanyProfileForm />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Données financières</CardTitle>
+            <CardDescription>
+              Chiffre d&apos;affaires, résultat et effectifs des dernières années
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <FinancialDataForm />
           </CardContent>
         </Card>
       </div>
