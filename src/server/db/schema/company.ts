@@ -151,6 +151,49 @@ export const companyTeamMembers = createTable("company_team_members", {
 });
 
 /**
+ * Project References table - stores company project references (Story 2.6)
+ * One-to-many relationship: one company profile can have multiple project references
+ */
+export const companyProjectReferences = createTable("company_project_references", {
+  id: varchar("id", { length: 255 })
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  companyProfileId: varchar("company_profile_id", { length: 255 })
+    .notNull()
+    .references(() => companyProfiles.id, { onDelete: "cascade" }),
+  // Project information
+  projectName: varchar("project_name", { length: 255 }).notNull(),
+  clientName: varchar("client_name", { length: 255 }).notNull(),
+  clientType: varchar("client_type", { length: 50 }), // public, private
+  // Project details
+  sector: varchar("sector", { length: 100 }), // BTP, IT, Services, Conseil, etc.
+  description: text("description"),
+  // Financial
+  amount: bigint("amount", { mode: "number" }), // Montant du projet en euros
+  // Dates
+  startDate: date("start_date"),
+  endDate: date("end_date"),
+  // Location
+  location: varchar("location", { length: 255 }), // Ville ou région
+  // Contact reference
+  contactName: varchar("contact_name", { length: 255 }),
+  contactEmail: varchar("contact_email", { length: 255 }),
+  contactPhone: varchar("contact_phone", { length: 20 }),
+  // Status and visibility
+  isHighlight: integer("is_highlight").default(0), // 1 = highlighted reference for tender responses
+  // Tags for categorization (stored as JSON array)
+  tags: text("tags"), // JSON array of tags
+  // Timestamps
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/**
  * Relations for company profiles
  */
 export const companyProfilesRelations = relations(companyProfiles, ({ one, many }) => ({
@@ -161,6 +204,7 @@ export const companyProfilesRelations = relations(companyProfiles, ({ one, many 
   financialData: many(companyFinancialData),
   certifications: many(companyCertifications),
   teamMembers: many(companyTeamMembers),
+  projectReferences: many(companyProjectReferences),
 }));
 
 /**
@@ -194,6 +238,16 @@ export const companyTeamMembersRelations = relations(companyTeamMembers, ({ one 
 }));
 
 /**
+ * Relations for project references
+ */
+export const companyProjectReferencesRelations = relations(companyProjectReferences, ({ one }) => ({
+  companyProfile: one(companyProfiles, {
+    fields: [companyProjectReferences.companyProfileId],
+    references: [companyProfiles.id],
+  }),
+}));
+
+/**
  * Type exports for company profiles
  */
 export type CompanyProfile = typeof companyProfiles.$inferSelect;
@@ -216,3 +270,9 @@ export type NewCompanyCertification = typeof companyCertifications.$inferInsert;
  */
 export type CompanyTeamMember = typeof companyTeamMembers.$inferSelect;
 export type NewCompanyTeamMember = typeof companyTeamMembers.$inferInsert;
+
+/**
+ * Type exports for project references
+ */
+export type CompanyProjectReference = typeof companyProjectReferences.$inferSelect;
+export type NewCompanyProjectReference = typeof companyProjectReferences.$inferInsert;

@@ -6,6 +6,7 @@ import { CompanyProfileForm } from "~/components/company/company-profile-form";
 import { FinancialDataForm } from "~/components/company/financial-data-form";
 import { CertificationsForm } from "~/components/company/certifications-form";
 import { TeamMembersForm } from "~/components/company/team-members-form";
+import { ProjectReferencesForm } from "~/components/company/project-references-form";
 import {
   Card,
   CardContent,
@@ -87,6 +88,18 @@ export default async function CompanyProfilePage() {
           </CardHeader>
           <CardContent>
             <TeamMembersForm />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Références Projets</CardTitle>
+            <CardDescription>
+              Vos réalisations passées à présenter dans les appels d&apos;offres
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ProjectReferencesForm />
           </CardContent>
         </Card>
       </div>
