@@ -1,6 +1,8 @@
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
 
+import { env } from "~/env";
+
 /**
  * Module augmentation for `next-auth` types. Allows us to add custom properties to the `session`
  * object and keep type safety.
@@ -29,7 +31,15 @@ declare module "next-auth" {
  */
 export const authConfig = {
   providers: [
-    DiscordProvider,
+    // Only add Discord provider if credentials are configured
+    ...(env.AUTH_DISCORD_ID && env.AUTH_DISCORD_SECRET
+      ? [
+          DiscordProvider({
+            clientId: env.AUTH_DISCORD_ID,
+            clientSecret: env.AUTH_DISCORD_SECRET,
+          }),
+        ]
+      : []),
     /**
      * ...add more providers here.
      *
