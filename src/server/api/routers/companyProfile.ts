@@ -3,7 +3,13 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { companyProfiles } from "~/server/db/schema";
+import {
+  companyProfiles,
+  companyFinancialData,
+  companyCertifications,
+  companyTeamMembers,
+  companyProjectReferences,
+} from "~/server/db/schema";
 
 /**
  * SIRET validation regex - exactly 14 digits
@@ -110,6 +116,17 @@ function calculateCompleteness(profile: {
 }
 
 /**
+ * Profile section definition for completeness tracking
+ */
+interface ProfileSection {
+  id: string;
+  name: string;
+  weight: number;
+  complete: boolean;
+  suggestions: string[];
+}
+
+/**
  * Company Profile router
  */
 export const companyProfileRouter = createTRPCRouter({
@@ -131,6 +148,186 @@ export const companyProfileRouter = createTRPCRouter({
     return {
       profile,
       completeness: calculateCompleteness(profile),
+    };
+  }),
+
+  /**
+   * Get comprehensive profile completeness (Story 2.7)
+   * Includes all related data: financial, certifications, team, references
+   */
+  getCompleteness: protectedProcedure.query(async ({ ctx }) => {
+    // Get the company profile
+    const profile = await ctx.db.query.companyProfiles.findFirst({
+      where: eq(companyProfiles.userId, ctx.session.user.id),
+    });
+
+    if (!profile) {
+      return {
+        totalScore: 0,
+        sections: [] as ProfileSection[],
+        suggestions: [
+          "Créez votre profil entreprise",
+          "Ajoutez vos informations de base (nom, SIRET)",
+        ],
+      };
+    }
+
+    // Fetch related data in parallel
+    const [financialData, certifications, teamMembers, projectRefs] = await Promise.all([
+      ctx.db.query.companyFinancialData.findMany({
+        where: eq(companyFinancialData.companyProfileId, profile.id),
+      }),
+      ctx.db.query.companyCertifications.findMany({
+        where: eq(companyCertifications.companyProfileId, profile.id),
+      }),
+      ctx.db.query.companyTeamMembers.findMany({
+        where: eq(companyTeamMembers.companyProfileId, profile.id),
+      }),
+      ctx.db.query.companyProjectReferences.findMany({
+        where: eq(companyProjectReferences.companyProfileId, profile.id),
+      }),
+    ]);
+
+    // Calculate section scores
+    const sections: ProfileSection[] = [];
+
+    // 1. Basic info (20%)
+    const hasBasicInfo = !!(profile.name && profile.siret);
+    const basicSuggestions: string[] = [];
+    if (!profile.name) basicSuggestions.push("Ajoutez le nom de votre entreprise");
+    if (!profile.siret) basicSuggestions.push("Ajoutez votre numéro SIRET");
+    sections.push({
+      id: "basic",
+      name: "Informations de base",
+      weight: 20,
+      complete: hasBasicInfo,
+      suggestions: basicSuggestions,
+    });
+
+    // 2. Legal info (15%)
+    const legalFields = [profile.legalForm, profile.capitalSocial, profile.nafCode, profile.creationDate];
+    const legalComplete = legalFields.filter(Boolean).length;
+    const hasLegalInfo = legalComplete >= 3;
+    const legalSuggestions: string[] = [];
+    if (!profile.legalForm) legalSuggestions.push("Ajoutez la forme juridique");
+    if (!profile.capitalSocial) legalSuggestions.push("Ajoutez le capital social");
+    if (!profile.nafCode) legalSuggestions.push("Ajoutez le code NAF");
+    if (!profile.creationDate) legalSuggestions.push("Ajoutez la date de création");
+    sections.push({
+      id: "legal",
+      name: "Informations légales",
+      weight: 15,
+      complete: hasLegalInfo,
+      suggestions: legalSuggestions,
+    });
+
+    // 3. Address (10%)
+    const hasAddress = !!(profile.address && profile.city && profile.postalCode);
+    const addressSuggestions: string[] = [];
+    if (!profile.address) addressSuggestions.push("Ajoutez l'adresse");
+    if (!profile.city) addressSuggestions.push("Ajoutez la ville");
+    if (!profile.postalCode) addressSuggestions.push("Ajoutez le code postal");
+    sections.push({
+      id: "address",
+      name: "Adresse",
+      weight: 10,
+      complete: hasAddress,
+      suggestions: addressSuggestions,
+    });
+
+    // 4. Contact (10%)
+    const hasContact = !!(profile.phone ?? profile.email);
+    const contactSuggestions: string[] = [];
+    if (!profile.phone && !profile.email) contactSuggestions.push("Ajoutez un téléphone ou email de contact");
+    sections.push({
+      id: "contact",
+      name: "Contact",
+      weight: 10,
+      complete: hasContact,
+      suggestions: contactSuggestions,
+    });
+
+    // 5. Financial data (15%)
+    const hasFinancialData = financialData.length >= 1;
+    const financialSuggestions: string[] = [];
+    if (financialData.length === 0) {
+      financialSuggestions.push("Ajoutez vos données financières (CA, effectif)");
+    } else if (financialData.length < 3) {
+      financialSuggestions.push("Complétez les données financières des 3 dernières années");
+    }
+    sections.push({
+      id: "financial",
+      name: "Données financières",
+      weight: 15,
+      complete: hasFinancialData,
+      suggestions: financialSuggestions,
+    });
+
+    // 6. Certifications (10%)
+    const hasCertifications = certifications.length >= 1;
+    const certSuggestions: string[] = [];
+    if (certifications.length === 0) {
+      certSuggestions.push("Ajoutez vos certifications et qualifications");
+    }
+    sections.push({
+      id: "certifications",
+      name: "Certifications",
+      weight: 10,
+      complete: hasCertifications,
+      suggestions: certSuggestions,
+    });
+
+    // 7. Team members (10%)
+    const hasTeamMembers = teamMembers.length >= 1;
+    const teamSuggestions: string[] = [];
+    if (teamMembers.length === 0) {
+      teamSuggestions.push("Ajoutez les membres clés de votre équipe");
+    }
+    sections.push({
+      id: "team",
+      name: "Équipe",
+      weight: 10,
+      complete: hasTeamMembers,
+      suggestions: teamSuggestions,
+    });
+
+    // 8. Project references (10%)
+    const hasProjectRefs = projectRefs.length >= 1;
+    const refSuggestions: string[] = [];
+    if (projectRefs.length === 0) {
+      refSuggestions.push("Ajoutez vos références de projets");
+    } else if (projectRefs.length < 3) {
+      refSuggestions.push("Ajoutez plus de références pour renforcer votre profil");
+    }
+    sections.push({
+      id: "references",
+      name: "Références projets",
+      weight: 10,
+      complete: hasProjectRefs,
+      suggestions: refSuggestions,
+    });
+
+    // Calculate total score
+    const totalScore = sections.reduce((sum, section) => {
+      return sum + (section.complete ? section.weight : 0);
+    }, 0);
+
+    // Collect all suggestions (prioritize incomplete sections)
+    const allSuggestions = sections
+      .filter((s) => !s.complete)
+      .flatMap((s) => s.suggestions)
+      .slice(0, 5); // Limit to 5 suggestions
+
+    return {
+      totalScore,
+      sections,
+      suggestions: allSuggestions,
+      counts: {
+        financialYears: financialData.length,
+        certifications: certifications.length,
+        teamMembers: teamMembers.length,
+        projectReferences: projectRefs.length,
+      },
     };
   }),
 
