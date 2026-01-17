@@ -138,3 +138,41 @@ export async function sendEmailChangeVerification(
     `.trim(),
   });
 }
+
+export async function sendAccountDeletionConfirmation(
+  email: string
+): Promise<void> {
+  await sendEmail({
+    to: email,
+    subject: "Confirmation de suppression de compte - Appel Offre SaaS",
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">Compte supprimé</h1>
+
+  <p>Bonjour,</p>
+
+  <p>Nous vous confirmons que votre compte Appel Offre SaaS a été supprimé avec succès.</p>
+
+  <p>Toutes vos données personnelles ont été définitivement effacées conformément au RGPD.</p>
+
+  <p style="color: #666; font-size: 14px; margin-top: 24px;">
+    Si vous n'êtes pas à l'origine de cette suppression, veuillez nous contacter immédiatement.
+  </p>
+
+  <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;">
+
+  <p style="color: #999; font-size: 12px;">
+    Cet email a été envoyé automatiquement par Appel Offre SaaS.<br>
+    Merci d'avoir utilisé notre service.
+  </p>
+</body>
+</html>
+    `.trim(),
+  });
+}

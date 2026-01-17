@@ -225,4 +225,89 @@ export const userRouter = createTRPCRouter({
 
       return { success: true, newEmail: changeToken.newEmail };
     }),
+
+  /**
+   * Delete user account (RGPD right to erasure)
+   * Requires password confirmation for security
+   */
+  deleteAccount: protectedProcedure
+    .input(
+      z.object({
+        password: z.string().min(1, "Le mot de passe est requis"),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { password } = input;
+
+      const { eq } = await import("drizzle-orm");
+      const { compare } = await import("bcryptjs");
+      const { users, sessions, accounts, emailChangeTokens, passwordResetTokens } =
+        await import("~/server/db/schema");
+      const { sendAccountDeletionConfirmation } = await import(
+        "~/server/services/email/resend"
+      );
+
+      // Get user with password
+      const user = await ctx.db.query.users.findFirst({
+        where: eq(users.id, ctx.session.user.id),
+      });
+
+      if (!user) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Utilisateur non trouvé",
+        });
+      }
+
+      if (!user.password) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message:
+            "Votre compte a été créé via une connexion sociale. Veuillez d'abord définir un mot de passe dans les paramètres de votre compte.",
+        });
+      }
+
+      // Verify password
+      const isValidPassword = await compare(password, user.password);
+      if (!isValidPassword) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Mot de passe incorrect",
+        });
+      }
+
+      const userEmail = user.email;
+
+      // Delete all related data in a transaction for data integrity
+      await ctx.db.transaction(async (tx) => {
+        // 1. Delete email change tokens
+        await tx
+          .delete(emailChangeTokens)
+          .where(eq(emailChangeTokens.userId, user.id));
+
+        // 2. Delete password reset tokens
+        await tx
+          .delete(passwordResetTokens)
+          .where(eq(passwordResetTokens.userId, user.id));
+
+        // 3. Delete sessions
+        await tx.delete(sessions).where(eq(sessions.userId, user.id));
+
+        // 4. Delete accounts (OAuth)
+        await tx.delete(accounts).where(eq(accounts.userId, user.id));
+
+        // 5. Delete user (this will cascade to any remaining related data)
+        await tx.delete(users).where(eq(users.id, user.id));
+      });
+
+      // Send confirmation email (outside transaction - non-critical)
+      try {
+        await sendAccountDeletionConfirmation(userEmail);
+      } catch (error) {
+        console.error("Failed to send account deletion confirmation:", error);
+        // Don't fail the deletion if email fails
+      }
+
+      return { success: true };
+    }),
 });

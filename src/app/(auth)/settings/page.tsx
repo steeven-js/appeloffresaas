@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "~/server/auth";
 import { ProfileForm } from "~/components/settings/profile-form";
 import { EmailChangeForm } from "~/components/settings/email-change-form";
+import { DeleteAccountDialog } from "~/components/settings/delete-account-dialog";
 import {
   Card,
   CardContent,
@@ -61,6 +62,24 @@ export default async function SettingsPage() {
           </CardHeader>
           <CardContent>
             <EmailChangeForm currentEmail={session.user.email ?? ""} />
+          </CardContent>
+        </Card>
+
+        <Card className="border-destructive">
+          <CardHeader>
+            <CardTitle className="text-destructive">Zone de danger</CardTitle>
+            <CardDescription>
+              Actions irréversibles sur votre compte
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                La suppression de votre compte est définitive et irréversible.
+                Toutes vos données seront supprimées conformément au RGPD.
+              </p>
+              <DeleteAccountDialog />
+            </div>
           </CardContent>
         </Card>
       </div>
