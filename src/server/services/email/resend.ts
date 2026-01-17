@@ -176,3 +176,95 @@ export async function sendAccountDeletionConfirmation(
     `.trim(),
   });
 }
+
+export async function sendSubscriptionConfirmation(
+  email: string,
+  tierName: string,
+  priceMonthly: number,
+  billingUrl: string
+): Promise<void> {
+  await sendEmail({
+    to: email,
+    subject: `Bienvenue sur ${tierName} - Appel Offre SaaS`,
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">Merci pour votre abonnement !</h1>
+
+  <p>Bonjour,</p>
+
+  <p>Votre abonnement <strong>${tierName}</strong> est maintenant actif.</p>
+
+  <div style="background-color: #f7f7f7; padding: 20px; border-radius: 8px; margin: 24px 0;">
+    <p style="margin: 0; font-size: 18px; color: #1a1a1a;">
+      <strong>${priceMonthly}€/mois</strong>
+    </p>
+    <p style="margin: 8px 0 0 0; color: #666; font-size: 14px;">
+      Votre facture sera disponible dans votre espace de facturation.
+    </p>
+  </div>
+
+  <p>Vous pouvez maintenant profiter de toutes les fonctionnalités de votre formule ${tierName}.</p>
+
+  <p style="margin: 32px 0;">
+    <a href="${billingUrl}"
+       style="background-color: #0070f3; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; font-weight: 500;">
+      Voir mon abonnement
+    </a>
+  </p>
+
+  <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;">
+
+  <p style="color: #999; font-size: 12px;">
+    Cet email a été envoyé automatiquement par Appel Offre SaaS.<br>
+    Si vous avez des questions, contactez notre support.
+  </p>
+</body>
+</html>
+    `.trim(),
+  });
+}
+
+export async function sendSubscriptionCanceled(
+  email: string,
+  tierName: string
+): Promise<void> {
+  await sendEmail({
+    to: email,
+    subject: "Votre abonnement a été annulé - Appel Offre SaaS",
+    html: `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h1 style="color: #1a1a1a; font-size: 24px; margin-bottom: 24px;">Abonnement annulé</h1>
+
+  <p>Bonjour,</p>
+
+  <p>Nous vous confirmons que votre abonnement <strong>${tierName}</strong> a été annulé.</p>
+
+  <p>Votre compte est maintenant sur la formule <strong>Gratuit</strong>. Vous pouvez continuer à utiliser les fonctionnalités de base.</p>
+
+  <p style="color: #666; font-size: 14px; margin-top: 24px;">
+    Vous pouvez réactiver votre abonnement à tout moment depuis votre espace de facturation.
+  </p>
+
+  <hr style="border: none; border-top: 1px solid #eee; margin: 32px 0;">
+
+  <p style="color: #999; font-size: 12px;">
+    Cet email a été envoyé automatiquement par Appel Offre SaaS.<br>
+    Si vous avez des questions, contactez notre support.
+  </p>
+</body>
+</html>
+    `.trim(),
+  });
+}

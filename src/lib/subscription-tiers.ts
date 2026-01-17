@@ -1,3 +1,5 @@
+import { env } from "~/env";
+
 /**
  * Subscription tier definitions and limits
  * Used for displaying tier info and enforcing limits
@@ -148,4 +150,39 @@ export function getUsagePercentage(
  */
 export function formatLimit(value: number | null): string {
   return value === null ? "Illimité" : value.toString();
+}
+
+/**
+ * Stripe price ID mapping
+ * Maps subscription tiers to their Stripe price IDs
+ */
+export function getStripePriceId(tier: SubscriptionTier): string | null {
+  switch (tier) {
+    case "PRO":
+      return env.STRIPE_PRO_PRICE_ID ?? null;
+    case "BUSINESS":
+      return env.STRIPE_BUSINESS_PRICE_ID ?? null;
+    default:
+      return null;
+  }
+}
+
+/**
+ * Get subscription tier from Stripe price ID
+ */
+export function getTierFromPriceId(priceId: string): SubscriptionTier {
+  if (priceId === env.STRIPE_PRO_PRICE_ID) {
+    return "PRO";
+  }
+  if (priceId === env.STRIPE_BUSINESS_PRICE_ID) {
+    return "BUSINESS";
+  }
+  return "FREE";
+}
+
+/**
+ * Check if tier upgrade requires payment
+ */
+export function requiresPayment(tier: SubscriptionTier): boolean {
+  return tier !== "FREE";
 }

@@ -36,6 +36,13 @@ export const users = createTable("users", {
   subscriptionTier: subscriptionTierEnum("subscription_tier")
     .default("FREE")
     .notNull(),
+  // Stripe subscription fields
+  stripeCustomerId: varchar("stripe_customer_id", { length: 255 }),
+  stripeSubscriptionId: varchar("stripe_subscription_id", { length: 255 }),
+  stripePriceId: varchar("stripe_price_id", { length: 255 }),
+  stripeCurrentPeriodEnd: timestamp("stripe_current_period_end", {
+    withTimezone: true,
+  }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

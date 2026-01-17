@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import {
   Card,
@@ -21,13 +22,53 @@ import {
   formatLimit,
   type SubscriptionTier,
 } from "~/lib/subscription-tiers";
+import { api } from "~/trpc/react";
 
 interface TierComparisonProps {
   currentTier: SubscriptionTier;
+  hasActiveSubscription?: boolean;
 }
 
-export function TierComparison({ currentTier }: TierComparisonProps) {
+export function TierComparison({
+  currentTier,
+  hasActiveSubscription = false,
+}: TierComparisonProps) {
   const tiers = Object.values(TIER_DEFINITIONS);
+  const [loadingTier, setLoadingTier] = useState<SubscriptionTier | null>(null);
+
+  const createCheckoutSession = api.billing.createCheckoutSession.useMutation({
+    onSuccess: (data) => {
+      // Redirect to Stripe Checkout
+      window.location.href = data.url;
+    },
+    onError: (error) => {
+      console.error("Checkout error:", error);
+      alert(error.message);
+      setLoadingTier(null);
+    },
+  });
+
+  const createPortalSession = api.billing.createPortalSession.useMutation({
+    onSuccess: (data) => {
+      // Redirect to Stripe Customer Portal
+      window.location.href = data.url;
+    },
+    onError: (error) => {
+      console.error("Portal error:", error);
+      alert(error.message);
+      setLoadingTier(null);
+    },
+  });
+
+  const handleUpgrade = (tier: "PRO" | "BUSINESS") => {
+    setLoadingTier(tier);
+    createCheckoutSession.mutate({ tier });
+  };
+
+  const handleManageSubscription = () => {
+    setLoadingTier(currentTier);
+    createPortalSession.mutate();
+  };
 
   const features = [
     { key: "projects", label: "Projets AO / mois" },
@@ -96,40 +137,56 @@ export function TierComparison({ currentTier }: TierComparisonProps) {
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead className="w-[200px]">Fonctionnalité</TableHead>
-              {tiers.map((tier) => (
-                <TableHead
-                  key={tier.id}
-                  className={`text-center ${
-                    tier.id === currentTier
-                      ? "bg-primary/5 dark:bg-primary/10"
-                      : ""
-                  }`}
-                >
-                  <div className="space-y-1">
-                    <div className="font-semibold">{tier.name}</div>
-                    <div className="text-sm font-normal text-muted-foreground">
-                      {tier.priceMonthly === 0
-                        ? "Gratuit"
-                        : `${tier.priceMonthly}€/mois`}
-                    </div>
-                    {tier.id === currentTier && (
-                      <div className="text-xs text-primary font-medium">
-                        Formule actuelle
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="w-[200px]">Fonctionnalité</TableHead>
+                {tiers.map((tier) => (
+                  <TableHead
+                    key={tier.id}
+                    className={`text-center ${
+                      tier.id === currentTier
+                        ? "bg-primary/5 dark:bg-primary/10"
+                        : ""
+                    }`}
+                  >
+                    <div className="space-y-1">
+                      <div className="font-semibold">{tier.name}</div>
+                      <div className="text-sm font-normal text-muted-foreground">
+                        {tier.priceMonthly === 0
+                          ? "Gratuit"
+                          : `${tier.priceMonthly}€/mois`}
                       </div>
-                    )}
-                  </div>
-                </TableHead>
+                      {tier.id === currentTier && (
+                        <div className="text-xs text-primary font-medium">
+                          Formule actuelle
+                        </div>
+                      )}
+                    </div>
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {features.map((feature) => (
+                <TableRow key={feature.key}>
+                  <TableCell className="font-medium">{feature.label}</TableCell>
+                  {tiers.map((tier) => (
+                    <TableCell
+                      key={tier.id}
+                      className={`text-center ${
+                        tier.id === currentTier
+                          ? "bg-primary/5 dark:bg-primary/10"
+                          : ""
+                      }`}
+                    >
+                      {getFeatureValue(tier, feature.key)}
+                    </TableCell>
+                  ))}
+                </TableRow>
               ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {features.map((feature) => (
-              <TableRow key={feature.key}>
-                <TableCell className="font-medium">{feature.label}</TableCell>
+              <TableRow>
+                <TableCell />
                 {tiers.map((tier) => (
                   <TableCell
                     key={tier.id}
@@ -139,54 +196,69 @@ export function TierComparison({ currentTier }: TierComparisonProps) {
                         : ""
                     }`}
                   >
-                    {getFeatureValue(tier, feature.key)}
+                    {tier.id === currentTier ? (
+                      hasActiveSubscription && currentTier !== "FREE" ? (
+                        <Button
+                          variant="outline"
+                          className="w-full"
+                          onClick={handleManageSubscription}
+                          disabled={loadingTier !== null}
+                        >
+                          {loadingTier === currentTier
+                            ? "Chargement..."
+                            : "Gérer l'abonnement"}
+                        </Button>
+                      ) : (
+                        <Button variant="outline" disabled className="w-full">
+                          Formule actuelle
+                        </Button>
+                      )
+                    ) : canUpgrade(tier.id) ? (
+                      <Button
+                        variant={tier.highlighted ? "default" : "outline"}
+                        className="w-full"
+                        onClick={() =>
+                          handleUpgrade(tier.id as "PRO" | "BUSINESS")
+                        }
+                        disabled={loadingTier !== null}
+                      >
+                        {loadingTier === tier.id
+                          ? "Chargement..."
+                          : `Passer à ${tier.name}`}
+                      </Button>
+                    ) : canDowngrade(tier.id) ? (
+                      hasActiveSubscription ? (
+                        <Button
+                          variant="ghost"
+                          className="w-full"
+                          onClick={handleManageSubscription}
+                          disabled={loadingTier !== null}
+                        >
+                          {loadingTier === tier.id
+                            ? "Chargement..."
+                            : "Rétrograder"}
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="ghost"
+                          className="w-full"
+                          disabled
+                        >
+                          Rétrograder
+                        </Button>
+                      )
+                    ) : null}
                   </TableCell>
                 ))}
               </TableRow>
-            ))}
-            <TableRow>
-              <TableCell />
-              {tiers.map((tier) => (
-                <TableCell
-                  key={tier.id}
-                  className={`text-center ${
-                    tier.id === currentTier
-                      ? "bg-primary/5 dark:bg-primary/10"
-                      : ""
-                  }`}
-                >
-                  {tier.id === currentTier ? (
-                    <Button variant="outline" disabled className="w-full">
-                      Formule actuelle
-                    </Button>
-                  ) : canUpgrade(tier.id) ? (
-                    <Button
-                      variant={tier.highlighted ? "default" : "outline"}
-                      className="w-full"
-                      disabled
-                      title="Disponible prochainement"
-                    >
-                      Passer à {tier.name}
-                    </Button>
-                  ) : canDowngrade(tier.id) ? (
-                    <Button
-                      variant="ghost"
-                      className="w-full"
-                      disabled
-                      title="Disponible prochainement"
-                    >
-                      Rétrograder
-                    </Button>
-                  ) : null}
-                </TableCell>
-              ))}
-            </TableRow>
-          </TableBody>
-        </Table>
+            </TableBody>
+          </Table>
         </div>
-        <p className="text-xs text-muted-foreground mt-4 text-center">
-          Les changements d&apos;abonnement seront disponibles prochainement.
-        </p>
+        {currentTier === "FREE" && (
+          <p className="text-xs text-muted-foreground mt-4 text-center">
+            Passez à Pro ou Business pour débloquer plus de fonctionnalités.
+          </p>
+        )}
       </CardContent>
     </Card>
   );

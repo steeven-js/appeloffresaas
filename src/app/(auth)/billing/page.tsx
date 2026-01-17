@@ -7,20 +7,32 @@ import { SubscriptionCard } from "~/components/billing/subscription-card";
 import { UsageDisplay } from "~/components/billing/usage-display";
 import { TierComparison } from "~/components/billing/tier-comparison";
 import { Button } from "~/components/ui/button";
+import { BillingAlert } from "~/components/billing/billing-alert";
 
 export const metadata = {
   title: "Abonnement | Appel Offre SaaS",
   description: "Gérez votre abonnement et consultez votre utilisation",
 };
 
-export default async function BillingPage() {
+interface BillingPageProps {
+  searchParams: Promise<{ success?: string; canceled?: string }>;
+}
+
+export default async function BillingPage({ searchParams }: BillingPageProps) {
   const session = await auth();
 
   if (!session?.user) {
     redirect("/login");
   }
 
-  const subscription = await api.user.getSubscription();
+  const [subscription, subscriptionStatus] = await Promise.all([
+    api.user.getSubscription(),
+    api.billing.getSubscriptionStatus(),
+  ]);
+
+  const params = await searchParams;
+  const showSuccess = params.success === "true";
+  const showCanceled = params.canceled === "true";
 
   return (
     <main className="min-h-screen bg-background p-8">
@@ -37,6 +49,38 @@ export default async function BillingPage() {
           </Button>
         </div>
 
+        {showSuccess && (
+          <BillingAlert
+            type="success"
+            title="Paiement réussi !"
+            description="Votre abonnement a été mis à jour. Merci pour votre confiance."
+          />
+        )}
+
+        {showCanceled && (
+          <BillingAlert
+            type="info"
+            title="Paiement annulé"
+            description="Votre paiement a été annulé. Aucun montant n'a été débité."
+          />
+        )}
+
+        {subscriptionStatus.cancelAtPeriodEnd && (
+          <BillingAlert
+            type="warning"
+            title="Abonnement en cours d'annulation"
+            description={`Votre abonnement sera annulé à la fin de la période de facturation${
+              subscriptionStatus.currentPeriodEnd
+                ? ` (${new Intl.DateTimeFormat("fr-FR", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  }).format(subscriptionStatus.currentPeriodEnd)})`
+                : ""
+            }.`}
+          />
+        )}
+
         <div className="grid gap-6 md:grid-cols-2">
           <SubscriptionCard
             tierInfo={subscription.tierInfo}
@@ -49,7 +93,10 @@ export default async function BillingPage() {
           />
         </div>
 
-        <TierComparison currentTier={subscription.tier} />
+        <TierComparison
+          currentTier={subscription.tier}
+          hasActiveSubscription={subscriptionStatus.hasActiveSubscription}
+        />
       </div>
     </main>
   );
