@@ -12,11 +12,13 @@ import {
   generateFollowUpQuestions,
   extractDocumentInfo,
   generateSuggestedCriteria,
+  generateCopilotSuggestions,
   isAssistantConfigured,
   type ChatMessage,
   type GeneratableSection,
   type ExtractedDocumentInfo,
   type SuggestedCriterion,
+  type CopilotAnalysis,
 } from "~/server/services/ai/demand-assistant";
 import {
   parseDocument,
@@ -520,5 +522,41 @@ export const demandChatRouter = createTRPCRouter({
         .where(eq(demandProjects.id, input.demandProjectId));
 
       return { success: true };
+    }),
+
+  /**
+   * Get copilot suggestions for a demand project
+   */
+  getCopilotSuggestions: protectedProcedure
+    .input(z.object({ demandProjectId: z.string() }))
+    .query(async ({ ctx, input }): Promise<CopilotAnalysis> => {
+      // Verify the user owns this project
+      const project = await ctx.db.query.demandProjects.findFirst({
+        where: and(
+          eq(demandProjects.id, input.demandProjectId),
+          eq(demandProjects.userId, ctx.session.user.id)
+        ),
+      });
+
+      if (!project) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Dossier non trouvé",
+        });
+      }
+
+      try {
+        const analysis = await generateCopilotSuggestions(project);
+        return analysis;
+      } catch (error) {
+        console.error("Copilot suggestions error:", error);
+        // Return empty suggestions on error instead of throwing
+        return {
+          suggestions: [],
+          completionScore: 0,
+          missingFields: [],
+          incompleteFields: [],
+        };
+      }
     }),
 });

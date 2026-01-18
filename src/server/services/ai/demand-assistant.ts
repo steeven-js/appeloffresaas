@@ -871,3 +871,295 @@ function isValidCategory(value: unknown): value is SuggestedCriterion["category"
   return typeof value === "string" &&
     ["technical", "quality", "price", "other"].includes(value);
 }
+
+/**
+ * Copilot suggestion types
+ */
+export type CopilotSuggestionType = "suggestion" | "generation" | "alert" | "improvement";
+
+export interface CopilotAction {
+  id: string;
+  label: string;
+  type: "generate" | "reformulate" | "navigate" | "complete";
+  targetSection?: string;
+}
+
+export interface CopilotSuggestion {
+  id: string;
+  type: CopilotSuggestionType;
+  title: string;
+  content: string;
+  priority: "high" | "medium" | "low";
+  actions?: CopilotAction[];
+  confidence?: number;
+}
+
+export interface CopilotAnalysis {
+  suggestions: CopilotSuggestion[];
+  completionScore: number;
+  missingFields: string[];
+  incompleteFields: string[];
+}
+
+/**
+ * Analyze project completion status
+ */
+function analyzeProjectCompletion(project: DemandProject): {
+  completionScore: number;
+  missingFields: string[];
+  incompleteFields: string[];
+  fieldDetails: Array<{ field: string; label: string; status: "complete" | "incomplete" | "empty"; importance: "high" | "medium" | "low" }>;
+} {
+  const fieldDetails: Array<{ field: string; label: string; status: "complete" | "incomplete" | "empty"; importance: "high" | "medium" | "low" }> = [];
+
+  // Check each field
+  const checks = [
+    { field: "title", label: "Titre", value: project.title, minLength: 10, importance: "high" as const },
+    { field: "departmentName", label: "Service demandeur", value: project.departmentName, minLength: 3, importance: "medium" as const },
+    { field: "contactName", label: "Nom du contact", value: project.contactName, minLength: 3, importance: "medium" as const },
+    { field: "contactEmail", label: "Email du contact", value: project.contactEmail, minLength: 5, importance: "low" as const },
+    { field: "needType", label: "Type de besoin", value: project.needType, minLength: 1, importance: "high" as const },
+    { field: "context", label: "Contexte", value: project.context, minLength: 100, importance: "high" as const },
+    { field: "description", label: "Description", value: project.description, minLength: 150, importance: "high" as const },
+    { field: "constraints", label: "Contraintes", value: project.constraints, minLength: 50, importance: "medium" as const },
+    { field: "budgetRange", label: "Fourchette budgétaire", value: project.budgetRange, minLength: 1, importance: "high" as const },
+    { field: "desiredDeliveryDate", label: "Date souhaitée", value: project.desiredDeliveryDate, minLength: 1, importance: "medium" as const },
+  ];
+
+  const missingFields: string[] = [];
+  const incompleteFields: string[] = [];
+  let totalScore = 0;
+  let maxScore = 0;
+
+  for (const check of checks) {
+    const weight = check.importance === "high" ? 3 : check.importance === "medium" ? 2 : 1;
+    maxScore += weight;
+
+    if (!check.value || check.value.trim().length === 0) {
+      fieldDetails.push({ field: check.field, label: check.label, status: "empty", importance: check.importance });
+      missingFields.push(check.label);
+    } else if (check.value.trim().length < check.minLength) {
+      fieldDetails.push({ field: check.field, label: check.label, status: "incomplete", importance: check.importance });
+      incompleteFields.push(check.label);
+      totalScore += weight * 0.5;
+    } else {
+      fieldDetails.push({ field: check.field, label: check.label, status: "complete", importance: check.importance });
+      totalScore += weight;
+    }
+  }
+
+  return {
+    completionScore: Math.round((totalScore / maxScore) * 100),
+    missingFields,
+    incompleteFields,
+    fieldDetails,
+  };
+}
+
+/**
+ * Generate copilot suggestions based on project analysis
+ */
+export async function generateCopilotSuggestions(
+  project: DemandProject
+): Promise<CopilotAnalysis> {
+  const analysis = analyzeProjectCompletion(project);
+  const suggestions: CopilotSuggestion[] = [];
+
+  // Add basic suggestions based on analysis (no AI needed for these)
+  const highPriorityMissing = analysis.fieldDetails.filter(
+    (f) => f.status === "empty" && f.importance === "high"
+  );
+  const incompleteHighPriority = analysis.fieldDetails.filter(
+    (f) => f.status === "incomplete" && f.importance === "high"
+  );
+
+  // Alert for high priority missing fields
+  if (highPriorityMissing.length > 0) {
+    suggestions.push({
+      id: `alert-missing-${Date.now()}`,
+      type: "alert",
+      title: "Champs requis manquants",
+      content: `${highPriorityMissing.length} champ(s) important(s) à compléter : ${highPriorityMissing.map((f) => f.label).join(", ")}.`,
+      priority: "high",
+      actions: highPriorityMissing.slice(0, 2).map((f) => ({
+        id: `navigate-${f.field}`,
+        label: `Compléter ${f.label}`,
+        type: "navigate" as const,
+        targetSection: f.field,
+      })),
+    });
+  }
+
+  // Suggestion to generate sections if we have enough context
+  if (project.title && (project.context || project.description)) {
+    const canGenerate: Array<{ field: string; label: string }> = [];
+
+    if (!project.context || project.context.length < 100) {
+      canGenerate.push({ field: "context", label: "Contexte" });
+    }
+    if (!project.description || project.description.length < 100) {
+      canGenerate.push({ field: "description", label: "Description" });
+    }
+    if (!project.constraints || project.constraints.length < 50) {
+      canGenerate.push({ field: "constraints", label: "Contraintes" });
+    }
+
+    if (canGenerate.length > 0) {
+      suggestions.push({
+        id: `generate-sections-${Date.now()}`,
+        type: "generation",
+        title: "Génération IA disponible",
+        content: `L'IA peut vous aider à rédiger : ${canGenerate.map((f) => f.label).join(", ")}.`,
+        priority: "medium",
+        actions: canGenerate.slice(0, 2).map((f) => ({
+          id: `generate-${f.field}`,
+          label: `Générer ${f.label}`,
+          type: "generate" as const,
+          targetSection: f.field,
+        })),
+      });
+    }
+  }
+
+  // If AI is configured, get intelligent suggestions
+  if (isAIConfigured() && (project.context || project.description)) {
+    try {
+      const aiSuggestions = await getAICopilotSuggestions(project, analysis);
+      suggestions.push(...aiSuggestions);
+    } catch (error) {
+      console.error("Error getting AI copilot suggestions:", error);
+      // Continue without AI suggestions
+    }
+  }
+
+  // Add improvement suggestion if content exists but could be better
+  if (incompleteHighPriority.length > 0) {
+    suggestions.push({
+      id: `improve-${Date.now()}`,
+      type: "improvement",
+      title: "Contenu à enrichir",
+      content: `Ces sections pourraient être plus détaillées : ${incompleteHighPriority.map((f) => f.label).join(", ")}.`,
+      priority: "low",
+      actions: incompleteHighPriority.slice(0, 2).map((f) => ({
+        id: `reformulate-${f.field}`,
+        label: `Enrichir ${f.label}`,
+        type: "reformulate" as const,
+        targetSection: f.field,
+      })),
+    });
+  }
+
+  // Add completion congratulation if score is high
+  if (analysis.completionScore >= 80 && suggestions.length === 0) {
+    suggestions.push({
+      id: `complete-${Date.now()}`,
+      type: "suggestion",
+      title: "Dossier bien avancé",
+      content: "Votre dossier est presque complet. Vous pouvez l'exporter ou demander une relecture à l'IA.",
+      priority: "low",
+    });
+  }
+
+  return {
+    suggestions: suggestions.slice(0, 5), // Max 5 suggestions
+    completionScore: analysis.completionScore,
+    missingFields: analysis.missingFields,
+    incompleteFields: analysis.incompleteFields,
+  };
+}
+
+/**
+ * Get AI-powered intelligent suggestions
+ */
+async function getAICopilotSuggestions(
+  project: DemandProject,
+  analysis: ReturnType<typeof analyzeProjectCompletion>
+): Promise<CopilotSuggestion[]> {
+  const projectContext = `
+PROJET: ${project.title}
+TYPE: ${project.needType ? getNeedTypeLabel(project.needType) : "Non défini"}
+URGENCE: ${project.urgencyLevel ? getUrgencyLabel(project.urgencyLevel) : "Non définie"}
+
+CONTENU ACTUEL:
+- Contexte (${project.context?.length ?? 0} car.): ${project.context?.slice(0, 200) ?? "(vide)"}
+- Description (${project.description?.length ?? 0} car.): ${project.description?.slice(0, 200) ?? "(vide)"}
+- Contraintes (${project.constraints?.length ?? 0} car.): ${project.constraints?.slice(0, 150) ?? "(vide)"}
+
+SCORE COMPLÉTUDE: ${analysis.completionScore}%
+CHAMPS MANQUANTS: ${analysis.missingFields.join(", ") || "Aucun"}
+CHAMPS INCOMPLETS: ${analysis.incompleteFields.join(", ") || "Aucun"}
+`;
+
+  const systemPrompt = `Tu es un assistant co-pilote pour la rédaction de dossiers de demande de marchés publics français.
+
+Analyse le dossier et génère 1-2 suggestions INTELLIGENTES et CONTEXTUELLES pour aider l'utilisateur.
+
+Types de suggestions:
+- "suggestion": Conseil stratégique basé sur le contenu
+- "improvement": Amélioration spécifique du contenu existant
+
+Règles:
+1. Sois spécifique au contenu du projet
+2. Ne répète pas les alertes sur les champs manquants (déjà gérées)
+3. Propose des améliorations concrètes
+4. Maximum 2 suggestions
+
+Format JSON:
+[
+  {
+    "type": "suggestion" | "improvement",
+    "title": "Titre court (max 30 car.)",
+    "content": "Description de la suggestion (max 150 car.)",
+    "priority": "high" | "medium" | "low",
+    "targetSection": "context" | "description" | "constraints" | null
+  }
+]
+
+IMPORTANT: Réponds UNIQUEMENT avec le JSON, en français.`;
+
+  const response = await createCompletion(
+    [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: projectContext },
+    ],
+    {
+      maxTokens: 500,
+      temperature: 0.7,
+      jsonMode: true,
+    }
+  );
+
+  const content = response.content || "[]";
+
+  try {
+    const parsed: unknown = JSON.parse(content);
+    const items = Array.isArray(parsed) ? parsed : [];
+
+    return items.slice(0, 2).map((item, index) => {
+      const s = item as Record<string, unknown>;
+      const type = s.type === "improvement" ? "improvement" : "suggestion";
+      const targetSection = typeof s.targetSection === "string" ? s.targetSection : undefined;
+
+      const priority: "high" | "medium" | "low" =
+        s.priority === "high" ? "high" : s.priority === "low" ? "low" : "medium";
+      const actionType: "reformulate" | "navigate" = type === "improvement" ? "reformulate" : "navigate";
+
+      return {
+        id: `ai-${Date.now()}-${index}`,
+        type: type as CopilotSuggestionType,
+        title: typeof s.title === "string" ? s.title.slice(0, 50) : "Suggestion",
+        content: typeof s.content === "string" ? s.content.slice(0, 200) : "",
+        priority,
+        actions: targetSection ? [{
+          id: `action-${index}`,
+          label: type === "improvement" ? "Améliorer" : "Voir",
+          type: actionType,
+          targetSection,
+        }] : undefined,
+      };
+    });
+  } catch {
+    console.error("Failed to parse AI copilot suggestions:", content);
+    return [];
+  }
+}

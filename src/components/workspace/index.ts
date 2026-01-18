@@ -1,0 +1,9 @@
+export { WorkspaceLayout } from "./workspace-layout";
+export { ModuleSidebar } from "./module-sidebar";
+export { ModuleItem, type ModuleStatus } from "./module-item";
+export { CompletionGauge } from "./completion-gauge";
+export { CentralZone, type ViewMode } from "./central-zone";
+export { ZoneModeToggle } from "./zone-mode-toggle";
+export { OverviewDashboard } from "./overview-dashboard";
+export { CopilotPanel } from "./copilot-panel";
+export { CopilotCard, type CopilotCardType } from "./copilot-card";

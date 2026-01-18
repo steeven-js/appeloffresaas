@@ -137,3 +137,25 @@ development_status:
 # - routers tRPC renommés ✅
 # - routes /projects → /demandes ✅
 # - composants Epic 4 supprimés ✅
+
+  # Epic 8: Refonte Workspace 3 Colonnes
+  # Ref: _bmad-output/planning-artifacts/ux-workspace-specification.md
+  epic-8: in-progress
+
+  # Phase 1: Fondations
+  8-1-workspace-layout-structure: backlog
+  8-2-module-sidebar-navigation: backlog
+
+  # Phase 2: Zone Centrale
+  8-3-central-zone-4-modes: backlog
+  8-4-overview-dashboard: backlog
+  8-5-adaptation-demand-chat: backlog
+
+  # Phase 3: Co-pilote
+  8-6-copilot-panel: backlog
+
+  # Phase 4: Assemblage
+  8-7-assemblage-workspace-v2: backlog
+  8-8-bascule-route-nettoyage: backlog
+
+  epic-8-retrospective: optional
