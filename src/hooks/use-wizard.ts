@@ -149,13 +149,13 @@ export function useWizard({ projectId }: UseWizardOptions): UseWizardReturn {
     }, {} as Record<string, ModuleProgress>);
   }, [config, wizardState, sections]);
 
-  // Calculate overall progress
+  // Calculate overall progress as average of all module progress
   const overallProgress = useMemo(() => {
     if (!config) return 0;
-    const completedModules = Object.values(moduleProgress).filter(
-      (m) => m.status === "completed"
-    ).length;
-    return Math.round((completedModules / config.modules.length) * 100);
+    const progressValues = Object.values(moduleProgress);
+    if (progressValues.length === 0) return 0;
+    const totalProgress = progressValues.reduce((sum, m) => sum + m.progress, 0);
+    return Math.round(totalProgress / progressValues.length);
   }, [config, moduleProgress]);
 
   // Actions
