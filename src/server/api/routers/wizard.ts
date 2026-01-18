@@ -307,8 +307,17 @@ export const wizardRouter = createTRPCRouter({
       };
 
       const moduleState = wizardState.modules[input.moduleId]!;
-      if (!moduleState.answeredQuestions.includes(input.questionId)) {
+
+      // Only count as answered if value is meaningful (non-empty)
+      const isAnswerMeaningful = Array.isArray(input.value)
+        ? input.value.length > 0
+        : input.value !== undefined && input.value !== "";
+
+      if (isAnswerMeaningful && !moduleState.answeredQuestions.includes(input.questionId)) {
         moduleState.answeredQuestions.push(input.questionId);
+      } else if (!isAnswerMeaningful && moduleState.answeredQuestions.includes(input.questionId)) {
+        // Remove from answered if value becomes empty (user cleared their answer)
+        moduleState.answeredQuestions = moduleState.answeredQuestions.filter(q => q !== input.questionId);
       }
 
       wizardState.lastActivityAt = new Date().toISOString();
