@@ -1,13 +1,12 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, asc, sql } from "drizzle-orm";
 import { DeleteObjectCommand, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { tenderProjects, tenderDocuments, TENDER_DOCUMENT_TYPES, rcParsedData } from "~/server/db/schema";
+import { demandProjects, demandDocuments, DEMAND_DOCUMENT_TYPES } from "~/server/db/schema";
 import { r2Client, R2_BUCKET } from "~/server/services/storage";
-import { inngest } from "~/server/inngest/client";
 
 /**
  * Maximum file size (10 MB)
@@ -15,23 +14,23 @@ import { inngest } from "~/server/inngest/client";
 export const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 /**
- * Tender Documents router (Story 3.2)
+ * Demand Documents router (Dossier de Demande)
  */
-export const tenderDocumentsRouter = createTRPCRouter({
+export const demandDocumentsRouter = createTRPCRouter({
   /**
-   * Get all documents for a tender project
+   * Get all documents for a demand project
    */
   list: protectedProcedure
     .input(
       z.object({
-        tenderProjectId: z.string(),
-        documentType: z.enum(TENDER_DOCUMENT_TYPES).optional(),
+        demandProjectId: z.string(),
+        documentType: z.enum(DEMAND_DOCUMENT_TYPES).optional(),
       })
     )
     .query(async ({ ctx, input }) => {
       // Verify project ownership
-      const project = await ctx.db.query.tenderProjects.findFirst({
-        where: eq(tenderProjects.id, input.tenderProjectId),
+      const project = await ctx.db.query.demandProjects.findFirst({
+        where: eq(demandProjects.id, input.demandProjectId),
         columns: { userId: true },
       });
 
@@ -50,15 +49,15 @@ export const tenderDocumentsRouter = createTRPCRouter({
       }
 
       // Build conditions
-      const conditions = [eq(tenderDocuments.tenderProjectId, input.tenderProjectId)];
+      const conditions = [eq(demandDocuments.demandProjectId, input.demandProjectId)];
 
       if (input.documentType) {
-        conditions.push(eq(tenderDocuments.documentType, input.documentType));
+        conditions.push(eq(demandDocuments.documentType, input.documentType));
       }
 
-      const documents = await ctx.db.query.tenderDocuments.findMany({
+      const documents = await ctx.db.query.demandDocuments.findMany({
         where: and(...conditions),
-        orderBy: [desc(tenderDocuments.createdAt)],
+        orderBy: [asc(demandDocuments.displayOrder), desc(demandDocuments.createdAt)],
       });
 
       return { documents };
@@ -70,10 +69,10 @@ export const tenderDocumentsRouter = createTRPCRouter({
   get: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {
-      const document = await ctx.db.query.tenderDocuments.findFirst({
-        where: eq(tenderDocuments.id, input.id),
+      const document = await ctx.db.query.demandDocuments.findFirst({
+        where: eq(demandDocuments.id, input.id),
         with: {
-          tenderProject: {
+          demandProject: {
             columns: { userId: true },
           },
         },
@@ -87,7 +86,7 @@ export const tenderDocumentsRouter = createTRPCRouter({
       }
 
       // Verify ownership
-      if (document.tenderProject.userId !== ctx.session.user.id) {
+      if (document.demandProject.userId !== ctx.session.user.id) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Accès non autorisé",
@@ -103,19 +102,21 @@ export const tenderDocumentsRouter = createTRPCRouter({
   create: protectedProcedure
     .input(
       z.object({
-        tenderProjectId: z.string(),
-        documentType: z.enum(TENDER_DOCUMENT_TYPES),
+        demandProjectId: z.string(),
+        documentType: z.enum(DEMAND_DOCUMENT_TYPES),
         fileName: z.string().min(1).max(255),
         originalName: z.string().min(1).max(255),
         mimeType: z.string().min(1).max(100),
         fileSize: z.number().int().min(1).max(MAX_FILE_SIZE),
         storageKey: z.string().min(1).max(500),
+        displayOrder: z.number().int().optional(),
+        description: z.string().max(500).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
       // Verify project ownership
-      const project = await ctx.db.query.tenderProjects.findFirst({
-        where: eq(tenderProjects.id, input.tenderProjectId),
+      const project = await ctx.db.query.demandProjects.findFirst({
+        where: eq(demandProjects.id, input.demandProjectId),
         columns: { userId: true },
       });
 
@@ -133,47 +134,34 @@ export const tenderDocumentsRouter = createTRPCRouter({
         });
       }
 
-      // For RC documents, check if one already exists
-      if (input.documentType === "rc") {
-        const existingRC = await ctx.db.query.tenderDocuments.findFirst({
-          where: and(
-            eq(tenderDocuments.tenderProjectId, input.tenderProjectId),
-            eq(tenderDocuments.documentType, "rc")
-          ),
-        });
-
-        if (existingRC) {
-          // Delete the old RC from R2
-          try {
-            await r2Client.send(
-              new DeleteObjectCommand({
-                Bucket: R2_BUCKET,
-                Key: existingRC.storageKey,
-              })
-            );
-          } catch (error) {
-            console.error("Failed to delete old RC from R2:", error);
-          }
-
-          // Delete the old RC record
-          await ctx.db
-            .delete(tenderDocuments)
-            .where(eq(tenderDocuments.id, existingRC.id));
-        }
+      // Get max displayOrder for this project and document type to auto-increment
+      let displayOrder = input.displayOrder;
+      if (displayOrder === undefined) {
+        const maxOrderResult = await ctx.db
+          .select({ maxOrder: sql<number>`COALESCE(MAX(${demandDocuments.displayOrder}), 0)` })
+          .from(demandDocuments)
+          .where(
+            and(
+              eq(demandDocuments.demandProjectId, input.demandProjectId),
+              eq(demandDocuments.documentType, input.documentType)
+            )
+          );
+        displayOrder = (maxOrderResult[0]?.maxOrder ?? 0) + 1;
       }
 
       // Create the document record
       const [created] = await ctx.db
-        .insert(tenderDocuments)
+        .insert(demandDocuments)
         .values({
-          tenderProjectId: input.tenderProjectId,
+          demandProjectId: input.demandProjectId,
           documentType: input.documentType,
           fileName: input.fileName,
           originalName: input.originalName,
           mimeType: input.mimeType,
           fileSize: input.fileSize,
           storageKey: input.storageKey,
-          parsingStatus: "pending",
+          displayOrder,
+          description: input.description,
         })
         .returning();
 
@@ -182,25 +170,6 @@ export const tenderDocumentsRouter = createTRPCRouter({
           code: "INTERNAL_SERVER_ERROR",
           message: "Erreur lors de l'enregistrement du document",
         });
-      }
-
-      // Trigger RC parsing via Inngest (Story 4.1)
-      if (input.documentType === "rc") {
-        try {
-          await inngest.send({
-            name: "tender/rc.uploaded",
-            data: {
-              documentId: created.id,
-              tenderProjectId: input.tenderProjectId,
-              userId: ctx.session.user.id,
-              storageKey: input.storageKey,
-              timestamp: new Date().toISOString(),
-            },
-          });
-        } catch (error) {
-          console.error("[Inngest] Failed to send RC parsing event:", error);
-          // Don't fail the request - parsing will be retried manually
-        }
       }
 
       return created;
@@ -213,10 +182,10 @@ export const tenderDocumentsRouter = createTRPCRouter({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       // Get the document with project info
-      const document = await ctx.db.query.tenderDocuments.findFirst({
-        where: eq(tenderDocuments.id, input.id),
+      const document = await ctx.db.query.demandDocuments.findFirst({
+        where: eq(demandDocuments.id, input.id),
         with: {
-          tenderProject: {
+          demandProject: {
             columns: { userId: true },
           },
         },
@@ -230,7 +199,7 @@ export const tenderDocumentsRouter = createTRPCRouter({
       }
 
       // Verify ownership
-      if (document.tenderProject.userId !== ctx.session.user.id) {
+      if (document.demandProject.userId !== ctx.session.user.id) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Accès non autorisé",
@@ -251,8 +220,8 @@ export const tenderDocumentsRouter = createTRPCRouter({
 
       // Delete from database
       await ctx.db
-        .delete(tenderDocuments)
-        .where(eq(tenderDocuments.id, input.id));
+        .delete(demandDocuments)
+        .where(eq(demandDocuments.id, input.id));
 
       return { success: true };
     }),
@@ -264,10 +233,10 @@ export const tenderDocumentsRouter = createTRPCRouter({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       // Get the document with project info
-      const document = await ctx.db.query.tenderDocuments.findFirst({
-        where: eq(tenderDocuments.id, input.id),
+      const document = await ctx.db.query.demandDocuments.findFirst({
+        where: eq(demandDocuments.id, input.id),
         with: {
-          tenderProject: {
+          demandProject: {
             columns: { userId: true },
           },
         },
@@ -281,7 +250,7 @@ export const tenderDocumentsRouter = createTRPCRouter({
       }
 
       // Verify ownership
-      if (document.tenderProject.userId !== ctx.session.user.id) {
+      if (document.demandProject.userId !== ctx.session.user.id) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Accès non autorisé",
@@ -314,10 +283,10 @@ export const tenderDocumentsRouter = createTRPCRouter({
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
       // Get the document with project info
-      const document = await ctx.db.query.tenderDocuments.findFirst({
-        where: eq(tenderDocuments.id, input.id),
+      const document = await ctx.db.query.demandDocuments.findFirst({
+        where: eq(demandDocuments.id, input.id),
         with: {
-          tenderProject: {
+          demandProject: {
             columns: { userId: true },
           },
         },
@@ -331,7 +300,7 @@ export const tenderDocumentsRouter = createTRPCRouter({
       }
 
       // Verify ownership
-      if (document.tenderProject.userId !== ctx.session.user.id) {
+      if (document.demandProject.userId !== ctx.session.user.id) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Accès non autorisé",
@@ -353,14 +322,19 @@ export const tenderDocumentsRouter = createTRPCRouter({
     }),
 
   /**
-   * Get the RC document for a project (if exists)
+   * Update display order for multiple documents (reordering)
    */
-  getRC: protectedProcedure
-    .input(z.object({ tenderProjectId: z.string() }))
-    .query(async ({ ctx, input }) => {
+  updateOrder: protectedProcedure
+    .input(
+      z.object({
+        demandProjectId: z.string(),
+        documentIds: z.array(z.string()),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
       // Verify project ownership
-      const project = await ctx.db.query.tenderProjects.findFirst({
-        where: eq(tenderProjects.id, input.tenderProjectId),
+      const project = await ctx.db.query.demandProjects.findFirst({
+        where: eq(demandProjects.id, input.demandProjectId),
         columns: { userId: true },
       });
 
@@ -378,96 +352,40 @@ export const tenderDocumentsRouter = createTRPCRouter({
         });
       }
 
-      const rcDocument = await ctx.db.query.tenderDocuments.findFirst({
-        where: and(
-          eq(tenderDocuments.tenderProjectId, input.tenderProjectId),
-          eq(tenderDocuments.documentType, "rc")
-        ),
-      });
-
-      return { rcDocument };
-    }),
-
-  /**
-   * Retry RC parsing (Story 4.1)
-   */
-  retryParsing: protectedProcedure
-    .input(z.object({ id: z.string() }))
-    .mutation(async ({ ctx, input }) => {
-      // Get the document with project info
-      const document = await ctx.db.query.tenderDocuments.findFirst({
-        where: eq(tenderDocuments.id, input.id),
-        with: {
-          tenderProject: {
-            columns: { userId: true, id: true },
-          },
-        },
-      });
-
-      if (!document) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Document non trouvé",
-        });
-      }
-
-      // Verify ownership
-      if (document.tenderProject.userId !== ctx.session.user.id) {
-        throw new TRPCError({
-          code: "FORBIDDEN",
-          message: "Accès non autorisé",
-        });
-      }
-
-      // Only allow retry for RC documents
-      if (document.documentType !== "rc") {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Seuls les documents RC peuvent être analysés",
-        });
-      }
-
-      // Reset status to pending
-      await ctx.db
-        .update(tenderDocuments)
-        .set({
-          parsingStatus: "pending",
-          parsedAt: null,
-          updatedAt: new Date(),
-        })
-        .where(eq(tenderDocuments.id, input.id));
-
-      // Delete existing parsed data
-      await ctx.db
-        .delete(rcParsedData)
-        .where(eq(rcParsedData.tenderDocumentId, input.id));
-
-      // Trigger new parsing event
-      await inngest.send({
-        name: "tender/rc.uploaded",
-        data: {
-          documentId: document.id,
-          tenderProjectId: document.tenderProject.id,
-          userId: ctx.session.user.id,
-          storageKey: document.storageKey,
-          timestamp: new Date().toISOString(),
-        },
-      });
+      // Update display order for each document
+      await Promise.all(
+        input.documentIds.map((id, index) =>
+          ctx.db
+            .update(demandDocuments)
+            .set({ displayOrder: index + 1, updatedAt: new Date() })
+            .where(
+              and(
+                eq(demandDocuments.id, id),
+                eq(demandDocuments.demandProjectId, input.demandProjectId)
+              )
+            )
+        )
+      );
 
       return { success: true };
     }),
 
   /**
-   * Get parsed RC data for a document (Story 4.1)
+   * Update document description
    */
-  getParsedData: protectedProcedure
-    .input(z.object({ documentId: z.string() }))
-    .query(async ({ ctx, input }) => {
+  updateDescription: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        description: z.string().max(500).nullable(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
       // Get the document with project info
-      const document = await ctx.db.query.tenderDocuments.findFirst({
-        where: eq(tenderDocuments.id, input.documentId),
+      const document = await ctx.db.query.demandDocuments.findFirst({
+        where: eq(demandDocuments.id, input.id),
         with: {
-          tenderProject: {
+          demandProject: {
             columns: { userId: true },
           },
         },
@@ -481,18 +399,20 @@ export const tenderDocumentsRouter = createTRPCRouter({
       }
 
       // Verify ownership
-      if (document.tenderProject.userId !== ctx.session.user.id) {
+      if (document.demandProject.userId !== ctx.session.user.id) {
         throw new TRPCError({
           code: "FORBIDDEN",
           message: "Accès non autorisé",
         });
       }
 
-      // Get parsed data
-      const parsedData = await ctx.db.query.rcParsedData.findFirst({
-        where: eq(rcParsedData.tenderDocumentId, input.documentId),
-      });
+      // Update description
+      const [updated] = await ctx.db
+        .update(demandDocuments)
+        .set({ description: input.description, updatedAt: new Date() })
+        .where(eq(demandDocuments.id, input.id))
+        .returning();
 
-      return { parsedData };
+      return updated;
     }),
 });

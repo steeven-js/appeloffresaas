@@ -98,3 +98,128 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* TipTap Editor Styles */
+.ProseMirror {
+  outline: none;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: hsl(var(--muted-foreground));
+  pointer-events: none;
+  height: 0;
+}
+
+.ProseMirror h1 {
+  @apply text-2xl font-bold mt-6 mb-4;
+}
+
+.ProseMirror h2 {
+  @apply text-xl font-semibold mt-5 mb-3;
+}
+
+.ProseMirror h3 {
+  @apply text-lg font-medium mt-4 mb-2;
+}
+
+.ProseMirror p {
+  @apply mb-3;
+}
+
+.ProseMirror ul {
+  @apply list-disc ml-6 mb-3;
+}
+
+.ProseMirror ol {
+  @apply list-decimal ml-6 mb-3;
+}
+
+.ProseMirror li {
+  @apply mb-1;
+}
+
+.ProseMirror blockquote {
+  @apply border-l-4 border-muted-foreground/30 pl-4 italic my-4 text-muted-foreground;
+}
+
+.ProseMirror hr {
+  @apply my-6 border-t border-border;
+}
+
+.ProseMirror mark {
+  @apply bg-yellow-200 dark:bg-yellow-800 rounded px-0.5;
+}
+
+.ProseMirror code {
+  @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono;
+}
+
+.ProseMirror pre {
+  @apply bg-muted p-4 rounded-lg overflow-x-auto my-4;
+}
+
+.ProseMirror pre code {
+  @apply bg-transparent p-0;
+}
+
+/* TipTap Editor Images */
+.ProseMirror .editor-image {
+  @apply max-w-full h-auto rounded-lg my-4 mx-auto block;
+  cursor: default;
+}
+
+.ProseMirror .editor-image.ProseMirror-selectednode {
+  @apply outline outline-2 outline-primary outline-offset-2;
+}
+
+/* TipTap Editor Tables */
+.ProseMirror .editor-table {
+  @apply border-collapse w-full my-4 text-sm;
+}
+
+.ProseMirror table {
+  @apply border-collapse w-full my-4 text-sm;
+}
+
+.ProseMirror th,
+.ProseMirror td {
+  @apply border border-border px-3 py-2 text-left align-top min-w-[100px];
+}
+
+.ProseMirror th {
+  @apply bg-muted font-semibold;
+}
+
+.ProseMirror tr:hover td {
+  @apply bg-muted/30;
+}
+
+/* Table selection styling */
+.ProseMirror .selectedCell:after {
+  @apply bg-primary/20 absolute inset-0 pointer-events-none;
+  content: "";
+  z-index: 2;
+}
+
+.ProseMirror th.selectedCell:after,
+.ProseMirror td.selectedCell:after {
+  @apply bg-primary/20;
+}
+
+/* Table cell positioning for selection overlay */
+.ProseMirror th,
+.ProseMirror td {
+  position: relative;
+}
+
+/* Column resize handle */
+.ProseMirror .column-resize-handle {
+  @apply absolute top-0 right-0 bottom-0 w-1 bg-primary cursor-col-resize;
+  z-index: 20;
+}
+
+.ProseMirror.resize-cursor {
+  cursor: col-resize;
+}

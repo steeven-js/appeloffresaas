@@ -2,38 +2,25 @@ import { Inngest, EventSchemas } from "inngest";
 
 /**
  * Event types for type-safe event handling
+ * Note: Events will be added as features are implemented
  */
-type TenderRCUploadedEvent = {
-  name: "tender/rc.uploaded";
+type DemandExportEvent = {
+  name: "demand/export.requested";
   data: {
-    documentId: string;
-    tenderProjectId: string;
+    demandProjectId: string;
     userId: string;
-    storageKey: string;
+    format: "pdf" | "docx";
     timestamp: string;
   };
 };
 
-type TenderRCParsedEvent = {
-  name: "tender/rc.parsed";
-  data: {
-    documentId: string;
-    tenderProjectId: string;
-    success: boolean;
-    pageCount?: number;
-    durationMs?: number;
-    error?: string;
-  };
-};
-
 type InngestEvents = {
-  "tender/rc.uploaded": TenderRCUploadedEvent;
-  "tender/rc.parsed": TenderRCParsedEvent;
+  "demand/export.requested": DemandExportEvent;
 };
 
 /**
- * Inngest client instance for background jobs (Story 4.1)
- * Used for: RC parsing, document generation, notifications
+ * Inngest client instance for background jobs
+ * Used for: document generation, notifications, exports
  */
 export const inngest = new Inngest({
   id: "appeloffresaas",

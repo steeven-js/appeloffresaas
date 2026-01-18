@@ -1,4 +1,4 @@
-# generated: 2026-01-16
+# generated: 2026-01-17
 # project: appeloffresaas
 # project_key: appeloffresaas
 # tracking_system: file-system
@@ -10,30 +10,22 @@
 #   - backlog: Epic not yet started
 #   - in-progress: Epic actively being worked on
 #   - done: All stories in epic completed
-#
-# Epic Status Transitions:
-#   - backlog → in-progress: Automatically when first story is created (via create-story)
-#   - in-progress → done: Manually when all stories reach 'done' status
+#   - removed: Epic removed from scope
 #
 # Story Status:
 #   - backlog: Story only exists in epic file
 #   - ready-for-dev: Story file created in stories folder
 #   - in-progress: Developer actively working on implementation
-#   - review: Ready for code review (via Dev's code-review workflow)
+#   - review: Ready for code review
 #   - done: Story completed
 #
-# Retrospective Status:
-#   - optional: Can be completed but not required
-#   - done: Retrospective has been completed
-#
-# WORKFLOW NOTES:
-# ===============
-# - Epic transitions to 'in-progress' automatically when first story is created
-# - Stories can be worked in parallel if team capacity allows
-# - SM typically creates next story after previous one is 'done' to incorporate learnings
-# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+# PRODUCT PIVOT NOTE:
+# ===================
+# Le produit a pivoté de "Réponse AO" vers "Dossier de Demande"
+# - CHEF crée un dossier de demande → envoie à Administration → Admin crée l'AO
+# - Sprint R1 complété: Migration DB (tender → demand), suppression Epic 4
 
-generated: 2026-01-16
+generated: 2026-01-17
 project: appeloffresaas
 project_key: appeloffresaas
 tracking_system: file-system
@@ -88,72 +80,60 @@ development_status:
   2-14-recherche-documents: done
   epic-2-retrospective: optional
 
-  # Epic 3: Création Projet AO
+  # Epic 3: Création Dossier de Demande (REFACTORED)
+  # Ancien: "Création Projet AO" - maintenant adapté pour Dossier de Demande
   epic-3: done
-  3-1-creation-nouveau-projet-ao: done
-  3-2-upload-reglement-de-consultation-rc: done
-  3-3-definition-deadline-soumission: done
-  3-4-liste-des-projets-ao-avec-statuts: done
-  3-5-archivage-projet-termine: done
-  3-6-duplication-projet-comme-template: done
-  3-7-suppression-projet-ao: done
+  3-1-creation-nouvelle-demande: done
+  3-2-informations-du-besoin: done
+  3-3-budget-et-delais: done
+  3-4-liste-des-demandes: done
+  3-5-duplication-demande: done
+  3-6-suppression-demande: done
+  3-7-archivage-demande: done
   epic-3-retrospective: optional
 
-  # Epic 4: Parsing RC & Checklist Conformité
-  epic-4: in-progress
-  4-1-parsing-automatique-du-rc: done
-  4-2-extraction-liste-documents-requis: backlog
-  4-3-categorisation-des-requirements: backlog
-  4-4-identification-format-soumission: backlog
-  4-5-extraction-deadline-depuis-rc: backlog
-  4-6-affichage-checklist-structuree: backlog
-  4-7-edition-manuelle-checklist: backlog
-  4-8-marquage-items-completes: backlog
-  epic-4-retrospective: optional
+  # Epic 4: REMOVED (Parsing RC & Checklist)
+  # Raison: Le parsing RC n'est pas pertinent pour un Dossier de DEMANDE
+  # Le CHEF crée le besoin, il ne répond pas à un AO existant
+  epic-4: removed
+  # Toutes les stories Epic 4 ont été supprimées du code
 
-  # Epic 5: Assistant IA Co-Pilote
-  epic-5: backlog
-  5-1-interface-chat-conversationnelle: backlog
-  5-2-questions-contextuelles-ia: backlog
-  5-3-suggestions-basees-sur-profil-entreprise: backlog
-  5-4-pre-remplissage-sections-depuis-profil: backlog
-  5-5-accepter-modifier-refuser-suggestions: backlog
-  5-6-profondeur-questions-adaptive: backlog
-  5-7-file-attente-questions: backlog
-  5-8-suggestions-specifiques-par-secteur: backlog
+  # Epic 5: Assistant IA Rédaction
+  epic-5: done
+  5-1-interface-chat-conversationnelle: done
+  5-2-generation-brouillon: done
+  5-3-reformulation-texte: done
+  5-4-questions-relance: done
+  5-5-import-document-existant: done
+  5-6-suggestions-criteres: done
   epic-5-retrospective: optional
 
-  # Epic 6: Preview & Édition Document
-  epic-6: backlog
-  6-1-editeur-riche-tiptap: backlog
-  6-2-preview-pdf-temps-reel: backlog
-  6-3-structure-documents-configurable: backlog
-  6-4-insertion-images-et-tableaux: backlog
-  6-5-annotations-et-commentaires: backlog
-  6-6-gestion-versions-document: backlog
-  6-7-editeur-plein-ecran: backlog
+  # Epic 6: Éditeur de Demande
+  epic-6: done
+  6-1-editeur-riche-tiptap: done
+  6-2-templates-par-secteur: done
+  6-3-structure-flexible: done
+  6-4-preview-temps-reel: done
+  6-5-insertion-images-tableaux: done
+  6-6-gestion-annexes: done
   epic-6-retrospective: optional
 
-  # Epic 7: Export & Préparation Soumission
-  epic-7: backlog
-  7-1-export-pdf-professionnel: backlog
-  7-2-export-word-docx: backlog
-  7-3-page-de-garde-automatique: backlog
-  7-4-sommaire-et-numerotation-automatiques: backlog
-  7-5-checklist-pre-soumission: backlog
-  7-6-archive-zip-complete: backlog
-  7-7-instructions-soumission-contextuelles: backlog
+  # Epic 7: Export PDF Demande
+  epic-7: done
+  7-1-export-pdf-structure: done
+  7-2-page-de-garde-automatique: done
+  7-3-sommaire-automatique: done
+  7-4-en-tetes-pieds-de-page: done
+  7-5-export-word-docx: done
+  7-6-nommage-automatique-fichiers: done
+  7-7-verification-pre-export: done
+  7-8-archive-zip-complete: done
   epic-7-retrospective: optional
 
-  # Epic 8: Alertes & Intelligence Données
-  epic-8: backlog
-  8-1-creation-alertes-personnalisees: backlog
-  8-2-notifications-email-configurables: backlog
-  8-3-centre-de-notifications-in-app: backlog
-  8-4-rappels-deadline: backlog
-  8-5-tableau-de-bord-statistiques: backlog
-  8-6-analyse-performance-par-secteur: backlog
-  8-7-historique-appels-offres: backlog
-  8-8-export-donnees-analytics: backlog
-  8-9-suggestions-amelioration: backlog
-  epic-8-retrospective: optional
+# Sprint R1: Migration DB + Renommage - COMPLETED
+# - tender_projects → demand_projects ✅
+# - tender_documents → demand_documents ✅
+# - rc_parsed_data supprimée ✅
+# - routers tRPC renommés ✅
+# - routes /projects → /demandes ✅
+# - composants Epic 4 supprimés ✅
