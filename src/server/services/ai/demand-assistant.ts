@@ -1,19 +1,28 @@
-import OpenAI from "openai";
-import { env } from "~/env";
 import type { DemandProject } from "~/server/db/schema/demands";
-
-/**
- * OpenAI client for demand assistant
- */
-const openai = env.OPENAI_API_KEY
-  ? new OpenAI({ apiKey: env.OPENAI_API_KEY })
-  : null;
+import {
+  createCompletion,
+  isAIConfigured,
+  getConfiguredProvider,
+  getProviderDisplayName,
+  type AIMessage,
+} from "./ai-provider";
 
 /**
  * Check if the AI assistant is configured
  */
 export function isAssistantConfigured(): boolean {
-  return !!env.OPENAI_API_KEY;
+  return isAIConfigured();
+}
+
+/**
+ * Get the current AI provider info
+ */
+export function getAssistantProviderInfo(): { provider: string; displayName: string } {
+  const provider = getConfiguredProvider();
+  return {
+    provider,
+    displayName: getProviderDisplayName(provider),
+  };
 }
 
 /**
@@ -112,40 +121,35 @@ export async function sendMessageToAssistant(
   chatHistory: ChatMessage[],
   project: DemandProject | null
 ): Promise<AssistantResponse> {
-  if (!openai) {
-    throw new Error("L'assistant IA n'est pas configuré. Veuillez configurer OPENAI_API_KEY.");
+  if (!isAIConfigured()) {
+    throw new Error("L'assistant IA n'est pas configuré. Veuillez configurer OPENAI_API_KEY ou ANTHROPIC_API_KEY.");
   }
 
   const systemPrompt = buildSystemPrompt(project);
 
   // Build the messages array
-  const messages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+  const messages: AIMessage[] = [
     { role: "system", content: systemPrompt },
     ...chatHistory.map((msg) => ({
-      role: msg.role as "user" | "assistant",
+      role: msg.role as "user" | "assistant" | "system",
       content: msg.content,
     })),
     { role: "user", content: userMessage },
   ];
 
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages,
-      max_tokens: 1000,
+    const response = await createCompletion(messages, {
+      maxTokens: 1000,
       temperature: 0.7,
     });
 
-    const content = response.choices[0]?.message?.content ?? "";
-    const tokenCount = response.usage?.total_tokens;
-
     return {
-      content,
-      tokenCount,
+      content: response.content,
+      tokenCount: response.tokenCount,
       model: response.model,
     };
   } catch (error) {
-    console.error("Error calling OpenAI:", error);
+    console.error("Error calling AI assistant:", error);
     throw new Error("Erreur lors de la communication avec l'assistant IA.");
   }
 }
@@ -254,8 +258,8 @@ export async function generateSectionDraft(
   section: GeneratableSection,
   project: DemandProject
 ): Promise<AssistantResponse> {
-  if (!openai) {
-    throw new Error("L'assistant IA n'est pas configuré. Veuillez configurer OPENAI_API_KEY.");
+  if (!isAIConfigured()) {
+    throw new Error("L'assistant IA n'est pas configuré. Veuillez configurer OPENAI_API_KEY ou ANTHROPIC_API_KEY.");
   }
 
   const sectionConfig = sectionPrompts[section];
@@ -295,22 +299,20 @@ ${projectContext}
 Génère un brouillon professionnel et complet pour cette section.`;
 
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
+    const response = await createCompletion(
+      [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
-      max_tokens: 1500,
-      temperature: 0.7,
-    });
-
-    const content = response.choices[0]?.message?.content ?? "";
-    const tokenCount = response.usage?.total_tokens;
+      {
+        maxTokens: 1500,
+        temperature: 0.7,
+      }
+    );
 
     return {
-      content,
-      tokenCount,
+      content: response.content,
+      tokenCount: response.tokenCount,
       model: response.model,
     };
   } catch (error) {
@@ -325,8 +327,8 @@ Génère un brouillon professionnel et complet pour cette section.`;
 export async function reformulateText(
   originalText: string
 ): Promise<AssistantResponse> {
-  if (!openai) {
-    throw new Error("L'assistant IA n'est pas configuré. Veuillez configurer OPENAI_API_KEY.");
+  if (!isAIConfigured()) {
+    throw new Error("L'assistant IA n'est pas configuré. Veuillez configurer OPENAI_API_KEY ou ANTHROPIC_API_KEY.");
   }
 
   if (!originalText.trim()) {
@@ -357,22 +359,20 @@ IMPORTANT:
 ${originalText}`;
 
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
+    const response = await createCompletion(
+      [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
-      max_tokens: 2000,
-      temperature: 0.5,
-    });
-
-    const content = response.choices[0]?.message?.content ?? "";
-    const tokenCount = response.usage?.total_tokens;
+      {
+        maxTokens: 2000,
+        temperature: 0.5,
+      }
+    );
 
     return {
-      content,
-      tokenCount,
+      content: response.content,
+      tokenCount: response.tokenCount,
       model: response.model,
     };
   } catch (error) {
@@ -422,8 +422,8 @@ export interface ExtractedDocumentInfo {
 export async function generateFollowUpQuestions(
   project: DemandProject
 ): Promise<FollowUpQuestion[]> {
-  if (!openai) {
-    throw new Error("L'assistant IA n'est pas configuré. Veuillez configurer OPENAI_API_KEY.");
+  if (!isAIConfigured()) {
+    throw new Error("L'assistant IA n'est pas configuré. Veuillez configurer OPENAI_API_KEY ou ANTHROPIC_API_KEY.");
   }
 
   // First, analyze what's missing or incomplete
@@ -511,18 +511,19 @@ ${projectContext}
 Génère les questions au format JSON.`;
 
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
+    const response = await createCompletion(
+      [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
-      max_tokens: 1000,
-      temperature: 0.7,
-      response_format: { type: "json_object" },
-    });
+      {
+        maxTokens: 1000,
+        temperature: 0.7,
+        jsonMode: true,
+      }
+    );
 
-    const content = response.choices[0]?.message?.content ?? "[]";
+    const content = response.content || "[]";
 
     // Parse the JSON response
     let questions: FollowUpQuestion[] = [];
@@ -568,8 +569,8 @@ export async function extractDocumentInfo(
   documentText: string,
   documentFormat: "pdf" | "docx" | "doc"
 ): Promise<ExtractedDocumentInfo> {
-  if (!openai) {
-    throw new Error("L'assistant IA n'est pas configuré. Veuillez configurer OPENAI_API_KEY.");
+  if (!isAIConfigured()) {
+    throw new Error("L'assistant IA n'est pas configuré. Veuillez configurer OPENAI_API_KEY ou ANTHROPIC_API_KEY.");
   }
 
   if (!documentText.trim()) {
@@ -636,18 +637,19 @@ ${truncatedText}
 Extrais les informations au format JSON spécifié.`;
 
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
+    const response = await createCompletion(
+      [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
-      max_tokens: 3000,
-      temperature: 0.3,
-      response_format: { type: "json_object" },
-    });
+      {
+        maxTokens: 3000,
+        temperature: 0.3,
+        jsonMode: true,
+      }
+    );
 
-    const content = response.choices[0]?.message?.content ?? "{}";
+    const content = response.content || "{}";
 
     // Parse the JSON response
     const parsed: unknown = JSON.parse(content);
@@ -737,8 +739,8 @@ export interface SuggestedCriteriaResponse {
 export async function generateSuggestedCriteria(
   project: DemandProject
 ): Promise<SuggestedCriteriaResponse> {
-  if (!openai) {
-    throw new Error("L'assistant IA n'est pas configuré. Veuillez configurer OPENAI_API_KEY.");
+  if (!isAIConfigured()) {
+    throw new Error("L'assistant IA n'est pas configuré. Veuillez configurer OPENAI_API_KEY ou ANTHROPIC_API_KEY.");
   }
 
   const needTypeLabels: Record<string, string> = {
@@ -803,18 +805,19 @@ ${projectContext}
 Génère les critères au format JSON.`;
 
   try {
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      messages: [
+    const response = await createCompletion(
+      [
         { role: "system", content: systemPrompt },
         { role: "user", content: userPrompt },
       ],
-      max_tokens: 2000,
-      temperature: 0.7,
-      response_format: { type: "json_object" },
-    });
+      {
+        maxTokens: 2000,
+        temperature: 0.7,
+        jsonMode: true,
+      }
+    );
 
-    const content = response.choices[0]?.message?.content ?? "{}";
+    const content = response.content || "{}";
 
     // Parse the JSON response
     const parsed: unknown = JSON.parse(content);

@@ -42,10 +42,17 @@ export const env = createEnv({
     STRIPE_WEBHOOK_SECRET: z.string().optional(),
     STRIPE_PRO_PRICE_ID: z.string().optional(),
     STRIPE_BUSINESS_PRICE_ID: z.string().optional(),
-    // OpenAI - AI document analysis (Story 2.11)
-    // Required for: automatic expiration date detection
+    // OpenAI - AI assistant (Story 2.11)
+    // Required for: AI editorial assistant, document analysis
     // Get your API key from https://platform.openai.com/api-keys
     OPENAI_API_KEY: z.string().optional(),
+    // Anthropic Claude - AI assistant alternative
+    // Required for: AI editorial assistant (if using Claude)
+    // Get your API key from https://console.anthropic.com/settings/keys
+    ANTHROPIC_API_KEY: z.string().optional(),
+    // AI Provider selection - which LLM to use for the assistant
+    // Options: "openai" (default), "anthropic"
+    AI_PROVIDER: z.enum(["openai", "anthropic"]).default("openai"),
     // Inngest - Background jobs (Story 4.1)
     // Required for: RC parsing, document generation
     // Get your keys from https://app.inngest.com
@@ -86,6 +93,8 @@ export const env = createEnv({
     STRIPE_BUSINESS_PRICE_ID: process.env.STRIPE_BUSINESS_PRICE_ID,
     NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+    ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+    AI_PROVIDER: process.env.AI_PROVIDER,
     INNGEST_EVENT_KEY: process.env.INNGEST_EVENT_KEY,
     INNGEST_SIGNING_KEY: process.env.INNGEST_SIGNING_KEY,
   },
