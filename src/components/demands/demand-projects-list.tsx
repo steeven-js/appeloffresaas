@@ -402,22 +402,20 @@ function ProjectFormDialog({
                   <FormItem>
                     <FormLabel>Service demandeur *</FormLabel>
                     <FormControl>
-                      <>
-                        <Input
-                          placeholder="Direction informatique"
-                          disabled={isPending}
-                          list="department-suggestions"
-                          {...field}
-                        />
-                        {departments.length > 0 && (
-                          <datalist id="department-suggestions">
-                            {departments.map((dept) => (
-                              <option key={dept} value={dept} />
-                            ))}
-                          </datalist>
-                        )}
-                      </>
+                      <Input
+                        placeholder="Direction informatique"
+                        disabled={isPending}
+                        list="department-suggestions"
+                        {...field}
+                      />
                     </FormControl>
+                    {departments.length > 0 && (
+                      <datalist id="department-suggestions">
+                        {departments.map((dept) => (
+                          <option key={dept} value={dept} />
+                        ))}
+                      </datalist>
+                    )}
                     <FormMessage />
                   </FormItem>
                 )}
