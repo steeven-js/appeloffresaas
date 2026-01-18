@@ -48,6 +48,7 @@ export function CopilotPanel({
   className,
 }: CopilotPanelProps) {
   // Fetch copilot suggestions
+  // Note: Reduced frequency to save OpenAI API costs - manual refresh available
   const {
     data: analysis,
     isLoading,
@@ -56,8 +57,9 @@ export function CopilotPanel({
   } = api.demandChat.getCopilotSuggestions.useQuery(
     { demandProjectId: projectId },
     {
-      refetchInterval: 60000, // Refresh every minute
-      staleTime: 30000, // Consider data stale after 30 seconds
+      refetchInterval: 3600000, // Refresh every hour (was 1 minute)
+      staleTime: 3600000, // Consider data stale after 1 hour
+      refetchOnWindowFocus: false, // Don't refetch on tab focus
     }
   );
 
