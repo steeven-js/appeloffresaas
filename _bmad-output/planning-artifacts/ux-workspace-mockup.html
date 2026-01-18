@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppelOffreSaaS - Workspace Mockup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3B82F6',
+                        success: '#22C55E',
+                        warning: '#F59E0B',
+                        destructive: '#EF4444',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .module-item.active {
+            background: rgba(59, 130, 246, 0.1);
+            border-left: 3px solid #3B82F6;
+        }
+        .mode-tab.active {
+            background: #3B82F6;
+            color: white;
+        }
+        .copilot-card {
+            transition: all 0.2s;
+        }
+        .copilot-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .chat-bubble-ai {
+            background: #f1f5f9;
+            border-radius: 0 12px 12px 12px;
+        }
+        .chat-bubble-user {
+            background: #3B82F6;
+            color: white;
+            border-radius: 12px 0 12px 12px;
+        }
+        .view-content {
+            display: none !important;
+        }
+        .view-content.active {
+            display: flex !important;
+        }
+        #view-overview.active,
+        #view-preview.active {
+            display: block !important;
+        }
+        .overview-card:hover {
+            border-color: rgba(59, 130, 246, 0.5);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Main Container -->
+    <div class="flex h-screen">
+
+        <!-- ========== SIDEBAR (260px) ========== -->
+        <aside class="w-[260px] bg-white border-r flex flex-col">
+            <!-- Back Button -->
+            <div class="p-4 border-b">
+                <button class="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                    Retour aux dossiers
+                </button>
+            </div>
+
+            <!-- Completion Gauge -->
+            <div class="p-4 border-b">
+                <div class="text-sm font-medium text-gray-700 mb-2">Complétude</div>
+                <div class="h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div class="h-full bg-primary rounded-full transition-all duration-500" style="width: 67%"></div>
+                </div>
+                <div class="flex justify-between mt-2 text-xs text-gray-500">
+                    <span>67% complet</span>
+                    <span>12 / 18</span>
+                </div>
+            </div>
+
+            <!-- Modules List -->
+            <div class="flex-1 overflow-y-auto">
+                <div class="p-3">
+                    <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-2">
+                        Modules
+                    </div>
+
+                    <div class="space-y-1">
+                        <button onclick="selectModule('info')" id="mod-info" class="module-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm hover:bg-gray-100 transition-colors">
+                            <span class="text-success">●</span>
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                            <span class="flex-1 text-left">Informations</span>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+
+                        <button onclick="selectModule('context')" id="mod-context" class="module-item active w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm hover:bg-gray-100 transition-colors">
+                            <span class="text-success">●</span>
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                            </svg>
+                            <span class="flex-1 text-left">Contexte</span>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+
+                        <button onclick="selectModule('description')" id="mod-description" class="module-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm hover:bg-gray-100 transition-colors">
+                            <span class="text-success">●</span>
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                            <span class="flex-1 text-left">Description</span>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+
+                        <button onclick="selectModule('constraints')" id="mod-constraints" class="module-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm hover:bg-gray-100 transition-colors">
+                            <span class="text-warning">◐</span>
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                            </svg>
+                            <span class="flex-1 text-left">Contraintes</span>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+
+                        <button onclick="selectModule('budget')" id="mod-budget" class="module-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm hover:bg-gray-100 transition-colors">
+                            <span class="text-gray-400">○</span>
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span class="flex-1 text-left">Budget & Délais</span>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+
+                        <button onclick="selectModule('documents')" id="mod-documents" class="module-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm hover:bg-gray-100 transition-colors">
+                            <span class="text-gray-400">○</span>
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                            </svg>
+                            <span class="flex-1 text-left">Documents</span>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
+
+                    <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mt-6 mb-2 px-2">
+                        Sections Rédaction
+                    </div>
+
+                    <div class="space-y-1">
+                        <button onclick="selectModule('methodology')" id="mod-methodology" class="module-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm hover:bg-gray-100 transition-colors">
+                            <span class="text-gray-400">○</span>
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                            </svg>
+                            <span class="flex-1 text-left">Méthodologie</span>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+
+                        <button onclick="selectModule('references')" id="mod-references" class="module-item w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm hover:bg-gray-100 transition-colors">
+                            <span class="text-gray-400">○</span>
+                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+                            </svg>
+                            <span class="flex-1 text-left">Références</span>
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Add Section Button -->
+            <div class="p-4 border-t">
+                <button class="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm text-primary border border-primary rounded-md hover:bg-primary/5 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Ajouter section
+                </button>
+            </div>
+        </aside>
+
+        <!-- ========== ZONE CENTRALE (flex: 1) ========== -->
+        <main class="flex-1 flex flex-col min-w-0 bg-gray-50">
+            <!-- Header with Mode Toggle -->
+            <div class="flex items-center justify-between px-4 py-3 bg-white border-b">
+                <div class="flex items-center gap-1 bg-gray-100 rounded-lg p-1">
+                    <button onclick="switchView('overview')" id="tab-overview" class="mode-tab active px-3 py-1.5 rounded-md text-sm font-medium transition-colors">
+                        📊 Vue d'ensemble
+                    </button>
+                    <button onclick="switchView('chat')" id="tab-chat" class="mode-tab px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                        💬 Chat
+                    </button>
+                    <button onclick="switchView('preview')" id="tab-preview" class="mode-tab px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                        📄 Preview
+                    </button>
+                    <button onclick="switchView('split')" id="tab-split" class="mode-tab px-3 py-1.5 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+                        ⚡ Split
+                    </button>
+                </div>
+                <div class="text-sm text-gray-500" id="module-indicator">
+                    Module : <strong id="current-module">Contexte</strong>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="flex-1 overflow-hidden">
+
+                <!-- VIEW: Overview Dashboard -->
+                <div id="view-overview" class="view-content active h-full overflow-y-auto p-6">
+                    <div class="max-w-5xl mx-auto space-y-6">
+                        <!-- Title Header -->
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h1 class="text-2xl font-bold text-gray-900">Solution de Gestion des Congés et Absences</h1>
+                                <p class="text-sm text-gray-500">Réf: DEM-2025-RH-001</p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded">Brouillon</span>
+                                <span class="px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-700 rounded">Moyen</span>
+                            </div>
+                        </div>
+
+                        <!-- Quick Stats -->
+                        <div class="grid grid-cols-4 gap-4">
+                            <div class="bg-white rounded-lg border p-4">
+                                <div class="text-xs text-gray-500 mb-1">Service demandeur</div>
+                                <div class="font-medium text-sm">Direction des Ressources Humaines</div>
+                            </div>
+                            <div class="bg-white rounded-lg border p-4">
+                                <div class="text-xs text-gray-500 mb-1">Contact</div>
+                                <div class="font-medium text-sm">Sophie Bernard</div>
+                            </div>
+                            <div class="bg-white rounded-lg border p-4">
+                                <div class="text-xs text-gray-500 mb-1">Budget estimé</div>
+                                <div class="font-medium text-sm">80 000 - 120 000 EUR</div>
+                            </div>
+                            <div class="bg-white rounded-lg border p-4">
+                                <div class="text-xs text-gray-500 mb-1">Date souhaitée</div>
+                                <div class="font-medium text-sm">2025-09-01</div>
+                            </div>
+                        </div>
+
+                        <!-- Cards Grid -->
+                        <div class="grid grid-cols-2 gap-6">
+                            <!-- Contexte -->
+                            <div onclick="goToChat('context')" class="overview-card bg-white rounded-lg border p-5 transition-colors">
+                                <h3 class="font-semibold text-gray-900 mb-3">Contexte & Justification</h3>
+                                <div class="text-sm text-gray-600 space-y-2">
+                                    <p>Dans le cadre de la modernisation de notre système d'information, le Service des Ressources Humaines a identifié un besoin urgent de digitalisation de la gestion des congés et absences.</p>
+                                    <p>Actuellement, le processus repose sur des formulaires papier et des échanges d'emails, ce qui engendre :</p>
+                                    <ul class="list-disc ml-5 space-y-1">
+                                        <li>Des délais de traitement importants (5 à 10 jours ouvrés)</li>
+                                        <li>Des erreurs de saisie fréquentes</li>
+                                        <li>Une difficulté à suivre les soldes de congés en temps réel</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Description -->
+                            <div onclick="goToChat('description')" class="overview-card bg-white rounded-lg border p-5 transition-colors">
+                                <h3 class="font-semibold text-gray-900 mb-3">Description du besoin</h3>
+                                <div class="text-sm text-gray-600">
+                                    <p>Acquisition d'une solution logicielle de gestion dématérialisée des congés et absences pour l'ensemble des collaborateurs de l'organisation.</p>
+                                </div>
+                            </div>
+
+                            <!-- Contraintes -->
+                            <div onclick="goToChat('constraints')" class="overview-card bg-white rounded-lg border p-5 transition-colors">
+                                <h3 class="font-semibold text-gray-900 mb-3">Contraintes identifiées</h3>
+                                <div class="text-sm text-gray-600 space-y-2">
+                                    <p class="font-medium">Contraintes techniques :</p>
+                                    <ul class="list-disc ml-5 space-y-1">
+                                        <li>Intégration obligatoire avec le SIRH SAP SuccessFactors existant</li>
+                                        <li>Compatibilité avec les navigateurs : Chrome, Firefox, Edge</li>
+                                        <li>Disponibilité minimale de 99,5% en heures ouvrées</li>
+                                    </ul>
+                                    <p class="font-medium mt-3">Contraintes réglementaires :</p>
+                                    <ul class="list-disc ml-5 space-y-1">
+                                        <li>Conformité RGPD (données hébergées en France ou UE)</li>
+                                        <li>Respect des règles de gestion RH en vigueur</li>
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <!-- Budget -->
+                            <div onclick="goToChat('budget')" class="overview-card bg-white rounded-lg border p-5 transition-colors">
+                                <h3 class="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                    </svg>
+                                    Budget & Délais
+                                </h3>
+                                <div class="text-sm space-y-3">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <span class="text-gray-500">Fourchette budgétaire</span>
+                                            <p class="font-medium">80 000 - 120 000 EUR</p>
+                                        </div>
+                                        <div>
+                                            <span class="text-gray-500">Montant estimé</span>
+                                            <p class="font-medium">100 000 EUR</p>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <span class="text-gray-500">Date souhaitée</span>
+                                            <p class="font-medium">31/08/2025</p>
+                                        </div>
+                                        <div>
+                                            <span class="text-gray-500">Statut budget</span>
+                                            <p><span class="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded">Validé</span></p>
+                                        </div>
+                                    </div>
+                                    <div class="pt-3 border-t">
+                                        <div class="flex items-center gap-1 text-orange-600 text-xs mb-1">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                                            </svg>
+                                            Justification urgence
+                                        </div>
+                                        <p class="text-gray-600">Mise en production impérative avant la rentrée de septembre pour bénéficier de la période de congés d'été pour la bascule.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: Chat -->
+                <div id="view-chat" class="view-content h-full flex flex-col">
+                    <div class="flex-1 overflow-y-auto p-6 space-y-4">
+                        <!-- AI Message -->
+                        <div class="flex gap-3 max-w-3xl">
+                            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                                </svg>
+                            </div>
+                            <div class="chat-bubble-ai p-4 max-w-xl">
+                                <p class="text-sm text-gray-700">Bonjour ! Je suis votre assistant pour ce dossier d'appel d'offres. Parlons du <strong>contexte</strong> de votre besoin.</p>
+                                <p class="text-sm text-gray-700 mt-2">Pourquoi ce projet est-il nécessaire pour votre organisation ?</p>
+                            </div>
+                        </div>
+
+                        <!-- User Message -->
+                        <div class="flex gap-3 max-w-3xl ml-auto flex-row-reverse">
+                            <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
+                                <span class="text-xs font-medium text-gray-600">SB</span>
+                            </div>
+                            <div class="chat-bubble-user p-4 max-w-xl">
+                                <p class="text-sm">Dans le cadre de la modernisation de notre système d'information, nous avons identifié un besoin urgent de digitalisation de la gestion des congés.</p>
+                            </div>
+                        </div>
+
+                        <!-- AI Response -->
+                        <div class="flex gap-3 max-w-3xl">
+                            <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                                </svg>
+                            </div>
+                            <div class="chat-bubble-ai p-4 max-w-xl">
+                                <p class="text-sm text-gray-700">Excellent ! Je comprends que vous souhaitez moderniser votre système d'information avec une solution de gestion des congés.</p>
+                                <div class="mt-3 p-2 bg-green-50 border border-green-200 rounded-md">
+                                    <p class="text-xs text-green-700 flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        J'ai mis à jour la section "Contexte"
+                                    </p>
+                                </div>
+                                <p class="text-sm text-gray-700 mt-3">Quels sont les principaux problèmes que vous rencontrez actuellement avec le processus existant ?</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Chat Input -->
+                    <div class="p-4 border-t bg-white">
+                        <div class="flex items-center gap-3 max-w-3xl mx-auto">
+                            <button class="p-2 text-gray-500 hover:text-gray-700">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                                </svg>
+                            </button>
+                            <input type="text" placeholder="Décrivez votre approche..." class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50">
+                            <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors">
+                                Envoyer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: Preview -->
+                <div id="view-preview" class="view-content h-full overflow-y-auto p-6 bg-gray-200">
+                    <!-- Toolbar -->
+                    <div class="max-w-4xl mx-auto mb-4 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <button class="p-2 bg-white rounded-lg shadow hover:bg-gray-50" title="Zoom arrière">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM13 10H7"/>
+                                </svg>
+                            </button>
+                            <span class="text-sm text-gray-600 bg-white px-3 py-1 rounded-lg shadow">100%</span>
+                            <button class="p-2 bg-white rounded-lg shadow hover:bg-gray-50" title="Zoom avant">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"/>
+                                </svg>
+                            </button>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-sm text-gray-500">Page 1 / 2</span>
+                            <button class="px-3 py-1.5 bg-primary text-white text-sm rounded-lg hover:bg-primary/90 flex items-center gap-1">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                Exporter
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Document A4 Style -->
+                    <div class="max-w-4xl mx-auto bg-white shadow-2xl" style="min-height: 297mm; width: 210mm; margin: 0 auto;">
+                        <div class="p-12">
+                            <!-- Header -->
+                            <div class="border-b-2 border-primary pb-6 mb-8">
+                                <h1 class="text-2xl font-bold text-primary mb-2">Solution de Gestion des Congés et Absences</h1>
+                                <p class="text-sm text-gray-500">Référence : DEM-2025-RH-001</p>
+                            </div>
+
+                            <!-- Metadata Grid -->
+                            <div class="grid grid-cols-2 gap-4 mb-8 text-sm">
+                                <div>
+                                    <span class="font-medium text-gray-500">Service demandeur :</span>
+                                    <p>Direction des Ressources Humaines</p>
+                                </div>
+                                <div>
+                                    <span class="font-medium text-gray-500">Contact :</span>
+                                    <p>Sophie Bernard</p>
+                                    <p class="text-gray-500">sophie.bernard@entreprise.fr</p>
+                                </div>
+                                <div>
+                                    <span class="font-medium text-gray-500">Type de besoin :</span>
+                                    <p>Logiciel / Licence</p>
+                                </div>
+                                <div>
+                                    <span class="font-medium text-gray-500">Niveau d'urgence :</span>
+                                    <p>Moyen</p>
+                                </div>
+                                <div>
+                                    <span class="font-medium text-gray-500">Budget estimé :</span>
+                                    <p>80 000 - 120 000 EUR</p>
+                                </div>
+                                <div>
+                                    <span class="font-medium text-gray-500">Date souhaitée :</span>
+                                    <p>01/09/2025</p>
+                                </div>
+                            </div>
+
+                            <!-- Sections -->
+                            <div class="space-y-8">
+                                <section>
+                                    <h2 class="text-lg font-semibold text-primary border-b pb-2 mb-4">1. Contexte & Justification</h2>
+                                    <div class="text-sm text-gray-700 space-y-3">
+                                        <p>Dans le cadre de la modernisation de notre système d'information, le Service des Ressources Humaines a identifié un besoin urgent de digitalisation de la gestion des congés et absences.</p>
+                                        <p>Actuellement, le processus repose sur des formulaires papier et des échanges d'emails, ce qui engendre :</p>
+                                        <ul class="list-disc ml-6 space-y-1">
+                                            <li>Des délais de traitement importants (5 à 10 jours ouvrés)</li>
+                                            <li>Des erreurs de saisie fréquentes</li>
+                                            <li>Une difficulté à suivre les soldes de congés en temps réel</li>
+                                            <li>Une charge administrative excessive pour l'équipe RH (estimation : 2 ETP)</li>
+                                        </ul>
+                                        <p>Ce projet s'inscrit dans la stratégie de transformation numérique 2024-2026 validée par la Direction Générale et répond aux objectifs du schéma directeur SI.</p>
+                                    </div>
+                                </section>
+
+                                <section>
+                                    <h2 class="text-lg font-semibold text-primary border-b pb-2 mb-4">2. Description du besoin</h2>
+                                    <div class="text-sm text-gray-700">
+                                        <p>Acquisition d'une solution logicielle de gestion dématérialisée des congés et absences pour l'ensemble des collaborateurs de l'organisation.</p>
+                                    </div>
+                                </section>
+
+                                <section>
+                                    <h2 class="text-lg font-semibold text-primary border-b pb-2 mb-4">3. Contraintes identifiées</h2>
+                                    <div class="text-sm text-gray-700 space-y-3">
+                                        <p class="font-semibold">Contraintes techniques :</p>
+                                        <ul class="list-disc ml-6 space-y-1">
+                                            <li>Intégration obligatoire avec le SIRH SAP SuccessFactors existant</li>
+                                            <li>Compatibilité avec les navigateurs : Chrome, Firefox, Edge (versions récentes)</li>
+                                            <li>Disponibilité minimale de 99,5% en heures ouvrées</li>
+                                            <li>Temps de réponse &lt; 3 secondes pour les opérations courantes</li>
+                                        </ul>
+
+                                        <p class="font-semibold mt-4">Contraintes réglementaires :</p>
+                                        <ul class="list-disc ml-6 space-y-1">
+                                            <li>Conformité RGPD (données hébergées en France ou UE)</li>
+                                            <li>Respect des règles de gestion RH en vigueur (statut fonction publique)</li>
+                                            <li>Traçabilité des opérations pour audit</li>
+                                        </ul>
+
+                                        <p class="font-semibold mt-4">Contraintes organisationnelles :</p>
+                                        <ul class="list-disc ml-6 space-y-1">
+                                            <li>Déploiement progressif par direction (4 vagues)</li>
+                                            <li>Formation des utilisateurs clés avant déploiement</li>
+                                            <li>Période de bascule : hors période de congés scolaires</li>
+                                        </ul>
+                                    </div>
+                                </section>
+                            </div>
+
+                            <!-- Footer -->
+                            <div class="mt-12 pt-4 border-t text-xs text-gray-400 text-center">
+                                Document généré le 18/01/2026 — Page 1/2
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: Split -->
+                <div id="view-split" class="view-content h-full flex">
+                    <!-- Left: Chat -->
+                    <div class="w-1/2 border-r flex flex-col bg-white">
+                        <div class="p-3 border-b bg-gray-50">
+                            <span class="text-sm font-medium text-gray-700">💬 Conversation</span>
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-4 space-y-4">
+                            <!-- AI Message -->
+                            <div class="flex gap-3">
+                                <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                                    </svg>
+                                </div>
+                                <div class="chat-bubble-ai p-3 max-w-sm">
+                                    <p class="text-sm text-gray-700">Parlons des <strong>contraintes techniques</strong> de votre projet.</p>
+                                    <p class="text-sm text-gray-700 mt-2">Avec quels systèmes existants la solution doit-elle s'intégrer ?</p>
+                                </div>
+                            </div>
+
+                            <!-- User Message -->
+                            <div class="flex gap-3 flex-row-reverse">
+                                <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
+                                    <span class="text-xs font-medium text-gray-600">SB</span>
+                                </div>
+                                <div class="chat-bubble-user p-3 max-w-sm">
+                                    <p class="text-sm">Notre SIRH est SAP SuccessFactors, l'intégration est obligatoire.</p>
+                                </div>
+                            </div>
+
+                            <!-- AI Response with update notification -->
+                            <div class="flex gap-3">
+                                <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                                    </svg>
+                                </div>
+                                <div class="chat-bubble-ai p-3 max-w-sm">
+                                    <p class="text-sm text-gray-700">Compris ! L'intégration SAP SuccessFactors est une contrainte clé.</p>
+                                    <div class="mt-2 p-2 bg-green-50 border border-green-200 rounded-md flex items-center gap-2">
+                                        <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                        <span class="text-xs text-green-700">Section "Contraintes" mise à jour →</span>
+                                    </div>
+                                    <p class="text-sm text-gray-700 mt-2">Quels navigateurs doivent être supportés ?</p>
+                                </div>
+                            </div>
+
+                            <!-- User typing -->
+                            <div class="flex gap-3 flex-row-reverse">
+                                <div class="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center flex-shrink-0">
+                                    <span class="text-xs font-medium text-gray-600">SB</span>
+                                </div>
+                                <div class="chat-bubble-user p-3 max-w-sm">
+                                    <p class="text-sm">Chrome, Firefox et Edge versions récentes.</p>
+                                </div>
+                            </div>
+
+                            <!-- AI typing indicator -->
+                            <div class="flex gap-3">
+                                <div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                                    <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                                    </svg>
+                                </div>
+                                <div class="chat-bubble-ai p-3">
+                                    <div class="flex items-center gap-1">
+                                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 0ms"></div>
+                                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 150ms"></div>
+                                        <div class="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style="animation-delay: 300ms"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-3 border-t">
+                            <div class="flex items-center gap-2">
+                                <button class="p-2 text-gray-500 hover:text-gray-700">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+                                    </svg>
+                                </button>
+                                <input type="text" placeholder="Votre message..." class="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50">
+                                <button class="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Live Preview -->
+                    <div class="w-1/2 flex flex-col bg-gray-100">
+                        <div class="p-3 border-b bg-gray-50 flex items-center justify-between">
+                            <span class="text-sm font-medium text-gray-700">📄 Aperçu en direct</span>
+                            <span class="text-xs text-green-600 flex items-center gap-1">
+                                <span class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                                Synchronisé
+                            </span>
+                        </div>
+                        <div class="flex-1 overflow-y-auto p-4">
+                            <div class="bg-white shadow-lg rounded-lg p-6 text-sm">
+                                <!-- Mini document preview -->
+                                <div class="border-b-2 border-primary pb-3 mb-4">
+                                    <h1 class="text-lg font-bold text-primary">Solution de Gestion des Congés et Absences</h1>
+                                    <p class="text-xs text-gray-500">Réf: DEM-2025-RH-001</p>
+                                </div>
+
+                                <section class="mb-4">
+                                    <h2 class="text-sm font-semibold text-primary border-b pb-1 mb-2">1. Contexte & Justification</h2>
+                                    <p class="text-xs text-gray-700">Dans le cadre de la modernisation de notre système d'information...</p>
+                                </section>
+
+                                <section class="mb-4">
+                                    <h2 class="text-sm font-semibold text-primary border-b pb-1 mb-2">2. Description du besoin</h2>
+                                    <p class="text-xs text-gray-700">Acquisition d'une solution logicielle...</p>
+                                </section>
+
+                                <!-- Highlighted section being edited -->
+                                <section class="mb-4 p-3 bg-green-50 border-2 border-green-300 rounded-lg relative">
+                                    <div class="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">
+                                        En cours
+                                    </div>
+                                    <h2 class="text-sm font-semibold text-primary border-b pb-1 mb-2">3. Contraintes identifiées</h2>
+                                    <div class="text-xs text-gray-700 space-y-2">
+                                        <p class="font-medium">Contraintes techniques :</p>
+                                        <ul class="list-disc ml-4 space-y-1">
+                                            <li>Intégration obligatoire avec le SIRH SAP SuccessFactors existant</li>
+                                            <li class="text-green-700 font-medium animate-pulse">Compatibilité avec les navigateurs : Chrome, Firefox, Edge (versions récentes)</li>
+                                        </ul>
+                                    </div>
+                                </section>
+
+                                <section class="opacity-50">
+                                    <h2 class="text-sm font-semibold text-gray-400 border-b pb-1 mb-2">4. Budget & Délais</h2>
+                                    <p class="text-xs text-gray-400 italic">Section à compléter...</p>
+                                </section>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+
+        <!-- ========== CO-PILOTE (320px) ========== -->
+        <aside class="w-[320px] bg-white border-l flex flex-col">
+            <!-- Header -->
+            <div class="p-4 border-b">
+                <h2 class="font-semibold flex items-center gap-2">
+                    <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                    </svg>
+                    Co-pilote
+                </h2>
+            </div>
+
+            <!-- Cards -->
+            <div class="flex-1 overflow-y-auto p-4 space-y-3">
+                <!-- Suggestion Card -->
+                <div class="copilot-card bg-white border-l-4 border-primary rounded-lg shadow-sm p-4">
+                    <div class="flex items-center gap-2 text-sm font-medium text-gray-900 mb-2">
+                        <svg class="w-4 h-4 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+                        </svg>
+                        Suggestion
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">Le RC mentionne une exigence RSE. Pensez à inclure votre politique environnementale.</p>
+                    <div class="flex gap-2">
+                        <button class="px-3 py-1 text-xs font-medium bg-primary text-white rounded hover:bg-primary/90">Appliquer</button>
+                        <button class="px-3 py-1 text-xs font-medium text-gray-600 border rounded hover:bg-gray-50">Ignorer</button>
+                    </div>
+                </div>
+
+                <!-- Generation Card -->
+                <div class="copilot-card bg-white border-l-4 border-success rounded-lg shadow-sm p-4">
+                    <div class="flex items-center gap-2 text-sm font-medium text-gray-900 mb-2">
+                        <svg class="w-4 h-4 text-success" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Génération
+                    </div>
+                    <p class="text-sm text-gray-600">Section "Contexte" mise à jour en temps réel.</p>
+                    <p class="text-xs text-gray-400 mt-2">Confiance : 92%</p>
+                </div>
+
+                <!-- Alert Card -->
+                <div class="copilot-card bg-white border-l-4 border-warning rounded-lg shadow-sm p-4">
+                    <div class="flex items-center gap-2 text-sm font-medium text-gray-900 mb-2">
+                        <svg class="w-4 h-4 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        Alerte
+                    </div>
+                    <p class="text-sm text-gray-600 mb-3">Attestation URSSAF expire dans 15 jours.</p>
+                    <button class="px-3 py-1 text-xs font-medium text-warning border border-warning rounded hover:bg-warning/10">Uploader nouveau</button>
+                </div>
+            </div>
+
+            <!-- Document Preview Miniature -->
+            <div class="p-4 border-t">
+                <h3 class="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Aperçu document
+                </h3>
+                <div class="aspect-[210/297] bg-gray-100 rounded border overflow-hidden flex items-center justify-center">
+                    <div class="text-center text-gray-400 text-xs">
+                        <svg class="w-8 h-8 mx-auto mb-1 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                        </svg>
+                        Miniature
+                    </div>
+                </div>
+                <button onclick="switchView('preview')" class="w-full mt-2 px-3 py-1.5 text-xs font-medium text-primary border border-primary rounded hover:bg-primary/5">
+                    Voir en grand
+                </button>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="p-4 border-t space-y-2">
+                <h3 class="text-sm font-medium text-gray-700 mb-2 flex items-center gap-1">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+                    </svg>
+                    Actions rapides
+                </h3>
+                <button class="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50">
+                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Exporter PDF
+                </button>
+                <button class="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50">
+                    <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    Exporter Word
+                </button>
+                <button class="w-full flex items-center justify-center gap-2 px-3 py-2 text-sm border rounded-lg hover:bg-gray-50">
+                    <svg class="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                    </svg>
+                    Exporter ZIP
+                </button>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // State
+        let currentView = 'overview';
+        let currentModule = 'context';
+
+        // Module names mapping
+        const moduleNames = {
+            'info': 'Informations',
+            'context': 'Contexte',
+            'description': 'Description',
+            'constraints': 'Contraintes',
+            'budget': 'Budget & Délais',
+            'documents': 'Documents',
+            'methodology': 'Méthodologie',
+            'references': 'Références'
+        };
+
+        // Switch view mode
+        function switchView(view) {
+            currentView = view;
+
+            // Update tabs
+            document.querySelectorAll('.mode-tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById('tab-' + view).classList.add('active');
+
+            // Update content
+            document.querySelectorAll('.view-content').forEach(content => content.classList.remove('active'));
+            document.getElementById('view-' + view).classList.add('active');
+
+            // Show/hide module indicator
+            const indicator = document.getElementById('module-indicator');
+            indicator.style.display = view === 'overview' ? 'none' : 'block';
+        }
+
+        // Select module from sidebar
+        function selectModule(moduleId) {
+            currentModule = moduleId;
+
+            // Update active state
+            document.querySelectorAll('.module-item').forEach(item => item.classList.remove('active'));
+            document.getElementById('mod-' + moduleId).classList.add('active');
+
+            // Update indicator
+            document.getElementById('current-module').textContent = moduleNames[moduleId];
+
+            // Switch to chat if not already
+            if (currentView === 'overview') {
+                switchView('chat');
+            }
+        }
+
+        // Go to chat from overview card click
+        function goToChat(moduleId) {
+            selectModule(moduleId);
+            switchView('chat');
+        }
+
+        // Initial state
+        document.getElementById('module-indicator').style.display = 'none';
+    </script>
+</body>
+</html>
