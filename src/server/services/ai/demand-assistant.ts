@@ -131,7 +131,7 @@ export async function sendMessageToAssistant(
   const messages: AIMessage[] = [
     { role: "system", content: systemPrompt },
     ...chatHistory.map((msg) => ({
-      role: msg.role as "user" | "assistant" | "system",
+      role: msg.role,
       content: msg.content,
     })),
     { role: "user", content: userMessage },

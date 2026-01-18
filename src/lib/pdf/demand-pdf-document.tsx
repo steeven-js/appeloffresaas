@@ -4,34 +4,14 @@ import {
   Text,
   View,
   StyleSheet,
-  Font,
   Image,
   Link,
 } from "@react-pdf/renderer";
 import type { DemandSection } from "~/server/db/schema";
 
-// Register fonts for professional look
-Font.register({
-  family: "Inter",
-  fonts: [
-    {
-      src: "https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuLyfAZ9hjp-Ek-_EeA.woff2",
-      fontWeight: 400,
-    },
-    {
-      src: "https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuI6fAZ9hjp-Ek-_EeA.woff2",
-      fontWeight: 500,
-    },
-    {
-      src: "https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuGKYAZ9hjp-Ek-_EeA.woff2",
-      fontWeight: 600,
-    },
-    {
-      src: "https://fonts.gstatic.com/s/inter/v18/UcCO3FwrK3iLTeHuS_nVMrMxCp50SjIw2boKoduKmMEVuFuYAZ9hjp-Ek-_EeA.woff2",
-      fontWeight: 700,
-    },
-  ],
-});
+// Use built-in Helvetica font for reliability
+// Custom fonts via URL can fail in serverless environments
+// If you need custom fonts, bundle them locally in /public/fonts/
 
 // Color palette
 const colors = {
@@ -51,7 +31,7 @@ const styles = StyleSheet.create({
     paddingTop: 60, // Space for fixed header
     paddingBottom: 50, // Space for fixed footer
     paddingHorizontal: 50,
-    fontFamily: "Inter",
+    fontFamily: "Helvetica",
     fontSize: 11,
     color: colors.text,
   },
@@ -60,7 +40,7 @@ const styles = StyleSheet.create({
     flexDirection: "column",
     backgroundColor: "#ffffff",
     padding: 50,
-    fontFamily: "Inter",
+    fontFamily: "Helvetica",
     color: colors.text,
   },
   coverContainer: {
@@ -288,7 +268,7 @@ const styles = StyleSheet.create({
     paddingTop: 60, // Space for fixed header
     paddingBottom: 50, // Space for fixed footer
     paddingHorizontal: 50,
-    fontFamily: "Inter",
+    fontFamily: "Helvetica",
     color: colors.text,
   },
   tocHeader: {

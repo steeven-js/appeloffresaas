@@ -213,7 +213,8 @@ function ProjectFormDialog({
 
   const onSubmit = async (data: DemandProjectInput) => {
     // Remove templateId from data as it's not a database field
-    const { templateId: _templateId, ...projectData } = data;
+    const { templateId, ...projectData } = data;
+    void templateId; // Explicitly mark as intentionally unused
 
     if (isEditing) {
       await updateMutation.mutateAsync({
