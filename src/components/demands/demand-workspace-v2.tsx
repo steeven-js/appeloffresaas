@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   FileText,
@@ -58,19 +58,23 @@ export function DemandWorkspaceV2({ projectId }: DemandWorkspaceV2Props) {
     if (project) {
       const existingSections = project.sections ?? [];
       if (existingSections.length === 0) {
-        // Create default sections
-        const defaults = getDefaultSections(projectId);
+        // Create default sections from project fields
+        const defaults = getDefaultSections(
+          project.context ?? undefined,
+          project.description ?? undefined,
+          project.constraints ?? undefined
+        );
         setSections(defaults);
       } else {
         setSections(existingSections);
       }
     }
-  }, [project, projectId]);
+  }, [project]);
 
-  // Run on mount and when project changes
-  useState(() => {
+  // Run when project data is loaded or changes
+  useEffect(() => {
     initializeSections();
-  });
+  }, [initializeSections]);
 
   // Calculate module status based on project data
   const getModuleStatus = (moduleId: ModuleId): ModuleStatus => {
