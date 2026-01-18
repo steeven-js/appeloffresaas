@@ -7,3 +7,4 @@ export { ZoneModeToggle } from "./zone-mode-toggle";
 export { OverviewDashboard } from "./overview-dashboard";
 export { CopilotPanel } from "./copilot-panel";
 export { CopilotCard, type CopilotCardType } from "./copilot-card";
+export { MiniDocumentPreview } from "./mini-document-preview";

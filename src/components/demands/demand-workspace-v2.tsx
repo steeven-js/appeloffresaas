@@ -276,7 +276,18 @@ export function DemandWorkspaceV2({ projectId }: DemandWorkspaceV2Props) {
       copilot={
         <CopilotPanel
           projectId={projectId}
-          projectTitle={project.title}
+          project={{
+            title: project.title,
+            reference: project.reference,
+            departmentName: project.departmentName,
+            contactName: project.contactName,
+            needType: project.needType,
+            urgencyLevel: project.urgencyLevel,
+            budgetRange: project.budgetRange,
+            context: project.context,
+            description: project.description,
+            constraints: project.constraints,
+          }}
           onExportPdf={handleExportPdf}
           onExportDocx={handleExportDocx}
           onExportZip={handleExportZip}

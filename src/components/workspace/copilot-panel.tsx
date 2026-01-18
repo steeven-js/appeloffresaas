@@ -1,34 +1,50 @@
 "use client";
 
-import { Sparkles, Download, FileText, Archive, FileType, RefreshCw, Loader2 } from "lucide-react";
+import { Sparkles, Download, FileText, Archive, RefreshCw, Loader2 } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
 import { CopilotCard, type CopilotAction } from "./copilot-card";
+import { MiniDocumentPreview } from "./mini-document-preview";
 import { Progress } from "~/components/ui/progress";
 import { api } from "~/trpc/react";
 import { cn } from "~/lib/utils";
 
+interface ProjectData {
+  title: string;
+  reference?: string | null;
+  departmentName?: string | null;
+  contactName?: string | null;
+  needType?: string | null;
+  urgencyLevel?: string | null;
+  budgetRange?: string | null;
+  context?: string | null;
+  description?: string | null;
+  constraints?: string | null;
+}
+
 interface CopilotPanelProps {
   projectId: string;
-  projectTitle: string;
+  project: ProjectData;
   onExportPdf?: () => void;
   onExportDocx?: () => void;
   onExportZip?: () => void;
   onNavigate?: (section: string) => void;
   onGenerate?: (section: string) => void;
   onReformulate?: (section: string) => void;
+  onPreviewClick?: () => void;
   className?: string;
 }
 
 export function CopilotPanel({
   projectId,
-  projectTitle,
+  project,
   onExportPdf,
   onExportDocx,
   onExportZip,
   onNavigate,
   onGenerate,
   onReformulate,
+  onPreviewClick,
   className,
 }: CopilotPanelProps) {
   // Fetch copilot suggestions
@@ -128,25 +144,21 @@ export function CopilotPanel({
 
       {/* Aperçu miniature */}
       <div className="p-3 border-t">
-        <h3 className="text-xs font-medium mb-2 flex items-center gap-2">
-          <FileType className="h-3.5 w-3.5" />
-          Aperçu document
-        </h3>
-        <div className="aspect-[210/297] bg-white rounded border shadow-sm overflow-hidden p-1.5 max-h-32">
-          <div className="h-full flex flex-col">
-            <div className="text-[5px] font-bold text-center border-b pb-0.5 mb-0.5 truncate">
-              {projectTitle}
-            </div>
-            <div className="flex-1 space-y-0.5">
-              <div className="h-0.5 bg-muted rounded w-3/4" />
-              <div className="h-0.5 bg-muted rounded w-full" />
-              <div className="h-0.5 bg-muted rounded w-5/6" />
-              <div className="h-0.5 bg-muted rounded w-2/3" />
-              <div className="h-0.5 bg-muted rounded w-full mt-1" />
-              <div className="h-0.5 bg-muted rounded w-4/5" />
-            </div>
-          </div>
-        </div>
+        <h3 className="text-xs font-medium mb-2">Aperçu document</h3>
+        <MiniDocumentPreview
+          title={project.title}
+          reference={project.reference}
+          departmentName={project.departmentName}
+          contactName={project.contactName}
+          needType={project.needType}
+          urgencyLevel={project.urgencyLevel}
+          budgetRange={project.budgetRange}
+          context={project.context}
+          description={project.description}
+          constraints={project.constraints}
+          onClick={onPreviewClick}
+          className="max-h-36"
+        />
       </div>
 
       {/* Actions rapides */}
