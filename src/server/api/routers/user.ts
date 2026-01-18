@@ -87,23 +87,18 @@ export const userRouter = createTRPCRouter({
     const tier = user.subscriptionTier;
     const tierInfo = getTierInfo(tier);
 
-    // For MVP, usage is 0 since we don't have projects/documents tables yet
-    // These will be updated when Epic 2 and Epic 3 are implemented
+    // Usage tracking - counts demands created this month and total documents
     const usage = {
-      projects: 0,
-      documents: 0,
+      demands: 0, // TODO: Count demands created this month
+      documents: 0, // TODO: Count documents in vault
       teamMembers: 1, // The user themselves
     };
 
     // Calculate usage percentages
-    const teamMembersPercentage = tierInfo.limits.maxTeamMembers
-      ? Math.round((usage.teamMembers / tierInfo.limits.maxTeamMembers) * 100)
-      : null;
-
     const usagePercentages = {
-      projects: getUsagePercentage(tier, "maxProjects", usage.projects),
+      demands: getUsagePercentage(tier, "maxDemands", usage.demands),
       documents: getUsagePercentage(tier, "maxDocuments", usage.documents),
-      teamMembers: teamMembersPercentage,
+      teamMembers: null, // Not tracked for now (single user per account in MVP)
     };
 
     return {

@@ -71,9 +71,9 @@ export function TierComparison({
   };
 
   const features = [
-    { key: "projects", label: "Projets AO / mois" },
+    { key: "demands", label: "Dossiers de demande / mois" },
     { key: "documents", label: "Documents coffre-fort" },
-    { key: "teamMembers", label: "Membres d'équipe" },
+    { key: "templates", label: "Templates" },
     { key: "aiAssistance", label: "Assistance IA" },
     { key: "exportFormats", label: "Formats d'export" },
     { key: "support", label: "Support" },
@@ -85,12 +85,16 @@ export function TierComparison({
   ): string => {
     const limits = tier.limits;
     switch (featureKey) {
-      case "projects":
-        return formatLimit(limits.maxProjects);
+      case "demands":
+        return formatLimit(limits.maxDemands);
       case "documents":
         return formatLimit(limits.maxDocuments);
-      case "teamMembers":
-        return limits.maxTeamMembers.toString();
+      case "templates":
+        return limits.templates === "basic"
+          ? "Basiques"
+          : limits.templates === "premium"
+            ? "Premium"
+            : "Personnalisables";
       case "aiAssistance":
         return limits.aiAssistance === "basic"
           ? "Basique"
@@ -100,11 +104,11 @@ export function TierComparison({
       case "exportFormats":
         return limits.exportFormats.join(", ");
       case "support":
-        return limits.supportLevel === "email"
-          ? "Email"
-          : limits.supportLevel === "priority"
-            ? "Prioritaire"
-            : "Dédié";
+        return limits.supportLevel === "community"
+          ? "Communauté"
+          : limits.supportLevel === "email"
+            ? "Email"
+            : "Prioritaire";
       default:
         return "-";
     }

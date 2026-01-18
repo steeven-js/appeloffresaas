@@ -12,13 +12,13 @@ import { formatLimit, type TierLimits } from "~/lib/subscription-tiers";
 
 interface UsageDisplayProps {
   usage: {
-    projects: number;
+    demands: number;
     documents: number;
     teamMembers: number;
   };
   limits: TierLimits;
   usagePercentages: {
-    projects: number | null;
+    demands: number | null;
     documents: number | null;
     teamMembers: number | null;
   };
@@ -74,22 +74,16 @@ export function UsageDisplay({
       </CardHeader>
       <CardContent className="space-y-6">
         <UsageItem
-          label="Projets AO"
-          current={usage.projects}
-          max={limits.maxProjects}
-          percentage={usagePercentages.projects}
+          label="Dossiers de demande"
+          current={usage.demands}
+          max={limits.maxDemands}
+          percentage={usagePercentages.demands}
         />
         <UsageItem
           label="Documents coffre-fort"
           current={usage.documents}
           max={limits.maxDocuments}
           percentage={usagePercentages.documents}
-        />
-        <UsageItem
-          label="Membres d'équipe"
-          current={usage.teamMembers}
-          max={limits.maxTeamMembers}
-          percentage={usagePercentages.teamMembers}
         />
       </CardContent>
     </Card>

@@ -9,12 +9,13 @@ export const SUBSCRIPTION_TIERS = ["FREE", "PRO", "BUSINESS"] as const;
 export type SubscriptionTier = (typeof SUBSCRIPTION_TIERS)[number];
 
 export interface TierLimits {
-  maxProjects: number | null; // null = unlimited
-  maxDocuments: number | null; // null = unlimited
+  maxDemands: number | null; // null = unlimited (demandes par mois)
+  maxDocuments: number | null; // null = unlimited (documents coffre-fort)
   maxTeamMembers: number;
   aiAssistance: "basic" | "full" | "priority";
-  exportFormats: string[];
-  supportLevel: "email" | "priority" | "dedicated";
+  exportFormats: ("PDF" | "Word" | "ZIP")[];
+  templates: "basic" | "premium" | "custom";
+  supportLevel: "community" | "email" | "priority";
 }
 
 export interface TierInfo {
@@ -30,6 +31,7 @@ export interface TierInfo {
 
 /**
  * Complete tier definitions with limits and features
+ * Updated for "Dossier de Demande" pivot (2026-01-18)
  */
 export const TIER_DEFINITIONS: Record<SubscriptionTier, TierInfo> = {
   FREE: {
@@ -39,66 +41,72 @@ export const TIER_DEFINITIONS: Record<SubscriptionTier, TierInfo> = {
     priceMonthly: 0,
     priceYearly: 0,
     limits: {
-      maxProjects: 1,
+      maxDemands: 2, // 2 dossiers par mois
       maxDocuments: 10,
       maxTeamMembers: 1,
       aiAssistance: "basic",
       exportFormats: ["PDF"],
-      supportLevel: "email",
+      templates: "basic",
+      supportLevel: "community",
     },
     features: [
-      "1 projet AO par mois",
+      "2 dossiers de demande par mois",
       "10 documents dans le coffre-fort",
+      "Templates de base",
       "Assistance IA basique",
-      "Export PDF",
-      "Support par email",
+      "Export PDF uniquement",
+      "Support communautaire",
     ],
   },
   PRO: {
     id: "PRO",
     name: "Pro",
-    description: "Pour les PME actives",
-    priceMonthly: 49,
-    priceYearly: 490, // ~2 mois gratuits
+    description: "Pour les utilisateurs réguliers",
+    priceMonthly: 19,
+    priceYearly: 190, // ~2 mois gratuits
     limits: {
-      maxProjects: 10,
-      maxDocuments: 100,
-      maxTeamMembers: 5,
+      maxDemands: null, // illimité
+      maxDocuments: 50,
+      maxTeamMembers: 1,
       aiAssistance: "full",
-      exportFormats: ["PDF", "Word"],
-      supportLevel: "priority",
+      exportFormats: ["PDF", "Word", "ZIP"],
+      templates: "premium",
+      supportLevel: "email",
     },
     features: [
-      "10 projets AO par mois",
-      "100 documents dans le coffre-fort",
-      "5 membres d'équipe",
+      "Dossiers de demande illimités",
+      "50 documents dans le coffre-fort",
+      "Templates premium par secteur",
+      "Profil entreprise complet",
       "Assistance IA complète",
-      "Export PDF et Word",
-      "Support prioritaire",
+      "Export PDF, Word et ZIP",
+      "Support par email",
     ],
     highlighted: true,
   },
   BUSINESS: {
     id: "BUSINESS",
     name: "Business",
-    description: "Pour les grandes entreprises",
-    priceMonthly: 149,
-    priceYearly: 1490, // ~2 mois gratuits
+    description: "Pour les power users",
+    priceMonthly: 39,
+    priceYearly: 390, // ~2 mois gratuits
     limits: {
-      maxProjects: null, // unlimited
-      maxDocuments: null, // unlimited
-      maxTeamMembers: 20,
+      maxDemands: null, // illimité
+      maxDocuments: null, // illimité
+      maxTeamMembers: 1, // multi-user en Team tier (futur)
       aiAssistance: "priority",
       exportFormats: ["PDF", "Word", "ZIP"],
-      supportLevel: "dedicated",
+      templates: "custom",
+      supportLevel: "priority",
     },
     features: [
-      "Projets AO illimités",
+      "Dossiers de demande illimités",
       "Documents illimités",
-      "20 membres d'équipe",
+      "Templates personnalisables",
+      "Export avec branding personnalisé",
       "Assistance IA prioritaire",
       "Export PDF, Word et ZIP",
-      "Support dédié",
+      "Support prioritaire",
     ],
   },
 };
@@ -123,7 +131,7 @@ export function getTierLimits(tier: SubscriptionTier): TierLimits {
  */
 export function isLimitReached(
   tier: SubscriptionTier,
-  limitKey: "maxProjects" | "maxDocuments",
+  limitKey: "maxDemands" | "maxDocuments",
   currentCount: number
 ): boolean {
   const limit = TIER_DEFINITIONS[tier].limits[limitKey];
@@ -137,7 +145,7 @@ export function isLimitReached(
  */
 export function getUsagePercentage(
   tier: SubscriptionTier,
-  limitKey: "maxProjects" | "maxDocuments",
+  limitKey: "maxDemands" | "maxDocuments",
   currentCount: number
 ): number | null {
   const limit = TIER_DEFINITIONS[tier].limits[limitKey];
