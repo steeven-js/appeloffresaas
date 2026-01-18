@@ -122,19 +122,32 @@ export function useWizard({ projectId }: UseWizardOptions): UseWizardReturn {
 
     return config.modules.reduce((acc, mod) => {
       const moduleState = wizardState.modules[mod.id];
+      const section = sections.find(s => s.id === mod.id);
       const totalQuestions = mod.questions.length;
-      const answeredQuestions = moduleState?.answeredQuestions.length ?? 0;
+
+      // Count only questions with meaningful answers
+      // Cross-reference answeredQuestions with actual answer values
+      const answeredQuestionIds = moduleState?.answeredQuestions ?? [];
+      const validAnsweredCount = answeredQuestionIds.filter(qId => {
+        const answer = section?.answers?.find(a => a.questionId === qId);
+        if (!answer) return false;
+        // Check if the answer value is meaningful (non-empty)
+        if (Array.isArray(answer.value)) {
+          return answer.value.length > 0;
+        }
+        return answer.value !== undefined && answer.value !== "";
+      }).length;
 
       acc[mod.id] = {
         status: moduleState?.status ?? "pending",
-        progress: totalQuestions > 0 ? Math.round((answeredQuestions / totalQuestions) * 100) : 0,
-        answered: answeredQuestions,
+        progress: totalQuestions > 0 ? Math.round((validAnsweredCount / totalQuestions) * 100) : 0,
+        answered: validAnsweredCount,
         total: totalQuestions,
       };
 
       return acc;
     }, {} as Record<string, ModuleProgress>);
-  }, [config, wizardState]);
+  }, [config, wizardState, sections]);
 
   // Calculate overall progress
   const overallProgress = useMemo(() => {
