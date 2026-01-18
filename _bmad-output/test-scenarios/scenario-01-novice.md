@@ -20,9 +20,9 @@
 
 | # | Input Utilisateur | Résultat | Observations |
 |---|-------------------|----------|--------------|
-| 1.1 | `Bonjour` | ⬜ | |
+| 1.1 | `Bonjour` | ✅ | IA répond correctement |
 | 1.2 | `Je sais pas trop par où commencer` | ✅ | IA guide avec 6 questions structurées. Markdown non rendu. |
-| 1.3 | `C'est ma première fois sur cet outil` | ⬜ | |
+| 1.3 | `C'est ma première fois sur cet outil` | ✅ | IA s'adapte : 1 question à la fois, ton patient |
 
 **Attendu:** L'IA doit accueillir chaleureusement et guider vers les premières étapes.
 
@@ -32,10 +32,10 @@
 
 | # | Input Utilisateur | Résultat | Observations |
 |---|-------------------|----------|--------------|
-| 2.1 | `J'ai besoin d'acheter des ordinateurs` | ⬜ | |
-| 2.2 | `C'est pour mon service` | ⬜ | |
-| 2.3 | `On est 5 personnes` | ⬜ | |
-| 2.4 | `Les ordis actuels sont vieux` | ⬜ | |
+| 2.1 | `J'ai besoin d'acheter des ordinateurs` | ✅ | IA confirme et pose 6 questions de clarification |
+| 2.2 | `C'est pour mon service` | ✅ | Testé groupé - IA fait un récap |
+| 2.3 | `On est 5 personnes` | ✅ | IA déduit "5 ordinateurs" |
+| 2.4 | `Les ordis actuels sont vieux` | ✅ | IA comprend "renouvellement". Bug: fin tronquée |
 
 **Attendu:** L'IA doit poser des questions de clarification (combien ? quel type ? budget ?).
 

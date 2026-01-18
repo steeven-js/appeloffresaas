@@ -227,6 +227,7 @@
 /* Prose-like styles for markdown content (without typography plugin) */
 .prose {
   @apply text-foreground;
+  counter-reset: prose-ol-counter;
 }
 
 .prose p {
@@ -246,7 +247,17 @@
 }
 
 .prose ol {
-  @apply list-decimal ml-6 mb-3 space-y-1;
+  @apply ml-6 mb-3 space-y-1;
+  list-style: none;
+}
+
+.prose ol > li {
+  counter-increment: prose-ol-counter;
+}
+
+.prose ol > li::before {
+  content: counter(prose-ol-counter) ". ";
+  @apply font-medium mr-1;
 }
 
 .prose li {
