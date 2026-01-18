@@ -21,6 +21,9 @@ export interface PromptContext {
 
   // Suggested options for AI context (e.g., checkbox options to help write)
   suggestedOptions?: string[];
+
+  // Previous answers from wizard (for context in guided choices mode)
+  previousAnswers?: Record<string, { questionLabel: string; value: string }>;
 }
 
 /**
@@ -706,5 +709,146 @@ FORMAT DE RÉPONSE (JSON strict) :
     "label": "Suggestion d'amélioration" ou null si pas pertinent,
     "text": "Texte suggéré à ajouter" ou null
   }
+}`;
+}
+
+/**
+ * Build prompt for generating dynamic choices in guided mode
+ * Generates 4-6 contextual suggestions based on project data and previous answers
+ */
+export function buildChoicesPrompt(
+  ctx: PromptContext,
+  existingChoices?: string[]
+): string {
+  // Build previous answers context
+  const previousAnswersContext = ctx.previousAnswers
+    ? Object.entries(ctx.previousAnswers)
+        .map(([questionId, data]) => `- ${data.questionLabel}: ${data.value}`)
+        .join("\n")
+    : "(Aucune réponse précédente)";
+
+  // Build existing choices to avoid
+  const existingChoicesContext = existingChoices && existingChoices.length > 0
+    ? `\nCHOIX DÉJÀ PROPOSÉS (à ne PAS répéter) :\n${existingChoices.map(c => `- ${c}`).join("\n")}`
+    : "";
+
+  const moduleRules = MODULE_RULES[ctx.moduleId] ?? "";
+
+  // Get question-specific guidance
+  const questionGuidance = QUESTION_FIRST_QUESTIONS[ctx.questionId]?.[ctx.needType ?? "default"]
+    ?? QUESTION_FIRST_QUESTIONS[ctx.questionId]?.default
+    ?? "";
+
+  const questionExample = QUESTION_EXAMPLES[ctx.questionId]?.[ctx.needType ?? "default"]
+    ?? QUESTION_EXAMPLES[ctx.questionId]?.default
+    ?? "";
+
+  return `Tu es un assistant expert en rédaction de dossiers de demande d'achat pour les collectivités.
+
+CONTEXTE DU PROJET :
+- Titre : ${ctx.title}
+- Service demandeur : ${ctx.departmentName ?? "Non spécifié"}
+- Type de besoin : ${ctx.needType ?? "Non spécifié"}
+- Niveau d'urgence : ${ctx.urgencyLevel ?? "normal"}
+
+MODULE ACTUEL : ${ctx.moduleId}
+QUESTION : ${ctx.questionLabel}
+
+${moduleRules}
+
+RÉPONSES PRÉCÉDENTES DU WIZARD :
+${previousAnswersContext}
+${existingChoicesContext}
+
+GUIDANCE POUR CETTE QUESTION :
+${questionGuidance}
+
+EXEMPLE DE RÉPONSE ATTENDUE :
+${questionExample}
+
+Ta tâche : Générer exactement 5 suggestions de réponses PERTINENTES et CONTEXTUALISÉES pour cette question.
+
+RÈGLES STRICTES :
+1. Chaque suggestion doit être une phrase courte et claire (10-20 mots max)
+2. Les suggestions doivent être SPÉCIFIQUES au contexte du projet (type de besoin, service, etc.)
+3. NE PAS répéter les choix déjà proposés
+4. NE PAS inclure de choix générique type "Autre" ou "Aucun"
+5. Les suggestions doivent pouvoir être combinées (l'utilisateur peut en sélectionner plusieurs)
+6. Adapter le vocabulaire au type de besoin (${ctx.needType ?? "général"})
+7. RESPECTER les règles du module (${ctx.moduleId})
+
+FORMAT DE RÉPONSE (JSON strict) :
+{
+  "choices": [
+    "Première suggestion contextuelle et spécifique",
+    "Deuxième suggestion différente mais pertinente",
+    "Troisième suggestion apportant un autre angle",
+    "Quatrième suggestion complémentaire",
+    "Cinquième suggestion originale"
+  ]
+}`;
+}
+
+/**
+ * Build prompt for generating final answer from selected choices
+ * Creates a well-structured professional text from user's selections
+ */
+export function buildAnswerFromChoicesPrompt(
+  ctx: PromptContext,
+  selectedChoices: string[],
+  freeInput?: string
+): string {
+  // Build previous answers context
+  const previousAnswersContext = ctx.previousAnswers
+    ? Object.entries(ctx.previousAnswers)
+        .map(([questionId, data]) => `- ${data.questionLabel}: ${data.value}`)
+        .join("\n")
+    : "(Aucune réponse précédente)";
+
+  const moduleRules = MODULE_RULES[ctx.moduleId] ?? "";
+
+  // Build selected choices list
+  const selectedChoicesText = selectedChoices.map((c, i) => `${i + 1}. ${c}`).join("\n");
+
+  // Free input context
+  const freeInputContext = freeInput
+    ? `\nSAISIE LIBRE DE L'UTILISATEUR :\n"${freeInput}"`
+    : "";
+
+  return `Tu es un rédacteur expert en dossiers de demande d'achat pour les collectivités.
+
+CONTEXTE DU PROJET :
+- Titre : ${ctx.title}
+- Service demandeur : ${ctx.departmentName ?? "Non spécifié"}
+- Type de besoin : ${ctx.needType ?? "Non spécifié"}
+- Niveau d'urgence : ${ctx.urgencyLevel ?? "normal"}
+
+MODULE ACTUEL : ${ctx.moduleId}
+QUESTION À TRAITER : ${ctx.questionLabel}
+
+${moduleRules}
+
+RÉPONSES PRÉCÉDENTES DU WIZARD :
+${previousAnswersContext}
+
+CHOIX SÉLECTIONNÉS PAR L'UTILISATEUR :
+${selectedChoicesText}
+${freeInputContext}
+
+Ta tâche : Rédiger un texte professionnel et structuré qui intègre TOUS les éléments sélectionnés par l'utilisateur.
+
+RÈGLES DE RÉDACTION :
+1. Style professionnel administratif, adapté aux marchés publics
+2. Rédaction à la 3ème personne ("Le service...", "L'organisation...")
+3. Intégrer TOUS les choix sélectionnés de manière fluide et cohérente
+4. Structurer le texte de manière logique (ne pas faire une simple liste)
+5. Ajouter des connecteurs et transitions pour la fluidité
+6. Si saisie libre fournie, l'intégrer naturellement dans le texte
+7. Longueur adaptée : ${selectedChoices.length <= 2 ? "2-3 phrases" : selectedChoices.length <= 4 ? "4-6 phrases" : "un paragraphe complet"}
+8. RESPECTER les règles du module (pas de solutions dans le module contexte, etc.)
+
+FORMAT DE RÉPONSE (JSON strict) :
+{
+  "generatedText": "Le texte rédigé, professionnel et structuré, intégrant tous les éléments sélectionnés."
 }`;
 }

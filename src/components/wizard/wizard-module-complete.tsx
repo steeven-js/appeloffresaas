@@ -14,6 +14,7 @@ import {
   DialogFooter,
 } from "~/components/ui/dialog";
 import { cn } from "~/lib/utils";
+import { markdownToHtml } from "~/lib/utils/markdown-parser";
 
 interface WizardModuleCompleteProps {
   isOpen: boolean;
@@ -95,9 +96,10 @@ export function WizardModuleComplete({
               </div>
             </div>
           ) : (
-            <div className="prose prose-sm max-w-none p-4 bg-muted/50 rounded-lg">
-              <p className="whitespace-pre-wrap">{generatedContent}</p>
-            </div>
+            <div
+              className="prose prose-sm dark:prose-invert max-w-none p-4 bg-muted/50 rounded-lg"
+              dangerouslySetInnerHTML={{ __html: markdownToHtml(generatedContent) }}
+            />
           )}
         </div>
 

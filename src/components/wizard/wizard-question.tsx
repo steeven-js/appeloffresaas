@@ -15,7 +15,7 @@ import {
   QuestionNumber,
   QuestionDate,
 } from "./questions";
-import { AIChatPanel } from "./ai-assistant";
+import { AIChatPanel, GuidedChoicesPanel } from "./ai-assistant";
 
 interface WizardQuestionProps {
   question: WizardQuestionType;
@@ -30,6 +30,9 @@ interface WizardQuestionProps {
   projectId?: string;
   moduleId?: string;
   hasAIAssistant?: boolean;
+  // Guided choices mode
+  useGuidedMode?: boolean;
+  previousAnswers?: Record<string, { questionLabel: string; value: string }>;
 }
 
 export function WizardQuestion({
@@ -44,6 +47,8 @@ export function WizardQuestion({
   projectId,
   moduleId,
   hasAIAssistant = false,
+  useGuidedMode = false,
+  previousAnswers,
 }: WizardQuestionProps) {
   // Check if this question has showAIByDefault flag (textarea or checkbox)
   const showAIByDefaultFlag = (question.type === "textarea" || question.type === "checkbox")
@@ -210,6 +215,22 @@ export function WizardQuestion({
       case "textarea":
         // Show AI panel if enabled and toggled
         if (isTextareaWithAI && showAIPanel) {
+          // Use guided choices panel if in guided mode
+          if (useGuidedMode && projectId && moduleId) {
+            return (
+              <div className="h-full">
+                <GuidedChoicesPanel
+                  projectId={projectId}
+                  moduleId={moduleId}
+                  questionId={question.id}
+                  questionLabel={question.label}
+                  previousAnswers={previousAnswers}
+                  onTextGenerated={handleAITextGenerated}
+                  onComplete={handleAIComplete}
+                />
+              </div>
+            );
+          }
           return (
             <div className="h-full">
               <AIChatPanel

@@ -20,6 +20,8 @@ import {
   buildAnalysisPrompt,
   buildSuggestionPrompt,
   buildUserQuestionPrompt,
+  buildChoicesPrompt,
+  buildAnswerFromChoicesPrompt,
   type PromptContext,
 } from "~/lib/ai/assistant-prompts";
 
@@ -804,5 +806,146 @@ export const aiAssistantRouter = createTRPCRouter({
         .where(eq(aiAssistantConversations.id, conversation.id));
 
       return { success: true, text: conversation.generatedText };
+    }),
+
+  /**
+   * Generate dynamic choices for guided mode
+   * Returns 5 contextual suggestions based on project data and previous answers
+   */
+  generateChoices: protectedProcedure
+    .input(z.object({
+      projectId: z.string(),
+      moduleId: z.string(),
+      questionId: z.string(),
+      questionLabel: z.string(),
+      existingChoices: z.array(z.string()).optional(),
+      previousAnswers: z.record(z.object({
+        questionLabel: z.string(),
+        value: z.string(),
+      })).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!isAIConfigured()) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "L'assistant IA n'est pas configuré",
+        });
+      }
+
+      // Get project data
+      const project = await ctx.db.query.demandProjects.findFirst({
+        where: eq(demandProjects.id, input.projectId),
+      });
+
+      if (project?.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Projet non trouvé",
+        });
+      }
+
+      // Build context for prompt
+      const promptContext: PromptContext = {
+        title: project.title,
+        departmentName: project.departmentName ?? undefined,
+        needType: project.needType ?? undefined,
+        urgencyLevel: project.urgencyLevel ?? undefined,
+        moduleId: input.moduleId,
+        questionId: input.questionId,
+        questionLabel: input.questionLabel,
+        previousAnswers: input.previousAnswers,
+      };
+
+      // Generate choices
+      const prompt = buildChoicesPrompt(promptContext, input.existingChoices);
+      const response = await createCompletion(
+        [{ role: "system", content: prompt }],
+        { maxTokens: 500, temperature: 0.8, jsonMode: true }
+      );
+
+      const parsed = parseAIResponse<{
+        choices: string[];
+      }>(response.content);
+
+      return {
+        choices: parsed.choices,
+      };
+    }),
+
+  /**
+   * Generate final answer from selected choices
+   * Creates a well-structured professional text from user's selections
+   */
+  generateAnswerFromChoices: protectedProcedure
+    .input(z.object({
+      projectId: z.string(),
+      moduleId: z.string(),
+      questionId: z.string(),
+      questionLabel: z.string(),
+      selectedChoices: z.array(z.string()),
+      freeInput: z.string().optional(),
+      previousAnswers: z.record(z.object({
+        questionLabel: z.string(),
+        value: z.string(),
+      })).optional(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (!isAIConfigured()) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "L'assistant IA n'est pas configuré",
+        });
+      }
+
+      // Validate that at least one choice is selected
+      if (input.selectedChoices.length === 0 && !input.freeInput) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Veuillez sélectionner au moins un choix ou saisir du texte libre",
+        });
+      }
+
+      // Get project data
+      const project = await ctx.db.query.demandProjects.findFirst({
+        where: eq(demandProjects.id, input.projectId),
+      });
+
+      if (project?.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Projet non trouvé",
+        });
+      }
+
+      // Build context for prompt
+      const promptContext: PromptContext = {
+        title: project.title,
+        departmentName: project.departmentName ?? undefined,
+        needType: project.needType ?? undefined,
+        urgencyLevel: project.urgencyLevel ?? undefined,
+        moduleId: input.moduleId,
+        questionId: input.questionId,
+        questionLabel: input.questionLabel,
+        previousAnswers: input.previousAnswers,
+      };
+
+      // Generate answer from choices
+      const prompt = buildAnswerFromChoicesPrompt(
+        promptContext,
+        input.selectedChoices,
+        input.freeInput
+      );
+      const response = await createCompletion(
+        [{ role: "system", content: prompt }],
+        { maxTokens: 800, temperature: 0.7, jsonMode: true }
+      );
+
+      const parsed = parseAIResponse<{
+        generatedText: string;
+      }>(response.content);
+
+      return {
+        generatedText: parsed.generatedText,
+      };
     }),
 });

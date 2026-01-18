@@ -39,6 +39,7 @@ interface UseWizardReturn {
   initializeWizard: () => Promise<void>;
   getModuleAnswers: (moduleId: string) => WizardAnswer[];
   getAnswerValue: (moduleId: string, questionId: string) => AnswerValue | undefined;
+  getPreviousAnswers: () => Record<string, { questionLabel: string; value: string }>;
 
   // Mutation states
   isSaving: boolean;
@@ -274,6 +275,39 @@ export function useWizard({ projectId }: UseWizardOptions): UseWizardReturn {
     [getModuleAnswers]
   );
 
+  // Get all previous answers as a flat record for AI context
+  const getPreviousAnswers = useCallback((): Record<string, { questionLabel: string; value: string }> => {
+    const result: Record<string, { questionLabel: string; value: string }> = {};
+
+    for (const section of sections) {
+      if (!section.answers) continue;
+
+      for (const answer of section.answers) {
+        // Convert value to string for AI context
+        let valueStr = "";
+        if (Array.isArray(answer.value)) {
+          // Filter out __detail__ entries and join
+          const actualValues = answer.value.filter(
+            (v) => typeof v !== "string" || !v.startsWith("__detail__:")
+          );
+          valueStr = actualValues.join(", ");
+        } else if (answer.value !== undefined) {
+          valueStr = String(answer.value);
+        }
+
+        // Only include non-empty answers
+        if (valueStr) {
+          result[answer.questionId] = {
+            questionLabel: answer.questionLabel,
+            value: valueStr,
+          };
+        }
+      }
+    }
+
+    return result;
+  }, [sections]);
+
   return {
     // Data
     config,
@@ -299,6 +333,7 @@ export function useWizard({ projectId }: UseWizardOptions): UseWizardReturn {
     initializeWizard,
     getModuleAnswers,
     getAnswerValue,
+    getPreviousAnswers,
 
     // Mutation states
     isSaving: saveAnswerMutation.isPending,

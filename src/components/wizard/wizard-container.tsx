@@ -41,6 +41,7 @@ export function WizardContainer({ projectId }: WizardContainerProps) {
     initializeWizard,
     getAnswerValue,
     getModuleAnswers,
+    getPreviousAnswers,
     isSaving,
     isGenerating,
     isValidating,
@@ -208,6 +209,8 @@ export function WizardContainer({ projectId }: WizardContainerProps) {
               projectId={projectId}
               moduleId={currentModule.id}
               hasAIAssistant={!!currentModule.assemblePrompt}
+              useGuidedMode={!!currentModule.assemblePrompt}
+              previousAnswers={getPreviousAnswers()}
             />
           </div>
         </main>
