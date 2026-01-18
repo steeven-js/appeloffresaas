@@ -3,7 +3,8 @@ import { z } from "zod";
 import { eq, desc, and, isNull, sql } from "drizzle-orm";
 
 import { createTRPCRouter, protectedProcedure } from "~/server/api/trpc";
-import { demandProjects, demandDocuments, DEMAND_STATUS } from "~/server/db/schema";
+import { demandProjects, demandDocuments, demandReferenceCounters, DEMAND_STATUS } from "~/server/db/schema";
+import { calculateCompletionPercentage } from "~/lib/utils/completeness";
 
 /**
  * Section schema for flexible document structure
@@ -72,47 +73,7 @@ function getDeadlineStatus(deadline: Date | null): "upcoming" | "urgent" | "pass
   return "upcoming";
 }
 
-/**
- * Calculate project completion percentage
- * Based on key fields for demand projects
- */
-interface ProjectForCompletion {
-  title: string;
-  description: string | null;
-  departmentName: string | null;
-  contactName: string | null;
-  context: string | null;
-  budgetRange: string | null;
-  desiredDeliveryDate: string | null;
-}
 
-function calculateCompletion(project: ProjectForCompletion, hasDocuments: boolean): number {
-  let score = 0;
-  const maxScore = 7;
-
-  // Title is always present (required), counts as 1
-  score += 1;
-
-  // Description set
-  if (project.description) score += 1;
-
-  // Department name set
-  if (project.departmentName) score += 1;
-
-  // Contact name set
-  if (project.contactName) score += 1;
-
-  // Context/needs defined
-  if (project.context) score += 1;
-
-  // Budget range set
-  if (project.budgetRange) score += 1;
-
-  // Has supporting documents
-  if (hasDocuments) score += 1;
-
-  return Math.round((score / maxScore) * 100);
-}
 
 /**
  * Demand Projects router (Dossier de Demande)
@@ -171,7 +132,10 @@ export const demandProjectsRouter = createTRPCRouter({
       const projectsWithStatus = projects.map((project) => ({
         ...project,
         deadlineStatus: getDeadlineStatus(project.submissionDeadline),
-        completionPercentage: calculateCompletion(project, projectsWithDocs.has(project.id)),
+        completionPercentage: calculateCompletionPercentage({
+          ...project,
+          hasDocuments: projectsWithDocs.has(project.id),
+        }),
       }));
 
       return {
@@ -238,12 +202,53 @@ export const demandProjectsRouter = createTRPCRouter({
   create: protectedProcedure
     .input(demandProjectSchema)
     .mutation(async ({ ctx, input }) => {
+      // Auto-generate reference number
+      const currentYear = new Date().getFullYear();
+      const userId = ctx.session.user.id;
+
+      // Get existing counter for this user and year
+      const [existingCounter] = await ctx.db
+        .select()
+        .from(demandReferenceCounters)
+        .where(
+          and(
+            eq(demandReferenceCounters.userId, userId),
+            eq(demandReferenceCounters.year, currentYear)
+          )
+        )
+        .limit(1);
+
+      let nextSequence: number;
+
+      if (existingCounter) {
+        // Increment the counter
+        nextSequence = existingCounter.lastSequence + 1;
+        await ctx.db
+          .update(demandReferenceCounters)
+          .set({
+            lastSequence: nextSequence,
+            updatedAt: new Date(),
+          })
+          .where(eq(demandReferenceCounters.id, existingCounter.id));
+      } else {
+        // Create new counter starting at 1
+        nextSequence = 1;
+        await ctx.db.insert(demandReferenceCounters).values({
+          userId,
+          year: currentYear,
+          lastSequence: nextSequence,
+        });
+      }
+
+      // Format: DEM-2026-001
+      const reference = `DEM-${currentYear}-${nextSequence.toString().padStart(3, "0")}`;
+
       const [created] = await ctx.db
         .insert(demandProjects)
         .values({
           userId: ctx.session.user.id,
           title: input.title,
-          reference: emptyToNull(input.reference),
+          reference,
           description: emptyToNull(input.description),
           // New demand fields
           departmentName: emptyToNull(input.departmentName),

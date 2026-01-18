@@ -292,3 +292,28 @@ export const demandChatMessagesRelations = relations(demandChatMessages, ({ one 
  */
 export type DemandChatMessage = typeof demandChatMessages.$inferSelect;
 export type NewDemandChatMessage = typeof demandChatMessages.$inferInsert;
+
+/**
+ * Demand Reference Counters table - tracks auto-incrementing reference numbers per user per year
+ * Ensures references never decrease even after project deletion
+ */
+export const demandReferenceCounters = createTable("demand_reference_counters", {
+  id: varchar("id", { length: 255 })
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: varchar("user_id", { length: 255 })
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  year: integer("year").notNull(),
+  lastSequence: integer("last_sequence").notNull().default(0),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+/**
+ * Type exports for demand reference counters
+ */
+export type DemandReferenceCounter = typeof demandReferenceCounters.$inferSelect;
+export type NewDemandReferenceCounter = typeof demandReferenceCounters.$inferInsert;

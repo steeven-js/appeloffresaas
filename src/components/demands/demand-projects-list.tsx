@@ -83,7 +83,7 @@ import { Progress } from "~/components/ui/progress";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Label } from "~/components/ui/label";
 import { api } from "~/trpc/react";
-import { cn } from "~/lib/utils";
+import { cn, stripHtmlTags, hasRealContent } from "~/lib/utils";
 import { demandTemplates, type DemandTemplate } from "~/lib/demand-templates";
 
 const demandProjectSchema = z.object({
@@ -339,25 +339,27 @@ function ProjectFormDialog({
                   )}
                 />
 
-            {/* Reference and Department */}
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="reference"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Référence interne</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="DEM-2024-001"
-                        disabled={isPending}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            {/* Reference (read-only when editing) and Department */}
+            <div className={cn("grid gap-4", isEditing ? "grid-cols-2" : "grid-cols-1")}>
+              {isEditing && (
+                <FormField
+                  control={form.control}
+                  name="reference"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Référence interne</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          disabled
+                          className="bg-muted"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
 
               <FormField
                 control={form.control}
@@ -651,7 +653,14 @@ function ProjectCard({ project, onEdit, onRefresh }: ProjectCardProps) {
   };
 
   const deleteMutation = api.demandProjects.delete.useMutation({
-    onSuccess: onRefresh,
+    onSuccess: () => {
+      setDeleteDialogOpen(false);
+      onRefresh();
+    },
+    onError: (error) => {
+      setDeleteDialogOpen(false);
+      window.alert(`Erreur lors de la suppression: ${error.message}`);
+    },
   });
 
   const isArchived = project.status === "archived";
@@ -683,11 +692,16 @@ function ProjectCard({ project, onEdit, onRefresh }: ProjectCardProps) {
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <MoreHorizontal className="h-4 w-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
                 <DropdownMenuItem onClick={onEdit}>
                   <Edit className="mr-2 h-4 w-4" />
                   Modifier
@@ -717,18 +731,27 @@ function ProjectCard({ project, onEdit, onRefresh }: ProjectCardProps) {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 {isArchived ? (
-                  <DropdownMenuItem onClick={() => unarchiveMutation.mutate({ id: project.id })}>
+                  <DropdownMenuItem onClick={(e) => {
+                    e.stopPropagation();
+                    unarchiveMutation.mutate({ id: project.id });
+                  }}>
                     <ArchiveRestore className="mr-2 h-4 w-4" />
                     Désarchiver
                   </DropdownMenuItem>
                 ) : (
-                  <DropdownMenuItem onClick={() => setArchiveDialogOpen(true)}>
+                  <DropdownMenuItem onClick={(e) => {
+                    e.stopPropagation();
+                    setArchiveDialogOpen(true);
+                  }}>
                     <Archive className="mr-2 h-4 w-4" />
                     Archiver
                   </DropdownMenuItem>
                 )}
                 <DropdownMenuItem
-                  onClick={() => setDeleteDialogOpen(true)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteDialogOpen(true);
+                  }}
                   className="text-destructive focus:text-destructive"
                   disabled={project.status === "sent_to_admin" || project.status === "converted_to_ao"}
                 >
@@ -756,9 +779,9 @@ function ProjectCard({ project, onEdit, onRefresh }: ProjectCardProps) {
               )}
             </div>
 
-            {/* Description preview */}
-            {project.description && (
-              <p className="line-clamp-2 text-muted-foreground">{project.description}</p>
+            {/* Description preview - only show if has real content (not just placeholders) */}
+            {hasRealContent(project.description) && (
+              <p className="line-clamp-2 text-muted-foreground">{stripHtmlTags(project.description)}</p>
             )}
 
             {/* Completion percentage */}
@@ -790,7 +813,7 @@ function ProjectCard({ project, onEdit, onRefresh }: ProjectCardProps) {
 
       {/* Duplicate Dialog */}
       <Dialog open={duplicateDialogOpen} onOpenChange={setDuplicateDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
+        <DialogContent className="sm:max-w-[425px]" onClick={(e) => e.stopPropagation()}>
           <DialogHeader>
             <DialogTitle>Dupliquer le dossier</DialogTitle>
             <DialogDescription>
@@ -834,7 +857,7 @@ function ProjectCard({ project, onEdit, onRefresh }: ProjectCardProps) {
 
       {/* Archive Confirmation Dialog */}
       <AlertDialog open={archiveDialogOpen} onOpenChange={setArchiveDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
           <AlertDialogHeader>
             <AlertDialogTitle>Archiver ce dossier ?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -844,7 +867,10 @@ function ProjectCard({ project, onEdit, onRefresh }: ProjectCardProps) {
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => archiveMutation.mutate({ id: project.id })}
+              onClick={(e) => {
+                e.stopPropagation();
+                archiveMutation.mutate({ id: project.id });
+              }}
             >
               <Archive className="mr-2 h-4 w-4" />
               Archiver
@@ -855,7 +881,7 @@ function ProjectCard({ project, onEdit, onRefresh }: ProjectCardProps) {
 
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
           <AlertDialogHeader>
             <AlertDialogTitle>Supprimer ce dossier ?</AlertDialogTitle>
             <AlertDialogDescription>
@@ -866,7 +892,11 @@ function ProjectCard({ project, onEdit, onRefresh }: ProjectCardProps) {
           <AlertDialogFooter>
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => deleteMutation.mutate({ id: project.id })}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                deleteMutation.mutate({ id: project.id });
+              }}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               <Trash2 className="mr-2 h-4 w-4" />

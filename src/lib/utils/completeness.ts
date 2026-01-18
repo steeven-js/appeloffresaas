@@ -1,6 +1,7 @@
 /**
  * Completeness check utilities for demand projects
- * Used for pre-export verification
+ * SINGLE SOURCE OF TRUTH for completion percentage calculation
+ * Used by: list, workspace sidebar, copilot panel
  */
 
 import type { DemandSection } from "~/server/db/schema";
@@ -49,6 +50,8 @@ export interface CompletenessInput {
   departmentName?: string | null;
   contactName?: string | null;
   contactEmail?: string | null;
+  context?: string | null;
+  constraints?: string | null;
   needType?: string | null;
   urgencyLevel?: string | null;
   budgetRange?: string | null;
@@ -58,7 +61,7 @@ export interface CompletenessInput {
 }
 
 /**
- * Check if a string has meaningful content
+ * Check if a string has meaningful content (strips HTML tags)
  */
 function hasContent(value: string | null | undefined): boolean {
   if (!value) return false;
@@ -68,6 +71,104 @@ function hasContent(value: string | null | undefined): boolean {
     .replace(/&nbsp;/g, " ")
     .trim();
   return stripped.length > 0;
+}
+
+/**
+ * Check if content has real data vs just placeholder text
+ * Placeholders are text wrapped in brackets like [À compléter], [Nombre], etc.
+ * Returns true if content has meaningful data filled in
+ */
+function hasRealContentInternal(content: string | null | undefined): boolean {
+  if (!content || content.trim() === "") return false;
+
+  // Strip HTML tags to get raw text
+  const textContent = content.replace(/<[^>]*>/g, " ").trim();
+  if (!textContent) return false;
+
+  // Find all placeholder patterns [text]
+  const placeholderPattern = /\[[^\]]+\]/g;
+  const placeholders = textContent.match(placeholderPattern) ?? [];
+
+  // Calculate total placeholder text length
+  const placeholderLength = placeholders.reduce((sum, p) => sum + p.length, 0);
+
+  // Get text without placeholders
+  const textWithoutPlaceholders = textContent.replace(placeholderPattern, "").replace(/\s+/g, " ").trim();
+
+  // If text without placeholders is very short (just labels/headers), it's placeholder content
+  if (placeholders.length === 0) {
+    return textWithoutPlaceholders.length > 10;
+  }
+
+  // If placeholder text dominates (> 30% of content), it's not real content
+  const totalLength = textContent.replace(/\s+/g, " ").length;
+  const placeholderRatio = placeholderLength / totalLength;
+
+  return placeholderRatio < 0.3 && textWithoutPlaceholders.length > 50;
+}
+
+/**
+ * UNIFIED completion percentage calculation
+ * This is the SINGLE SOURCE OF TRUTH used by all parts of the app
+ *
+ * CANVAS-BASED SCORING:
+ * - Sections (70%): Editorial content written in sections (real content vs placeholders)
+ * - Metadata (20%): Budget, delivery date, contact email, constraints
+ * - Documents (10%): Supporting documents attached
+ *
+ * A blank project (just created with required fields) = 0%
+ * Progress reflects actual editorial content written.
+ */
+export function calculateCompletionPercentage(data: CompletenessInput & { hasDocuments?: boolean }): number {
+  // === SECTIONS (70%) - Core editorial content ===
+  const sections = data.sections ?? [];
+  let sectionsScore = 0;
+
+  if (sections.length > 0) {
+    // Count sections with real content (not placeholders)
+    const sectionsWithContent = sections.filter(s => hasRealContentInternal(s.content)).length;
+    sectionsScore = (sectionsWithContent / sections.length) * 70;
+  } else {
+    // No sections defined - check legacy fields (context, description, constraints)
+    // These are the "default canvas" fields stored directly on the project
+    const legacyFields = [
+      { content: data.context, weight: 30 },     // Contexte - required, 30%
+      { content: data.description, weight: 30 }, // Description - required, 30%
+      { content: data.constraints, weight: 10 }, // Contraintes - optional, 10%
+    ];
+
+    for (const field of legacyFields) {
+      if (hasRealContentInternal(field.content)) {
+        sectionsScore += field.weight;
+      }
+    }
+  }
+
+  // === METADATA (20%) - Supporting information ===
+  let metadataScore = 0;
+  const metadataFields = [
+    { value: data.budgetRange, weight: 7 },           // Budget - important
+    { value: data.desiredDeliveryDate, weight: 7 },   // Delivery date - important
+    { value: data.contactEmail, weight: 3 },          // Contact email
+    // Constraints with real content if stored as legacy field and not already counted
+    ...(sections.length > 0 ? [{ value: data.constraints, weight: 3, isRich: true }] : []),
+  ];
+
+  for (const field of metadataFields) {
+    if ('isRich' in field && field.isRich) {
+      if (hasRealContentInternal(field.value)) metadataScore += field.weight;
+    } else {
+      if (hasContent(field.value)) metadataScore += field.weight;
+    }
+  }
+
+  // === DOCUMENTS (10%) - Supporting materials ===
+  const documentsScore = (data.hasDocuments || (data.annexesCount && data.annexesCount > 0)) ? 10 : 0;
+
+  // Calculate total
+  const totalScore = sectionsScore + metadataScore + documentsScore;
+
+  return Math.round(totalScore);
 }
 
 /**

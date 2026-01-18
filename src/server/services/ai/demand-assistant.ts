@@ -6,6 +6,7 @@ import {
   getProviderDisplayName,
   type AIMessage,
 } from "./ai-provider";
+import { calculateCompletionPercentage } from "~/lib/utils/completeness";
 
 /**
  * Check if the AI assistant is configured
@@ -903,6 +904,7 @@ export interface CopilotAnalysis {
 
 /**
  * Analyze project completion status
+ * Uses unified calculateCompletionPercentage for consistent scores across app
  */
 function analyzeProjectCompletion(project: DemandProject): {
   completionScore: number;
@@ -911,45 +913,49 @@ function analyzeProjectCompletion(project: DemandProject): {
   fieldDetails: Array<{ field: string; label: string; status: "complete" | "incomplete" | "empty"; importance: "high" | "medium" | "low" }>;
 } {
   const fieldDetails: Array<{ field: string; label: string; status: "complete" | "incomplete" | "empty"; importance: "high" | "medium" | "low" }> = [];
-
-  // Check each field
-  const checks = [
-    { field: "title", label: "Titre", value: project.title, minLength: 10, importance: "high" as const },
-    { field: "departmentName", label: "Service demandeur", value: project.departmentName, minLength: 3, importance: "medium" as const },
-    { field: "contactName", label: "Nom du contact", value: project.contactName, minLength: 3, importance: "medium" as const },
-    { field: "contactEmail", label: "Email du contact", value: project.contactEmail, minLength: 5, importance: "low" as const },
-    { field: "needType", label: "Type de besoin", value: project.needType, minLength: 1, importance: "high" as const },
-    { field: "context", label: "Contexte", value: project.context, minLength: 100, importance: "high" as const },
-    { field: "description", label: "Description", value: project.description, minLength: 150, importance: "high" as const },
-    { field: "constraints", label: "Contraintes", value: project.constraints, minLength: 50, importance: "medium" as const },
-    { field: "budgetRange", label: "Fourchette budgétaire", value: project.budgetRange, minLength: 1, importance: "high" as const },
-    { field: "desiredDeliveryDate", label: "Date souhaitée", value: project.desiredDeliveryDate, minLength: 1, importance: "medium" as const },
-  ];
-
   const missingFields: string[] = [];
   const incompleteFields: string[] = [];
-  let totalScore = 0;
-  let maxScore = 0;
+
+  // Check each field for detailed analysis (for AI suggestions)
+  const checks = [
+    { field: "title", label: "Titre", value: project.title, importance: "high" as const },
+    { field: "departmentName", label: "Service demandeur", value: project.departmentName, importance: "high" as const },
+    { field: "contactName", label: "Nom du contact", value: project.contactName, importance: "high" as const },
+    { field: "contactEmail", label: "Email du contact", value: project.contactEmail, importance: "low" as const },
+    { field: "needType", label: "Type de besoin", value: project.needType, importance: "high" as const },
+    { field: "context", label: "Contexte", value: project.context, importance: "high" as const },
+    { field: "description", label: "Description", value: project.description, importance: "high" as const },
+    { field: "constraints", label: "Contraintes", value: project.constraints, importance: "medium" as const },
+    { field: "budgetRange", label: "Fourchette budgétaire", value: project.budgetRange, importance: "medium" as const },
+    { field: "desiredDeliveryDate", label: "Date souhaitée", value: project.desiredDeliveryDate, importance: "medium" as const },
+  ];
 
   for (const check of checks) {
-    const weight = check.importance === "high" ? 3 : check.importance === "medium" ? 2 : 1;
-    maxScore += weight;
-
     if (!check.value || check.value.trim().length === 0) {
       fieldDetails.push({ field: check.field, label: check.label, status: "empty", importance: check.importance });
       missingFields.push(check.label);
-    } else if (check.value.trim().length < check.minLength) {
-      fieldDetails.push({ field: check.field, label: check.label, status: "incomplete", importance: check.importance });
-      incompleteFields.push(check.label);
-      totalScore += weight * 0.5;
     } else {
       fieldDetails.push({ field: check.field, label: check.label, status: "complete", importance: check.importance });
-      totalScore += weight;
     }
   }
 
+  // Use unified completion percentage (single source of truth)
+  const completionScore = calculateCompletionPercentage({
+    title: project.title,
+    departmentName: project.departmentName,
+    contactName: project.contactName,
+    contactEmail: project.contactEmail,
+    needType: project.needType,
+    context: project.context,
+    description: project.description,
+    constraints: project.constraints,
+    budgetRange: project.budgetRange,
+    desiredDeliveryDate: project.desiredDeliveryDate,
+    hasDocuments: false, // Copilot doesn't have document info
+  });
+
   return {
-    completionScore: Math.round((totalScore / maxScore) * 100),
+    completionScore,
     missingFields,
     incompleteFields,
     fieldDetails,

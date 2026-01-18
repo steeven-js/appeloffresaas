@@ -22,6 +22,8 @@ import {
 } from "~/components/workspace";
 import type { DemandSection } from "~/server/db/schema";
 import { getDefaultSections } from "./section-editor";
+import { hasRealContent } from "~/lib/utils";
+import { calculateCompletionPercentage } from "~/lib/utils/completeness";
 
 interface DemandWorkspaceV2Props {
   projectId: string;
@@ -77,6 +79,7 @@ export function DemandWorkspaceV2({ projectId }: DemandWorkspaceV2Props) {
   }, [initializeSections]);
 
   // Calculate module status based on project data
+  // Uses hasRealContent to ignore placeholder text like [À compléter]
   const getModuleStatus = (moduleId: ModuleId): ModuleStatus => {
     if (!project) return "empty";
 
@@ -85,11 +88,11 @@ export function DemandWorkspaceV2({ projectId }: DemandWorkspaceV2Props) {
         return project.title && project.departmentName ? "complete" :
                project.title ? "in_progress" : "empty";
       case "context":
-        return project.context ? "complete" : "empty";
+        return hasRealContent(project.context) ? "complete" : "empty";
       case "description":
-        return project.description ? "complete" : "empty";
+        return hasRealContent(project.description) ? "complete" : "empty";
       case "constraints":
-        return project.constraints ? "complete" : "empty";
+        return hasRealContent(project.constraints) ? "complete" : "empty";
       case "budget":
         return project.budgetRange || project.estimatedAmount ? "complete" :
                project.desiredDeliveryDate ? "in_progress" : "empty";
@@ -108,23 +111,41 @@ export function DemandWorkspaceV2({ projectId }: DemandWorkspaceV2Props) {
   }));
 
   // Add section modules
+  // Uses hasRealContent to ignore placeholder text like [À compléter]
   const sectionModules = sections.map((section) => ({
     id: `section-${section.id}`,
     label: section.title,
     icon: Pen,
-    status: (section.content ? "complete" : "empty") as ModuleStatus,
+    status: (hasRealContent(section.content) ? "complete" : "empty") as ModuleStatus,
     category: "section" as const,
   }));
 
   const allModules = [...modules, ...sectionModules];
 
-  // Calculate completion
+  // Calculate completion using unified calculation
   const calculateCompletion = () => {
+    // Count completed modules for X/Y display
     const completed = modules.filter((m) => m.status === "complete").length +
                       sectionModules.filter((m) => m.status === "complete").length;
     const total = allModules.length;
+
+    // Use unified percentage calculation (single source of truth)
+    const percentage = project ? calculateCompletionPercentage({
+      title: project.title,
+      departmentName: project.departmentName,
+      contactName: project.contactName,
+      contactEmail: project.contactEmail,
+      needType: project.needType,
+      context: project.context,
+      description: project.description,
+      constraints: project.constraints,
+      budgetRange: project.budgetRange,
+      desiredDeliveryDate: project.desiredDeliveryDate,
+      hasDocuments: false, // Will be updated when annexes are loaded
+    }) : 0;
+
     return {
-      percentage: total > 0 ? Math.round((completed / total) * 100) : 0,
+      percentage,
       completedItems: completed,
       totalItems: total,
     };
