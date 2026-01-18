@@ -32,14 +32,20 @@ export function WizardPreview({
   const completionPercentage = answers.length > 0 ? Math.min(100, answers.length * 20) : 0;
 
   // Format answer value for display
-  const formatAnswerValue = (value: WizardAnswer["value"]): string => {
+  const formatAnswerValue = (value: WizardAnswer["value"]): { selections: string; detail?: string } => {
     if (Array.isArray(value)) {
-      return value.join(", ");
+      // Separate detail text from checkbox selections
+      const detailItem = value.find(v => typeof v === "string" && v.startsWith("__detail__:"));
+      const selections = value.filter(v => typeof v !== "string" || !v.startsWith("__detail__:"));
+      const detail = detailItem && typeof detailItem === "string"
+        ? detailItem.replace("__detail__:", "")
+        : undefined;
+      return { selections: selections.join(", "), detail };
     }
     if (typeof value === "boolean") {
-      return value ? "Oui" : "Non";
+      return { selections: value ? "Oui" : "Non" };
     }
-    return String(value);
+    return { selections: String(value) };
   };
 
   return (
@@ -67,24 +73,34 @@ export function WizardPreview({
           // Show answers summary
           <>
             <div className="space-y-3">
-              {answers.map((answer) => (
-                <div
-                  key={answer.questionId}
-                  className={cn(
-                    "p-3 rounded-lg border text-sm",
-                    answer.questionId === currentQuestionId
-                      ? "border-primary/50 bg-primary/5"
-                      : "border-border bg-muted/30"
-                  )}
-                >
-                  <div className="font-medium text-foreground mb-1">
-                    {answer.questionLabel}
+              {answers.map((answer) => {
+                const formatted = formatAnswerValue(answer.value);
+                return (
+                  <div
+                    key={answer.questionId}
+                    className={cn(
+                      "p-3 rounded-lg border text-sm",
+                      answer.questionId === currentQuestionId
+                        ? "border-primary/50 bg-primary/5"
+                        : "border-border bg-muted/30"
+                    )}
+                  >
+                    <div className="font-medium text-foreground mb-1">
+                      {answer.questionLabel}
+                    </div>
+                    {formatted.selections && (
+                      <div className="text-muted-foreground">
+                        {formatted.selections}
+                      </div>
+                    )}
+                    {formatted.detail && (
+                      <div className="text-muted-foreground mt-2 pt-2 border-t border-border/50 whitespace-pre-wrap">
+                        {formatted.detail}
+                      </div>
+                    )}
                   </div>
-                  <div className="text-muted-foreground">
-                    {formatAnswerValue(answer.value)}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {hasAssemblePrompt && (

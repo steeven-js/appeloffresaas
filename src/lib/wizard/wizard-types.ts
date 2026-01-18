@@ -41,6 +41,8 @@ export interface TextareaQuestion extends BaseQuestion {
   minLength?: number;
   maxLength?: number;
   rows?: number;
+  /** Show AI assistant panel by default instead of plain textarea */
+  showAIByDefault?: boolean;
 }
 
 /**
@@ -78,6 +80,8 @@ export interface CheckboxQuestion extends BaseQuestion {
   minSelect?: number;
   maxSelect?: number;
   allowOther?: boolean;
+  /** Show AI assistant panel by default with options as context */
+  showAIByDefault?: boolean;
 }
 
 /**

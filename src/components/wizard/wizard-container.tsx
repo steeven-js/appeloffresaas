@@ -205,6 +205,9 @@ export function WizardContainer({ projectId }: WizardContainerProps) {
               canGoNext={true}
               canGoPrevious={currentQuestionIndex > 0 || currentModuleIndex > 0}
               isSaving={isSaving}
+              projectId={projectId}
+              moduleId={currentModule.id}
+              hasAIAssistant={!!currentModule.assemblePrompt}
             />
           </div>
         </main>

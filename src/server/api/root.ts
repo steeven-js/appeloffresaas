@@ -1,3 +1,4 @@
+import { aiAssistantRouter } from "~/server/api/routers/aiAssistant";
 import { authRouter } from "~/server/api/routers/auth";
 import { billingRouter } from "~/server/api/routers/billing";
 import { companyCertificationsRouter } from "~/server/api/routers/companyCertifications";
@@ -20,6 +21,7 @@ import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
  * All routers added in /api/routers should be manually added here.
  */
 export const appRouter = createTRPCRouter({
+  aiAssistant: aiAssistantRouter,
   auth: authRouter,
   billing: billingRouter,
   companyCertifications: companyCertificationsRouter,

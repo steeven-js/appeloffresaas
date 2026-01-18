@@ -261,6 +261,7 @@ export const demandProjectsRelations = relations(demandProjects, ({ one, many })
   }),
   documents: many(demandDocuments),
   chatMessages: many(demandChatMessages),
+  aiConversations: many(aiAssistantConversations),
 }));
 
 /**
@@ -371,3 +372,102 @@ export const demandReferenceCounters = createTable("demand_reference_counters", 
  */
 export type DemandReferenceCounter = typeof demandReferenceCounters.$inferSelect;
 export type NewDemandReferenceCounter = typeof demandReferenceCounters.$inferInsert;
+
+/**
+ * AI Assistant Message type
+ */
+export interface AIAssistantMessage {
+  id: string;
+  role: "assistant" | "user";
+  content: string;
+  type: "question" | "response" | "validation" | "suggestion" | "final";
+  options?: { id: string; label: string; value: string }[];
+  generatedText?: string;
+  example?: string;
+  timestamp: string;
+}
+
+/**
+ * AI Assistant Suggestion type
+ */
+export interface AIAssistantSuggestion {
+  id: string;
+  label: string;
+  preview: string;
+  priority: "high" | "medium" | "low";
+  type: "add" | "improve" | "reformulate";
+}
+
+/**
+ * AI Assistant modes
+ */
+export const AI_ASSISTANT_MODES = {
+  GUIDED: "guided",
+  EXPERT: "expert",
+} as const;
+
+export type AIAssistantMode = (typeof AI_ASSISTANT_MODES)[keyof typeof AI_ASSISTANT_MODES];
+
+/**
+ * AI Assistant conversation status
+ */
+export const AI_CONVERSATION_STATUS = {
+  ACTIVE: "active",
+  COMPLETED: "completed",
+  ABANDONED: "abandoned",
+} as const;
+
+export type AIConversationStatus = (typeof AI_CONVERSATION_STATUS)[keyof typeof AI_CONVERSATION_STATUS];
+
+/**
+ * AI Assistant Conversations table - stores wizard AI assistant conversations
+ * One conversation per module/question combination
+ */
+export const aiAssistantConversations = createTable("ai_assistant_conversations", {
+  id: varchar("id", { length: 255 })
+    .notNull()
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  demandProjectId: varchar("demand_project_id", { length: 255 })
+    .notNull()
+    .references(() => demandProjects.id, { onDelete: "cascade" }),
+
+  // Context
+  moduleId: varchar("module_id", { length: 50 }).notNull(),
+  questionId: varchar("question_id", { length: 50 }).notNull(),
+
+  // Mode and status
+  mode: varchar("mode", { length: 20 }).notNull().default("guided"),
+  status: varchar("status", { length: 20 }).notNull().default("active"),
+
+  // Conversation history
+  messages: jsonb("messages").$type<AIAssistantMessage[]>().default([]),
+
+  // Generated content
+  generatedText: text("generated_text"),
+
+  // Timestamps
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+});
+
+/**
+ * Relations for AI assistant conversations
+ */
+export const aiAssistantConversationsRelations = relations(aiAssistantConversations, ({ one }) => ({
+  demandProject: one(demandProjects, {
+    fields: [aiAssistantConversations.demandProjectId],
+    references: [demandProjects.id],
+  }),
+}));
+
+/**
+ * Type exports for AI assistant conversations
+ */
+export type AIAssistantConversation = typeof aiAssistantConversations.$inferSelect;
+export type NewAIAssistantConversation = typeof aiAssistantConversations.$inferInsert;

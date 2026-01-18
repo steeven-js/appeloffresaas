@@ -133,7 +133,11 @@ export function useWizard({ projectId }: UseWizardOptions): UseWizardReturn {
         if (!answer) return false;
         // Check if the answer value is meaningful (non-empty)
         if (Array.isArray(answer.value)) {
-          return answer.value.length > 0;
+          // Exclude __detail__ entries from counting
+          const actualValues = answer.value.filter(v =>
+            typeof v !== "string" || !v.startsWith("__detail__:")
+          );
+          return actualValues.length > 0;
         }
         return answer.value !== undefined && answer.value !== "";
       }).length;
