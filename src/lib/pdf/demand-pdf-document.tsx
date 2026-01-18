@@ -8,6 +8,10 @@ import {
   Link,
 } from "@react-pdf/renderer";
 import type { DemandSection } from "~/server/db/schema";
+import { parseMarkdownContent, type TextSegment, type ParsedLine } from "~/lib/utils/markdown-parser";
+
+// Type for react-pdf styles
+type PdfStyle = Parameters<typeof StyleSheet.create>[0][string];
 
 // Use built-in Helvetica font for reliability
 // Custom fonts via URL can fail in serverless environments
@@ -436,57 +440,71 @@ export interface DemandPdfData {
 }
 
 /**
- * Strip HTML tags and convert to plain text
+ * Render text segments with markdown styling (bold, italic)
  */
-function stripHtml(html: string): string {
-  // Replace common HTML elements
-  const text = html
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n\n")
-    .replace(/<\/div>/gi, "\n")
-    .replace(/<\/li>/gi, "\n")
-    .replace(/<li>/gi, "• ")
-    .replace(/<\/h[1-6]>/gi, "\n\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+function TextSegments({ segments, style }: { segments: TextSegment[]; style?: PdfStyle }) {
+  return (
+    <Text style={style}>
+      {segments.map((segment, i) => {
+        let fontFamily: string | undefined;
+        if (segment.bold && segment.italic) {
+          fontFamily = "Helvetica-BoldOblique";
+        } else if (segment.bold) {
+          fontFamily = "Helvetica-Bold";
+        } else if (segment.italic) {
+          fontFamily = "Helvetica-Oblique";
+        }
 
-  return text;
+        return (
+          <Text key={i} style={fontFamily ? { fontFamily } : undefined}>
+            {segment.text}
+          </Text>
+        );
+      })}
+    </Text>
+  );
 }
 
 /**
- * Render content as paragraphs
+ * Render a single parsed line
+ */
+function RenderLine({ line, lineIndex }: { line: ParsedLine; lineIndex: number }) {
+  if (line.type === "bullet") {
+    return (
+      <View key={lineIndex} style={styles.listItem}>
+        <Text style={styles.bullet}>•</Text>
+        <TextSegments segments={line.segments} style={styles.listItemText} />
+      </View>
+    );
+  }
+
+  if (line.type === "numbered") {
+    return (
+      <View key={lineIndex} style={styles.listItem}>
+        <Text style={styles.bullet}>{line.number}.</Text>
+        <TextSegments segments={line.segments} style={styles.listItemText} />
+      </View>
+    );
+  }
+
+  return <TextSegments key={lineIndex} segments={line.segments} style={styles.sectionContent} />;
+}
+
+/**
+ * Render content as paragraphs with markdown support
  */
 function ContentRenderer({ content }: { content: string }) {
-  const plainText = stripHtml(content);
-  const paragraphs = plainText.split("\n\n").filter(p => p.trim());
+  const parsedContent = parseMarkdownContent(content);
 
   return (
     <View>
-      {paragraphs.map((paragraph, index) => {
-        const lines = paragraph.split("\n").filter(l => l.trim());
-        return (
-          <View key={index} style={styles.paragraph}>
-            {lines.map((line, lineIndex) => {
-              if (line.startsWith("• ")) {
-                return (
-                  <View key={lineIndex} style={styles.listItem}>
-                    <Text style={styles.bullet}>•</Text>
-                    <Text style={styles.listItemText}>{line.substring(2)}</Text>
-                  </View>
-                );
-              }
-              return <Text key={lineIndex} style={styles.sectionContent}>{line}</Text>;
-            })}
-          </View>
-        );
-      })}
+      {parsedContent.map((paragraphLines, paragraphIndex) => (
+        <View key={paragraphIndex} style={styles.paragraph}>
+          {paragraphLines.map((line, lineIndex) => (
+            <RenderLine key={lineIndex} line={line} lineIndex={lineIndex} />
+          ))}
+        </View>
+      ))}
     </View>
   );
 }

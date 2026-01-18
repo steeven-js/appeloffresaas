@@ -93,6 +93,7 @@ import { DocumentPreview } from "./document-preview";
 import { AnnexesManager } from "./annexes-manager";
 import { PreExportDialog } from "./pre-export-dialog";
 import type { DemandSection } from "~/server/db/schema";
+import { markdownToHtml } from "~/lib/utils/markdown-parser";
 
 type GeneratableSection = "context" | "description" | "constraints";
 type QuestionTargetSection = GeneratableSection | "budget" | "general";
@@ -735,13 +736,14 @@ export function DemandWorkspace({ projectId }: DemandWorkspaceProps) {
       >
         <div className="mx-auto max-w-6xl space-y-6">
           {/* Header */}
-          <div className="flex items-start justify-between">
+          <div className="space-y-4">
+            {/* Title Row */}
             <div className="flex items-center gap-4">
               <Button variant="ghost" size="sm" onClick={() => router.push("/demandes")}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
-              <div>
-                <div className="flex items-center gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-2xl font-bold">{project.title}</h1>
                   <Badge variant={status.variant} className={status.className}>
                     {status.label}
@@ -757,7 +759,8 @@ export function DemandWorkspace({ projectId }: DemandWorkspaceProps) {
                 )}
               </div>
             </div>
-            <div className="flex items-center gap-2">
+            {/* Actions Row */}
+            <div className="flex items-center gap-2 flex-wrap">
             {/* Hidden file input for document import */}
             <input
               ref={fileInputRef}
@@ -1474,7 +1477,10 @@ export function DemandWorkspace({ projectId }: DemandWorkspaceProps) {
                     </CardHeader>
                     <CardContent>
                       {project.context ? (
-                        <p className="text-sm whitespace-pre-wrap">{project.context}</p>
+                        <div
+                          className="prose prose-sm max-w-none"
+                          dangerouslySetInnerHTML={{ __html: markdownToHtml(project.context) }}
+                        />
                       ) : (
                         <p className="text-sm text-muted-foreground italic">
                           Aucun contexte renseigné. Cliquez sur Modifier pour ajouter.
@@ -1490,7 +1496,10 @@ export function DemandWorkspace({ projectId }: DemandWorkspaceProps) {
                     </CardHeader>
                     <CardContent>
                       {project.description ? (
-                        <p className="text-sm whitespace-pre-wrap">{project.description}</p>
+                        <div
+                          className="prose prose-sm max-w-none"
+                          dangerouslySetInnerHTML={{ __html: markdownToHtml(project.description) }}
+                        />
                       ) : (
                         <p className="text-sm text-muted-foreground italic">
                           Aucune description renseignée. Cliquez sur Modifier pour ajouter.
@@ -1509,7 +1518,10 @@ export function DemandWorkspace({ projectId }: DemandWorkspaceProps) {
                     </CardHeader>
                     <CardContent>
                       {project.constraints ? (
-                        <p className="text-sm whitespace-pre-wrap">{project.constraints}</p>
+                        <div
+                          className="prose prose-sm max-w-none"
+                          dangerouslySetInnerHTML={{ __html: markdownToHtml(project.constraints) }}
+                        />
                       ) : (
                         <p className="text-sm text-muted-foreground italic">
                           Aucune contrainte renseignée. Cliquez sur Modifier pour ajouter.

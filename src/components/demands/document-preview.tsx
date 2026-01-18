@@ -15,6 +15,7 @@ import {
 
 import { Button } from "~/components/ui/button";
 import { cn } from "~/lib/utils";
+import { markdownToHtml } from "~/lib/utils/markdown-parser";
 import type { DemandSection } from "~/server/db/schema";
 
 interface DocumentPreviewProps {
@@ -316,7 +317,7 @@ export function DocumentPreview({
                     {section.content ? (
                       <div
                         className="prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ __html: section.content }}
+                        dangerouslySetInnerHTML={{ __html: markdownToHtml(section.content) }}
                       />
                     ) : (
                       <p className="text-muted-foreground italic text-sm">

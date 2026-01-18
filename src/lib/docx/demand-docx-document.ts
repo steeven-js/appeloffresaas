@@ -16,6 +16,7 @@ import {
   convertInchesToTwip,
 } from "docx";
 import type { DemandSection } from "~/server/db/schema";
+import { parseMarkdownContent, type TextSegment } from "~/lib/utils/markdown-parser";
 
 // Color palette (matching PDF)
 const colors = {
@@ -66,27 +67,18 @@ export interface DemandDocxData {
 }
 
 /**
- * Strip HTML tags and convert to plain text
+ * Convert text segments to TextRun array with proper styling
  */
-function stripHtml(html: string): string {
-  const text = html
-    .replace(/<br\s*\/?>/gi, "\n")
-    .replace(/<\/p>/gi, "\n\n")
-    .replace(/<\/div>/gi, "\n")
-    .replace(/<\/li>/gi, "\n")
-    .replace(/<li>/gi, "• ")
-    .replace(/<\/h[1-6]>/gi, "\n\n")
-    .replace(/<[^>]+>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&lt;/g, "<")
-    .replace(/&gt;/g, ">")
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-
-  return text;
+function segmentsToTextRuns(segments: TextSegment[], baseSize = 22): TextRun[] {
+  return segments.map(
+    (segment) =>
+      new TextRun({
+        text: segment.text,
+        size: baseSize,
+        bold: segment.bold,
+        italics: segment.italic,
+      })
+  );
 }
 
 /**
@@ -471,29 +463,35 @@ function createMetadataSection(data: DemandDocxData): (Paragraph | Table)[] {
 }
 
 /**
- * Create content paragraphs from HTML content
+ * Create content paragraphs from content with markdown support
  */
 function createContentParagraphs(content: string): Paragraph[] {
-  const plainText = stripHtml(content);
-  const paragraphs = plainText.split("\n\n").filter((p) => p.trim());
-
+  const parsedContent = parseMarkdownContent(content);
   const elements: Paragraph[] = [];
 
-  for (const paragraph of paragraphs) {
-    const lines = paragraph.split("\n").filter((l) => l.trim());
-
-    for (const line of lines) {
-      if (line.startsWith("• ")) {
+  for (const paragraphLines of parsedContent) {
+    for (const line of paragraphLines) {
+      if (line.type === "bullet") {
         // Bullet point
         elements.push(
           new Paragraph({
             bullet: { level: 0 },
             spacing: { after: 100 },
+            children: segmentsToTextRuns(line.segments),
+          })
+        );
+      } else if (line.type === "numbered") {
+        // Numbered list item
+        elements.push(
+          new Paragraph({
+            spacing: { after: 100 },
             children: [
               new TextRun({
-                text: line.substring(2),
+                text: `${line.number}. `,
                 size: 22,
+                bold: true,
               }),
+              ...segmentsToTextRuns(line.segments),
             ],
           })
         );
@@ -502,12 +500,7 @@ function createContentParagraphs(content: string): Paragraph[] {
         elements.push(
           new Paragraph({
             spacing: { after: 200 },
-            children: [
-              new TextRun({
-                text: line,
-                size: 22,
-              }),
-            ],
+            children: segmentsToTextRuns(line.segments),
           })
         );
       }

@@ -223,3 +223,45 @@
 .ProseMirror.resize-cursor {
   cursor: col-resize;
 }
+
+/* Prose-like styles for markdown content (without typography plugin) */
+.prose {
+  @apply text-foreground;
+}
+
+.prose p {
+  @apply mb-3 leading-relaxed;
+}
+
+.prose strong {
+  @apply font-semibold;
+}
+
+.prose em {
+  @apply italic;
+}
+
+.prose ul {
+  @apply list-disc ml-6 mb-3 space-y-1;
+}
+
+.prose ol {
+  @apply list-decimal ml-6 mb-3 space-y-1;
+}
+
+.prose li {
+  @apply leading-relaxed;
+}
+
+.prose-sm {
+  @apply text-sm;
+}
+
+.prose-sm p {
+  @apply mb-2;
+}
+
+.prose-sm ul,
+.prose-sm ol {
+  @apply mb-2;
+}
