@@ -11,6 +11,7 @@ import { demandDocumentsRouter } from "~/server/api/routers/demandDocuments";
 import { demandProjectsRouter } from "~/server/api/routers/demandProjects";
 import { healthRouter } from "~/server/api/routers/health";
 import { userRouter } from "~/server/api/routers/user";
+import { wizardRouter } from "~/server/api/routers/wizard";
 import { createCallerFactory, createTRPCRouter } from "~/server/api/trpc";
 
 /**
@@ -32,6 +33,7 @@ export const appRouter = createTRPCRouter({
   demandProjects: demandProjectsRouter,
   health: healthRouter,
   user: userRouter,
+  wizard: wizardRouter,
 });
 
 // export type definition of API

@@ -153,6 +153,11 @@ function ProjectFormDialog({
   const [selectedTemplate, setSelectedTemplate] = useState<DemandTemplate | null>(null);
   const [showTemplateSelector, setShowTemplateSelector] = useState(!isEditing);
 
+  // Fetch departments and team members from company profile
+  const { data: formOptions } = api.companyProfile.getDemandFormOptions.useQuery();
+  const departments = formOptions?.departments ?? [];
+  const teamMembers = formOptions?.teamMembers ?? [];
+
   const form = useForm<DemandProjectInput>({
     resolver: zodResolver(demandProjectSchema),
     defaultValues: {
@@ -170,13 +175,42 @@ function ProjectFormDialog({
     },
   });
 
-  // Reset template selector when dialog opens/closes
+  // Reset form and template selector when dialog opens/closes
   useEffect(() => {
     if (open && !isEditing) {
+      // Reset form to empty values for new project
+      form.reset({
+        title: "",
+        reference: "",
+        description: "",
+        departmentName: "",
+        contactName: "",
+        contactEmail: "",
+        urgencyLevel: "medium",
+        needType: "autre",
+        budgetRange: "",
+        notes: "",
+        templateId: "",
+      });
       setShowTemplateSelector(true);
       setSelectedTemplate(null);
+    } else if (open && isEditing && project) {
+      // Reset form to project values when editing
+      form.reset({
+        title: project.title ?? "",
+        reference: project.reference ?? "",
+        description: project.description ?? "",
+        departmentName: project.departmentName ?? "",
+        contactName: project.contactName ?? "",
+        contactEmail: project.contactEmail ?? "",
+        urgencyLevel: (project.urgencyLevel as "low" | "medium" | "high" | "critical") ?? "medium",
+        needType: (project.needType as "fourniture" | "service" | "travaux" | "formation" | "logiciel" | "maintenance" | "autre") ?? "autre",
+        budgetRange: project.budgetRange ?? "",
+        notes: "",
+        templateId: "",
+      });
     }
-  }, [open, isEditing]);
+  }, [open, isEditing, project, form]);
 
   const handleSelectTemplate = (template: DemandTemplate) => {
     setSelectedTemplate(template);
@@ -200,7 +234,8 @@ function ProjectFormDialog({
       form.reset();
       setSelectedTemplate(null);
       setShowTemplateSelector(true);
-      router.push(`/demandes/${newProject.id}`);
+      // Redirect to wizard mode for new projects
+      router.push(`/demandes/${newProject.id}?mode=wizard`);
     },
   });
 
@@ -368,11 +403,21 @@ function ProjectFormDialog({
                   <FormItem>
                     <FormLabel>Service demandeur *</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Direction informatique"
-                        disabled={isPending}
-                        {...field}
-                      />
+                      <>
+                        <Input
+                          placeholder="Direction informatique"
+                          disabled={isPending}
+                          list="department-suggestions"
+                          {...field}
+                        />
+                        {departments.length > 0 && (
+                          <datalist id="department-suggestions">
+                            {departments.map((dept) => (
+                              <option key={dept} value={dept} />
+                            ))}
+                          </datalist>
+                        )}
+                      </>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -389,11 +434,42 @@ function ProjectFormDialog({
                   <FormItem>
                     <FormLabel>Nom du responsable *</FormLabel>
                     <FormControl>
-                      <Input
-                        placeholder="Jean Dupont"
-                        disabled={isPending}
-                        {...field}
-                      />
+                      {teamMembers.length > 0 ? (
+                        <Select
+                          onValueChange={(value) => {
+                            field.onChange(value);
+                            // Auto-fill email when team member selected
+                            const member = teamMembers.find((m) => m.fullName === value);
+                            if (member?.email) {
+                              form.setValue("contactEmail", member.email);
+                            }
+                          }}
+                          value={field.value}
+                          disabled={isPending}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Sélectionner un responsable..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {teamMembers.map((member) => (
+                              <SelectItem key={member.id} value={member.fullName}>
+                                <div className="flex flex-col">
+                                  <span>{member.fullName}</span>
+                                  {member.role && (
+                                    <span className="text-xs text-muted-foreground">{member.role}</span>
+                                  )}
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Input
+                          placeholder="Jean Dupont"
+                          disabled={isPending}
+                          {...field}
+                        />
+                      )}
                     </FormControl>
                     <FormMessage />
                   </FormItem>

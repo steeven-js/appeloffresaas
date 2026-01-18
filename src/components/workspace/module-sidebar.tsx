@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, Sparkles } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
@@ -29,6 +29,7 @@ interface ModuleSidebarProps {
   completion: CompletionData;
   onBack: () => void;
   onAddSection?: () => void;
+  onSwitchToWizard?: () => void;
   className?: string;
 }
 
@@ -39,6 +40,7 @@ export function ModuleSidebar({
   completion,
   onBack,
   onAddSection,
+  onSwitchToWizard,
   className,
 }: ModuleSidebarProps) {
   // Split modules by category
@@ -113,9 +115,23 @@ export function ModuleSidebar({
         </div>
       </div>
 
-      {/* Add Section Button */}
-      {onAddSection && (
-        <div className="p-4 border-t">
+      {/* Bottom Actions */}
+      <div className="p-4 border-t space-y-2">
+        {/* Switch to Wizard Button */}
+        {onSwitchToWizard && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onSwitchToWizard}
+            className="w-full gap-2 text-primary hover:text-primary"
+          >
+            <Sparkles className="h-4 w-4" />
+            Mode guidé
+          </Button>
+        )}
+
+        {/* Add Section Button */}
+        {onAddSection && (
           <Button
             variant="outline"
             size="sm"
@@ -125,8 +141,8 @@ export function ModuleSidebar({
             <Plus className="h-4 w-4" />
             Ajouter section
           </Button>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

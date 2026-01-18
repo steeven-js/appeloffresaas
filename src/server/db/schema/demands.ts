@@ -56,6 +56,16 @@ export interface SuggestedCriteria {
 }
 
 /**
+ * Answer type for wizard responses
+ */
+export interface WizardAnswer {
+  questionId: string;
+  questionLabel: string;
+  value: string | string[] | number | boolean;
+  answeredAt: string;
+}
+
+/**
  * Section type for flexible document structure
  */
 export interface DemandSection {
@@ -65,7 +75,45 @@ export interface DemandSection {
   isDefault: boolean; // true for context, description, constraints
   isRequired: boolean; // cannot be deleted if true
   order: number;
+  // Wizard-specific fields
+  answers?: WizardAnswer[];
+  generatedAt?: string;
+  validatedAt?: string;
+  generationCount?: number;
 }
+
+/**
+ * Wizard module state
+ */
+export interface WizardModuleState {
+  status: "pending" | "in_progress" | "completed";
+  startedAt?: string;
+  completedAt?: string;
+  validatedAt?: string;
+  answeredQuestions: string[];
+}
+
+/**
+ * Wizard state for tracking wizard progress
+ */
+export interface WizardState {
+  currentModule: number;
+  currentQuestion: number;
+  startedAt: string;
+  lastActivityAt: string;
+  modules: Record<string, WizardModuleState>;
+}
+
+/**
+ * Interaction modes for demand projects
+ */
+export const INTERACTION_MODES = {
+  WIZARD: "wizard",    // Step-by-step guided wizard
+  CHAT: "chat",        // Free-form AI chat
+  MANUAL: "manual",    // Manual editing
+} as const;
+
+export type InteractionMode = (typeof INTERACTION_MODES)[keyof typeof INTERACTION_MODES];
 
 /**
  * Demand Projects table - stores user's demand projects (Dossier de Demande)
@@ -109,6 +157,12 @@ export const demandProjects = createTable("demand_projects", {
 
   // Flexible sections structure
   sections: jsonb("sections").$type<DemandSection[]>(),
+
+  // Wizard state for step-by-step guidance
+  wizardState: jsonb("wizard_state").$type<WizardState>(),
+
+  // Interaction mode (wizard, chat, manual)
+  interactionMode: varchar("interaction_mode", { length: 20 }).default("wizard"),
 
   // Legacy fields (kept for compatibility during migration)
   buyerName: varchar("buyer_name", { length: 255 }), // Can be used for destination admin

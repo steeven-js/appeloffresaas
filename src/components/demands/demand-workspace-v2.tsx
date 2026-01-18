@@ -93,9 +93,13 @@ export function DemandWorkspaceV2({ projectId }: DemandWorkspaceV2Props) {
         return hasRealContent(project.description) ? "complete" : "empty";
       case "constraints":
         return hasRealContent(project.constraints) ? "complete" : "empty";
-      case "budget":
-        return project.budgetRange || project.estimatedAmount ? "complete" :
+      case "budget": {
+        // Check metadata fields OR budget section content
+        const budgetSection = sections.find(s => s.id === "budget");
+        const hasBudgetSectionContent = budgetSection && hasRealContent(budgetSection.content);
+        return project.budgetRange || project.estimatedAmount || hasBudgetSectionContent ? "complete" :
                project.desiredDeliveryDate ? "in_progress" : "empty";
+      }
       case "documents":
         // Documents status will be updated when annexes are loaded
         return "empty";
@@ -141,6 +145,7 @@ export function DemandWorkspaceV2({ projectId }: DemandWorkspaceV2Props) {
       constraints: project.constraints,
       budgetRange: project.budgetRange,
       desiredDeliveryDate: project.desiredDeliveryDate,
+      sections: sections, // Include sections for budget content check
       hasDocuments: false, // Will be updated when annexes are loaded
     }) : 0;
 
@@ -216,6 +221,11 @@ export function DemandWorkspaceV2({ projectId }: DemandWorkspaceV2Props) {
     router.push("/demandes");
   };
 
+  // Handle switch to wizard mode
+  const handleSwitchToWizard = () => {
+    router.push(`/demandes/${projectId}?mode=wizard`);
+  };
+
   // Handle add section
   const handleAddSection = () => {
     // TODO: Implement add section dialog
@@ -268,6 +278,7 @@ export function DemandWorkspaceV2({ projectId }: DemandWorkspaceV2Props) {
           completion={completion}
           onBack={handleBack}
           onAddSection={handleAddSection}
+          onSwitchToWizard={handleSwitchToWizard}
         />
       }
       main={
