@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Bot, Loader2, Send, Trash2, User, AlertCircle, Sparkles } from "lucide-react";
+import { Bot, Loader2, Send, Trash2, User, AlertCircle, Sparkles, Save, Check, FileText } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
@@ -15,23 +15,46 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "~/components/ui/dropdown-menu";
 import { cn } from "~/lib/utils";
 import { markdownToHtml } from "~/lib/utils/markdown-parser";
 import { api } from "~/trpc/react";
+import {
+  detectSaveableContent,
+  cleanContentForSave,
+  type SaveableSection,
+} from "~/lib/utils/response-parser";
 
 interface DemandChatPanelProps {
   projectId: string;
+  onContentSaved?: () => void;
 }
 
-export function DemandChatPanel({ projectId }: DemandChatPanelProps) {
+export function DemandChatPanel({ projectId, onContentSaved }: DemandChatPanelProps) {
   const [input, setInput] = useState("");
   const [clearDialogOpen, setClearDialogOpen] = useState(false);
+  const [savedMessageIds, setSavedMessageIds] = useState<Set<string>>(new Set());
+  const [savingSection, setSavingSection] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const utils = api.useUtils();
 
   // Check if AI is available
   const { data: aiStatus } = api.demandChat.isAvailable.useQuery();
+
+  // Save content to section mutation
+  const saveToSectionMutation = api.demandProjects.saveAIContent.useMutation({
+    onSuccess: () => {
+      // Invalidate project data to refresh completion percentage
+      void utils.demandProjects.get.invalidate({ id: projectId });
+      onContentSaved?.();
+    },
+  });
 
   // Get greeting message
   const { data: greeting } = api.demandChat.getGreeting.useQuery(
@@ -83,6 +106,27 @@ export function DemandChatPanel({ projectId }: DemandChatPanelProps) {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
       e.preventDefault();
       handleSend();
+    }
+  };
+
+  // Handle save content to section
+  const handleSaveToSection = async (
+    messageId: string,
+    section: SaveableSection,
+    content: string
+  ) => {
+    setSavingSection(`${messageId}-${section}`);
+    try {
+      const cleanedContent = cleanContentForSave(content);
+      await saveToSectionMutation.mutateAsync({
+        id: projectId,
+        section,
+        content: cleanedContent,
+      });
+      // Mark message as saved for this section
+      setSavedMessageIds((prev) => new Set(prev).add(`${messageId}-${section}`));
+    } finally {
+      setSavingSection(null);
     }
   };
 
@@ -142,8 +186,12 @@ export function DemandChatPanel({ projectId }: DemandChatPanelProps) {
           {messages?.map((message) => (
             <ChatMessage
               key={message.id}
+              messageId={message.id}
               role={message.role as "user" | "assistant"}
               content={message.content}
+              onSaveToSection={handleSaveToSection}
+              savedSections={savedMessageIds}
+              savingSection={savingSection}
             />
           ))}
 
@@ -217,13 +265,39 @@ export function DemandChatPanel({ projectId }: DemandChatPanelProps) {
 }
 
 interface ChatMessageProps {
+  messageId?: string;
   role: "user" | "assistant";
   content: string;
   isLoading?: boolean;
+  onSaveToSection?: (messageId: string, section: SaveableSection, content: string) => void;
+  savedSections?: Set<string>;
+  savingSection?: string | null;
 }
 
-function ChatMessage({ role, content, isLoading }: ChatMessageProps) {
+const SECTION_LABELS: Record<SaveableSection, string> = {
+  context: "Contexte",
+  description: "Description",
+  constraints: "Contraintes",
+  budget: "Budget & Délais",
+};
+
+function ChatMessage({
+  messageId,
+  role,
+  content,
+  isLoading,
+  onSaveToSection,
+  savedSections,
+  savingSection,
+}: ChatMessageProps) {
   const isUser = role === "user";
+
+  // Detect saveable content in assistant messages
+  const saveableContent = !isUser && !isLoading && content
+    ? detectSaveableContent(content)
+    : [];
+
+  const hasSaveableContent = saveableContent.length > 0;
 
   return (
     <div
@@ -244,31 +318,123 @@ function ChatMessage({ role, content, isLoading }: ChatMessageProps) {
           <Bot className="h-4 w-4" />
         )}
       </div>
-      <div
-        className={cn(
-          "rounded-lg px-4 py-2 max-w-[85%]",
-          isUser
-            ? "bg-primary text-primary-foreground"
-            : "bg-muted"
-        )}
-      >
-        {isLoading ? (
-          <div className="flex items-center gap-1">
-            <span className="animate-bounce">.</span>
-            <span className="animate-bounce animation-delay-100">.</span>
-            <span className="animate-bounce animation-delay-200">.</span>
+      <div className="flex-1 max-w-[85%]">
+        <div
+          className={cn(
+            "rounded-lg px-4 py-2",
+            isUser
+              ? "bg-primary text-primary-foreground"
+              : "bg-muted"
+          )}
+        >
+          {isLoading ? (
+            <div className="flex items-center gap-1">
+              <span className="animate-bounce">.</span>
+              <span className="animate-bounce animation-delay-100">.</span>
+              <span className="animate-bounce animation-delay-200">.</span>
+            </div>
+          ) : isUser ? (
+            <p className="text-sm whitespace-pre-wrap">{content}</p>
+          ) : (
+            <div
+              className="text-sm prose prose-sm prose-neutral dark:prose-invert max-w-none
+                prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5
+                prose-strong:font-semibold prose-headings:font-semibold"
+              dangerouslySetInnerHTML={{ __html: markdownToHtml(content) }}
+            />
+          )}
+        </div>
+
+        {/* Save to document button for assistant messages with saveable content */}
+        {hasSaveableContent && messageId && onSaveToSection && (
+          <div className="mt-2 flex items-center gap-2">
+            {saveableContent.length === 1 ? (
+              // Single section detected - show direct button
+              <SaveButton
+                messageId={messageId}
+                section={saveableContent[0]!.section}
+                content={saveableContent[0]!.content}
+                label={saveableContent[0]!.label}
+                onSave={onSaveToSection}
+                isSaved={savedSections?.has(`${messageId}-${saveableContent[0]!.section}`)}
+                isSaving={savingSection === `${messageId}-${saveableContent[0]!.section}`}
+              />
+            ) : (
+              // Multiple sections detected - show dropdown
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5">
+                    <Save className="h-3 w-3" />
+                    Enregistrer dans le dossier
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  {saveableContent.map((item) => {
+                    const isSaved = savedSections?.has(`${messageId}-${item.section}`);
+                    const isSaving = savingSection === `${messageId}-${item.section}`;
+                    return (
+                      <DropdownMenuItem
+                        key={item.section}
+                        onClick={() => onSaveToSection(messageId, item.section, item.content)}
+                        disabled={(isSaved ?? false) || isSaving}
+                        className="gap-2"
+                      >
+                        {isSaving ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : isSaved ? (
+                          <Check className="h-3 w-3 text-green-600" />
+                        ) : (
+                          <FileText className="h-3 w-3" />
+                        )}
+                        {SECTION_LABELS[item.section]}
+                        {isSaved && <span className="text-xs text-muted-foreground ml-auto">Enregistré</span>}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
-        ) : isUser ? (
-          <p className="text-sm whitespace-pre-wrap">{content}</p>
-        ) : (
-          <div
-            className="text-sm prose prose-sm prose-neutral dark:prose-invert max-w-none
-              prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5
-              prose-strong:font-semibold prose-headings:font-semibold"
-            dangerouslySetInnerHTML={{ __html: markdownToHtml(content) }}
-          />
         )}
       </div>
     </div>
+  );
+}
+
+interface SaveButtonProps {
+  messageId: string;
+  section: SaveableSection;
+  content: string;
+  label: string;
+  onSave: (messageId: string, section: SaveableSection, content: string) => void;
+  isSaved?: boolean;
+  isSaving?: boolean;
+}
+
+function SaveButton({ messageId, section, content, label, onSave, isSaved, isSaving }: SaveButtonProps) {
+  if (isSaved) {
+    return (
+      <Button variant="outline" size="sm" className="h-7 text-xs gap-1.5 text-green-600" disabled>
+        <Check className="h-3 w-3" />
+        Enregistré dans {label}
+      </Button>
+    );
+  }
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      className="h-7 text-xs gap-1.5"
+      onClick={() => onSave(messageId, section, content)}
+      disabled={isSaving}
+    >
+      {isSaving ? (
+        <Loader2 className="h-3 w-3 animate-spin" />
+      ) : (
+        <Save className="h-3 w-3" />
+      )}
+      Enregistrer dans {label}
+    </Button>
   );
 }

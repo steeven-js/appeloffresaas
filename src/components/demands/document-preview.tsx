@@ -14,8 +14,8 @@ import {
 } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
-import { cn } from "~/lib/utils";
-import { markdownToHtml } from "~/lib/utils/markdown-parser";
+import { cn, hasRealContent } from "~/lib/utils";
+import { markdownToHtml, transformPlaceholders } from "~/lib/utils/markdown-parser";
 import type { DemandSection } from "~/server/db/schema";
 
 interface DocumentPreviewProps {
@@ -314,15 +314,17 @@ export function DocumentPreview({
                     <h2 className="text-lg font-semibold text-primary border-b pb-2 mb-4">
                       {index + 1}. {section.title}
                     </h2>
-                    {section.content ? (
+                    {hasRealContent(section.content) ? (
                       <div
                         className="prose prose-sm max-w-none"
-                        dangerouslySetInnerHTML={{ __html: markdownToHtml(section.content) }}
+                        dangerouslySetInnerHTML={{ __html: transformPlaceholders(markdownToHtml(section.content)) }}
                       />
                     ) : (
-                      <p className="text-muted-foreground italic text-sm">
-                        Cette section est vide.
-                      </p>
+                      <div className="py-4 px-6 bg-muted/30 rounded-lg border border-dashed border-muted-foreground/20">
+                        <p className="text-muted-foreground text-sm text-center">
+                          Section à compléter
+                        </p>
+                      </div>
                     )}
                   </div>
                 ))}

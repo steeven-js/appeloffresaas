@@ -234,8 +234,7 @@ function ProjectFormDialog({
       form.reset();
       setSelectedTemplate(null);
       setShowTemplateSelector(true);
-      // Redirect to wizard mode for new projects
-      router.push(`/demandes/${newProject.id}?mode=wizard`);
+      router.push(`/demandes/${newProject.id}`);
     },
   });
 

@@ -409,4 +409,59 @@ export const companyProfileRouter = createTRPCRouter({
         };
       }
     }),
+
+  /**
+   * Get departments and team members for demand form autocomplete
+   * Returns unique departments and team members with their email
+   */
+  getDemandFormOptions: protectedProcedure.query(async ({ ctx }) => {
+    // Get the company profile first
+    const profile = await ctx.db.query.companyProfiles.findFirst({
+      where: eq(companyProfiles.userId, ctx.session.user.id),
+    });
+
+    if (!profile) {
+      return {
+        departments: [],
+        teamMembers: [],
+      };
+    }
+
+    // Fetch team members
+    const members = await ctx.db.query.companyTeamMembers.findMany({
+      where: eq(companyTeamMembers.companyProfileId, profile.id),
+      columns: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        department: true,
+        role: true,
+      },
+      orderBy: (members, { asc }) => [asc(members.lastName), asc(members.firstName)],
+    });
+
+    // Extract unique departments (non-null and non-empty)
+    const departmentSet = new Set<string>();
+    for (const member of members) {
+      if (member.department?.trim()) {
+        departmentSet.add(member.department.trim());
+      }
+    }
+    const departments = Array.from(departmentSet).sort();
+
+    // Format team members for the form
+    const teamMembers = members.map((m) => ({
+      id: m.id,
+      fullName: `${m.firstName} ${m.lastName}`,
+      email: m.email ?? "",
+      department: m.department ?? "",
+      role: m.role,
+    }));
+
+    return {
+      departments,
+      teamMembers,
+    };
+  }),
 });

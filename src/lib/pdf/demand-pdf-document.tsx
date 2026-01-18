@@ -465,10 +465,31 @@ function TextSegments({ segments, style }: { segments: TextSegment[]; style?: Pd
   );
 }
 
+// Header styles based on level
+const headerStyles: Record<number, PdfStyle> = {
+  1: { fontSize: 16, fontFamily: "Helvetica-Bold", marginBottom: 8, marginTop: 12 },
+  2: { fontSize: 14, fontFamily: "Helvetica-Bold", marginBottom: 6, marginTop: 10 },
+  3: { fontSize: 12, fontFamily: "Helvetica-Bold", marginBottom: 4, marginTop: 8 },
+  4: { fontSize: 11, fontFamily: "Helvetica-Bold", marginBottom: 4, marginTop: 6 },
+  5: { fontSize: 11, fontFamily: "Helvetica-Bold", marginBottom: 2, marginTop: 4 },
+  6: { fontSize: 10, fontFamily: "Helvetica-Bold", marginBottom: 2, marginTop: 4 },
+};
+
 /**
  * Render a single parsed line
  */
 function RenderLine({ line, lineIndex }: { line: ParsedLine; lineIndex: number }) {
+  if (line.type === "header") {
+    const level = line.level ?? 3;
+    const defaultHeaderStyle = { fontSize: 12, fontFamily: "Helvetica-Bold", marginBottom: 4, marginTop: 8 };
+    const headerStyle = headerStyles[level] ?? defaultHeaderStyle;
+    return (
+      <View key={lineIndex} style={{ marginTop: (headerStyle.marginTop as number | undefined) ?? 8 }}>
+        <TextSegments segments={line.segments} style={headerStyle} />
+      </View>
+    );
+  }
+
   if (line.type === "bullet") {
     return (
       <View key={lineIndex} style={styles.listItem}>

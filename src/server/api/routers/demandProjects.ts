@@ -462,6 +462,99 @@ export const demandProjectsRouter = createTRPCRouter({
     }),
 
   /**
+   * Save AI-generated content to a specific section
+   */
+  saveAIContent: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        section: z.enum(["context", "description", "constraints", "budget"]),
+        content: z.string(),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Verify ownership
+      const existing = await ctx.db.query.demandProjects.findFirst({
+        where: eq(demandProjects.id, input.id),
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Projet non trouvé",
+        });
+      }
+
+      if (existing.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Accès non autorisé",
+        });
+      }
+
+      // Get current sections or initialize empty array
+      const currentSections = (existing.sections as Array<{
+        id: string;
+        title: string;
+        content: string;
+        isDefault: boolean;
+        isRequired: boolean;
+        order: number;
+      }>) ?? [];
+
+      // Update the specific section in sections array
+      const updatedSections = currentSections.map((s) => {
+        if (s.id === input.section) {
+          return { ...s, content: input.content };
+        }
+        return s;
+      });
+
+      // If section doesn't exist in array, add it
+      const sectionExists = currentSections.some((s) => s.id === input.section);
+      if (!sectionExists) {
+        const sectionTitles: Record<string, string> = {
+          context: "Contexte & Justification",
+          description: "Description du Besoin",
+          constraints: "Contraintes",
+          budget: "Budget & Délais",
+        };
+        updatedSections.push({
+          id: input.section,
+          title: sectionTitles[input.section] ?? input.section,
+          content: input.content,
+          isDefault: true,
+          isRequired: ["context", "description"].includes(input.section),
+          order: updatedSections.length,
+        });
+      }
+
+      // Build update object with legacy field mapping
+      const updateData: Record<string, unknown> = {
+        sections: updatedSections,
+        updatedAt: new Date(),
+      };
+
+      // Also update legacy fields for backward compatibility
+      if (input.section === "context") {
+        updateData.context = input.content;
+      } else if (input.section === "description") {
+        updateData.description = input.content;
+      } else if (input.section === "constraints") {
+        updateData.constraints = input.content;
+      }
+      // Note: budget section content goes into sections array only (no single legacy field)
+
+      const [updated] = await ctx.db
+        .update(demandProjects)
+        .set(updateData)
+        .where(eq(demandProjects.id, input.id))
+        .returning();
+
+      return updated;
+    }),
+
+  /**
    * Archive a demand project
    */
   archive: protectedProcedure

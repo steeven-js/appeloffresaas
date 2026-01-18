@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Check, Download, PenLine } from "lucide-react";
+import { ArrowLeft, Check, Download } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
 import { Progress } from "~/components/ui/progress";
@@ -21,7 +21,6 @@ interface WizardSidebarProps {
   onModuleClick: (index: number) => void;
   onBack: () => void;
   onExport?: () => void;
-  onSwitchToManual?: () => void;
   isExportEnabled: boolean;
   className?: string;
 }
@@ -34,7 +33,6 @@ export function WizardSidebar({
   onModuleClick,
   onBack,
   onExport,
-  onSwitchToManual,
   isExportEnabled,
   className,
 }: WizardSidebarProps) {
@@ -162,22 +160,6 @@ export function WizardSidebar({
           </div>
         </button>
 
-        {/* Switch to Manual Mode Button */}
-        {onSwitchToManual && (
-          <button
-            onClick={onSwitchToManual}
-            className="w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors hover:bg-muted/50"
-          >
-            <div className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-muted text-muted-foreground">
-              <PenLine className="h-3.5 w-3.5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="text-sm font-medium text-muted-foreground">
-                Mode manuel
-              </div>
-            </div>
-          </button>
-        )}
       </div>
 
       {/* Overall Progress */}

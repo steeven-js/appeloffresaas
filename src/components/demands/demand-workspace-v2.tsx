@@ -221,11 +221,6 @@ export function DemandWorkspaceV2({ projectId }: DemandWorkspaceV2Props) {
     router.push("/demandes");
   };
 
-  // Handle switch to wizard mode
-  const handleSwitchToWizard = () => {
-    router.push(`/demandes/${projectId}?mode=wizard`);
-  };
-
   // Handle add section
   const handleAddSection = () => {
     // TODO: Implement add section dialog
@@ -278,7 +273,6 @@ export function DemandWorkspaceV2({ projectId }: DemandWorkspaceV2Props) {
           completion={completion}
           onBack={handleBack}
           onAddSection={handleAddSection}
-          onSwitchToWizard={handleSwitchToWizard}
         />
       }
       main={

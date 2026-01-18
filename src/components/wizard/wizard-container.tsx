@@ -148,11 +148,6 @@ export function WizardContainer({ projectId }: WizardContainerProps) {
     router.push("/demandes");
   }, [router]);
 
-  // Handle switch to manual mode
-  const handleSwitchToManual = useCallback(() => {
-    router.push(`/demandes/${projectId}`);
-  }, [router, projectId]);
-
   if (isLoading || isInitializing) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -182,7 +177,6 @@ export function WizardContainer({ projectId }: WizardContainerProps) {
             onModuleClick={navigateToModule}
             onBack={handleBack}
             onExport={handleExport}
-            onSwitchToManual={handleSwitchToManual}
             isExportEnabled={isExportEnabled}
           />
         </aside>

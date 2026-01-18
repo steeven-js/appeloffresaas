@@ -10,8 +10,9 @@ export interface TextSegment {
 }
 
 export interface ParsedLine {
-  type: "paragraph" | "bullet" | "numbered";
+  type: "paragraph" | "bullet" | "numbered" | "header";
   number?: number;
+  level?: number; // For headers (1-6)
   segments: TextSegment[];
 }
 
@@ -105,6 +106,17 @@ export function parseInlineMarkdown(text: string): TextSegment[] {
 export function parseLine(line: string): ParsedLine {
   const trimmedLine = line.trim();
 
+  // Check for headers (### Header text)
+  const headerRegex = /^(#{1,6})\s+(.*)$/;
+  const headerMatch = headerRegex.exec(trimmedLine);
+  if (headerMatch?.[1] && headerMatch[2]) {
+    return {
+      type: "header",
+      level: headerMatch[1].length,
+      segments: parseInlineMarkdown(headerMatch[2]),
+    };
+  }
+
   // Check for bullet points (-, *, •)
   const bulletRegex = /^[-*•]\s+(.*)$/;
   const bulletMatch = bulletRegex.exec(trimmedLine);
@@ -155,7 +167,7 @@ export function segmentsToPlainText(segments: TextSegment[]): string {
 
 /**
  * Convert markdown to HTML for browser rendering
- * Handles: **bold**, *italic*, lists, line breaks
+ * Handles: **bold**, *italic*, lists, headers, line breaks
  */
 export function markdownToHtml(content: string): string {
   const plainText = stripHtml(content);
@@ -167,6 +179,16 @@ export function markdownToHtml(content: string): string {
 
   for (const paragraph of paragraphs) {
     const lines = paragraph.split("\n").filter((l) => l.trim());
+
+    // Check if first line is a header
+    const firstLine = lines[0]?.trim() ?? "";
+    const headerMatch = /^(#{1,6})\s+(.+)$/.exec(firstLine);
+    if (headerMatch?.[1] && headerMatch[2] && lines.length === 1) {
+      const level = headerMatch[1].length;
+      const headerContent = formatInlineMarkdown(headerMatch[2]);
+      htmlParts.push(`<h${level}>${headerContent}</h${level}>`);
+      continue;
+    }
 
     // Check if this paragraph is a bullet list
     const isBulletList = lines.every((line) => /^[-*•]\s+/.test(line.trim()));
@@ -188,16 +210,30 @@ export function markdownToHtml(content: string): string {
       });
       htmlParts.push(`<ol>${listItems.join("")}</ol>`);
     } else {
-      // Process as regular paragraph with possible inline lists
+      // Process as regular paragraph with possible inline lists and headers
       const processedLines: string[] = [];
       let currentList: { type: "ul" | "ol"; items: string[] } | null = null;
 
       for (const line of lines) {
         const trimmedLine = line.trim();
+
+        // Check for headers within mixed content
+        const headerMatch = /^(#{1,6})\s+(.+)$/.exec(trimmedLine);
         const bulletMatch = /^[-*•]\s+(.*)$/.exec(trimmedLine);
         const numberedMatch = /^\d+\.\s+(.*)$/.exec(trimmedLine);
 
-        if (bulletMatch?.[1] !== undefined) {
+        if (headerMatch?.[1] && headerMatch[2]) {
+          // Close any open list first
+          if (currentList) {
+            processedLines.push(
+              `<${currentList.type}>${currentList.items.map((i) => `<li>${i}</li>`).join("")}</${currentList.type}>`
+            );
+            currentList = null;
+          }
+          const level = headerMatch[1].length;
+          const headerContent = formatInlineMarkdown(headerMatch[2]);
+          processedLines.push(`<h${level}>${headerContent}</h${level}>`);
+        } else if (bulletMatch?.[1] !== undefined) {
           // Start or continue bullet list
           if (currentList?.type !== "ul") {
             if (currentList) {
@@ -241,17 +277,17 @@ export function markdownToHtml(content: string): string {
         );
       }
 
-      // Join with <br> for regular text, but not for lists
+      // Join with <br> for regular text, but not for lists or headers
       const paragraphHtml = processedLines
         .map((part, i) => {
-          // Don't add <br> after list elements
-          if (part.startsWith("<ul>") || part.startsWith("<ol>")) {
+          // Don't add <br> after list or header elements
+          if (part.startsWith("<ul>") || part.startsWith("<ol>") || part.startsWith("<h")) {
             return part;
           }
-          // Don't add <br> before list elements
+          // Don't add <br> before list or header elements
           if (i < processedLines.length - 1) {
             const nextPart = processedLines[i + 1];
-            if (nextPart?.startsWith("<ul>") || nextPart?.startsWith("<ol>")) {
+            if (nextPart?.startsWith("<ul>") || nextPart?.startsWith("<ol>") || nextPart?.startsWith("<h")) {
               return part;
             }
           }
@@ -264,8 +300,8 @@ export function markdownToHtml(content: string): string {
         .join("");
 
       if (paragraphHtml) {
-        // Only wrap in <p> if it's not just a list
-        if (paragraphHtml.startsWith("<ul>") || paragraphHtml.startsWith("<ol>")) {
+        // Only wrap in <p> if it's not starting with a block element (list or header)
+        if (paragraphHtml.startsWith("<ul>") || paragraphHtml.startsWith("<ol>") || paragraphHtml.startsWith("<h")) {
           htmlParts.push(paragraphHtml);
         } else {
           htmlParts.push(`<p>${paragraphHtml}</p>`);
@@ -279,10 +315,31 @@ export function markdownToHtml(content: string): string {
 
 /**
  * Format inline markdown (bold, italic) to HTML
+ * Also transforms placeholder patterns [text] into styled elements
  */
-function formatInlineMarkdown(text: string): string {
-  return text
+function formatInlineMarkdown(text: string, transformPlaceholders = true): string {
+  let result = text
     .replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>")
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.+?)\*/g, "<em>$1</em>");
+
+  // Transform placeholder patterns [text] into styled placeholder elements
+  if (transformPlaceholders) {
+    result = result.replace(
+      /\[([^\]]+)\]/g,
+      '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-muted/50 border border-dashed border-muted-foreground/30 text-muted-foreground/60 text-xs font-normal italic">$1</span>'
+    );
+  }
+
+  return result;
+}
+
+/**
+ * Transform placeholder patterns [text] in already-rendered HTML
+ */
+export function transformPlaceholders(html: string): string {
+  return html.replace(
+    /\[([^\]]+)\]/g,
+    '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-muted/50 border border-dashed border-muted-foreground/30 text-muted-foreground/60 text-xs font-normal italic">$1</span>'
+  );
 }

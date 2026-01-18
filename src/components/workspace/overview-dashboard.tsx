@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Banknote, Calendar, FileText } from "lucide-react";
+import { AlertCircle, Banknote, Calendar, FileText, PenLine } from "lucide-react";
 
 import { Badge } from "~/components/ui/badge";
 import {
@@ -9,8 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from "~/components/ui/card";
-import { markdownToHtml } from "~/lib/utils/markdown-parser";
-import { cn } from "~/lib/utils";
+import { markdownToHtml, transformPlaceholders } from "~/lib/utils/markdown-parser";
+import { cn, hasRealContent } from "~/lib/utils";
 
 interface OverviewDashboardProps {
   project: {
@@ -65,7 +65,15 @@ function OverviewCard({ title, moduleId, icon, children, onClick }: OverviewCard
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <p className="text-sm text-muted-foreground italic">{message}</p>
+    <div className="flex flex-col items-center justify-center py-6 text-center">
+      <div className="rounded-full bg-muted p-3 mb-3">
+        <PenLine className="h-5 w-5 text-muted-foreground" />
+      </div>
+      <p className="text-sm text-muted-foreground">{message}</p>
+      <p className="text-xs text-muted-foreground/60 mt-1">
+        Cliquez pour compléter avec l&apos;assistant IA
+      </p>
+    </div>
   );
 }
 
@@ -132,13 +140,13 @@ export function OverviewDashboard({
             moduleId="context"
             onClick={onCardClick}
           >
-            {project.context ? (
+            {hasRealContent(project.context) ? (
               <div
                 className="prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: markdownToHtml(project.context) }}
+                dangerouslySetInnerHTML={{ __html: transformPlaceholders(markdownToHtml(project.context ?? "")) }}
               />
             ) : (
-              <EmptyState message="Cliquez pour compléter avec l'assistant IA" />
+              <EmptyState message="Section à compléter" />
             )}
           </OverviewCard>
 
@@ -147,13 +155,13 @@ export function OverviewDashboard({
             moduleId="description"
             onClick={onCardClick}
           >
-            {project.description ? (
+            {hasRealContent(project.description) ? (
               <div
                 className="prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: markdownToHtml(project.description) }}
+                dangerouslySetInnerHTML={{ __html: transformPlaceholders(markdownToHtml(project.description ?? "")) }}
               />
             ) : (
-              <EmptyState message="Cliquez pour compléter avec l'assistant IA" />
+              <EmptyState message="Section à compléter" />
             )}
           </OverviewCard>
         </div>
@@ -165,13 +173,13 @@ export function OverviewDashboard({
             moduleId="constraints"
             onClick={onCardClick}
           >
-            {project.constraints ? (
+            {hasRealContent(project.constraints) ? (
               <div
                 className="prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: markdownToHtml(project.constraints) }}
+                dangerouslySetInnerHTML={{ __html: transformPlaceholders(markdownToHtml(project.constraints ?? "")) }}
               />
             ) : (
-              <EmptyState message="Cliquez pour compléter avec l'assistant IA" />
+              <EmptyState message="Section à compléter" />
             )}
           </OverviewCard>
 
@@ -223,7 +231,7 @@ export function OverviewDashboard({
                   <h4 className="text-sm font-medium text-muted-foreground mb-1">
                     Statut budget
                   </h4>
-                  <p className="text-sm">
+                  <div className="text-sm">
                     {project.budgetValidated === 1 ? (
                       <Badge variant="default" className="bg-green-600">
                         Validé
@@ -231,7 +239,7 @@ export function OverviewDashboard({
                     ) : (
                       <Badge variant="outline">À valider</Badge>
                     )}
-                  </p>
+                  </div>
                 </div>
               </div>
               {project.urgencyJustification && (

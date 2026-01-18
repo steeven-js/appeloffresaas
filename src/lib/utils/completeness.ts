@@ -146,20 +146,24 @@ export function calculateCompletionPercentage(data: CompletenessInput & { hasDoc
 
   // === METADATA (20%) - Supporting information ===
   let metadataScore = 0;
-  const metadataFields = [
-    { value: data.budgetRange, weight: 7 },           // Budget - important
-    { value: data.desiredDeliveryDate, weight: 7 },   // Delivery date - important
-    { value: data.contactEmail, weight: 3 },          // Contact email
-    // Constraints with real content if stored as legacy field and not already counted
-    ...(sections.length > 0 ? [{ value: data.constraints, weight: 3, isRich: true }] : []),
-  ];
 
-  for (const field of metadataFields) {
-    if ('isRich' in field && field.isRich) {
-      if (hasRealContentInternal(field.value)) metadataScore += field.weight;
-    } else {
-      if (hasContent(field.value)) metadataScore += field.weight;
-    }
+  // Check if budget section has content (alternative to budgetRange/desiredDeliveryDate fields)
+  const budgetSection = sections.find(s => s.id === "budget");
+  const hasBudgetSectionContent = budgetSection && hasRealContentInternal(budgetSection.content);
+
+  // Budget info: either explicit fields OR section content
+  if (hasContent(data.budgetRange) || hasBudgetSectionContent) {
+    metadataScore += 7; // Budget - important
+  }
+  if (hasContent(data.desiredDeliveryDate) || hasBudgetSectionContent) {
+    metadataScore += 7; // Delivery date - important (often included in budget section)
+  }
+  if (hasContent(data.contactEmail)) {
+    metadataScore += 3; // Contact email
+  }
+  // Constraints with real content if stored as legacy field and not already counted in sections
+  if (sections.length > 0 && hasRealContentInternal(data.constraints)) {
+    metadataScore += 3;
   }
 
   // === DOCUMENTS (10%) - Supporting materials ===
