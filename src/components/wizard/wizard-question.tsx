@@ -60,8 +60,8 @@ export function WizardQuestion({
     switch (question.type) {
       case "text":
       case "textarea": {
-        const strVal = localValue as string | undefined;
-        return strVal && strVal.trim().length > 0;
+        if (typeof localValue !== "string") return false;
+        return localValue.trim().length > 0;
       }
 
       case "radio":
@@ -69,16 +69,16 @@ export function WizardQuestion({
         return localValue !== undefined && localValue !== "";
 
       case "checkbox": {
-        const arrVal = localValue as string[] | undefined;
+        if (!Array.isArray(localValue)) return false;
         const minSelect = question.minSelect ?? 1;
-        return arrVal && arrVal.length >= minSelect;
+        return localValue.length >= minSelect;
       }
 
       case "number":
         return localValue !== undefined && localValue !== "";
 
       case "date":
-        return localValue !== undefined && localValue !== "";
+        return typeof localValue === "string" && localValue !== "";
 
       default:
         return true;
