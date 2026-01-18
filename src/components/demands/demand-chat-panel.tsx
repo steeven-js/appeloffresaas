@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
 } from "~/components/ui/alert-dialog";
 import { cn } from "~/lib/utils";
+import { markdownToHtml } from "~/lib/utils/markdown-parser";
 import { api } from "~/trpc/react";
 
 interface DemandChatPanelProps {
@@ -257,8 +258,15 @@ function ChatMessage({ role, content, isLoading }: ChatMessageProps) {
             <span className="animate-bounce animation-delay-100">.</span>
             <span className="animate-bounce animation-delay-200">.</span>
           </div>
-        ) : (
+        ) : isUser ? (
           <p className="text-sm whitespace-pre-wrap">{content}</p>
+        ) : (
+          <div
+            className="text-sm prose prose-sm prose-neutral dark:prose-invert max-w-none
+              prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5
+              prose-strong:font-semibold prose-headings:font-semibold"
+            dangerouslySetInnerHTML={{ __html: markdownToHtml(content) }}
+          />
         )}
       </div>
     </div>

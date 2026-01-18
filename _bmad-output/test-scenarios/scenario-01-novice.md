@@ -21,7 +21,7 @@
 | # | Input Utilisateur | Résultat | Observations |
 |---|-------------------|----------|--------------|
 | 1.1 | `Bonjour` | ⬜ | |
-| 1.2 | `Je sais pas trop par où commencer` | ⬜ | |
+| 1.2 | `Je sais pas trop par où commencer` | ✅ | IA guide avec 6 questions structurées. Markdown non rendu. |
 | 1.3 | `C'est ma première fois sur cet outil` | ⬜ | |
 
 **Attendu:** L'IA doit accueillir chaleureusement et guider vers les premières étapes.
