@@ -94,27 +94,117 @@ export const wizardRouter = createTRPCRouter({
         });
       }
 
+      // Build initial answers from existing project data (from creation form)
+      const now = new Date().toISOString();
+      const infoAnswers: WizardAnswer[] = [];
+
+      // Map existing project fields to wizard answers
+      if (project.title) {
+        infoAnswers.push({
+          questionId: "title",
+          questionLabel: "Quel est le titre de votre demande ?",
+          value: project.title,
+          answeredAt: now,
+        });
+      }
+      if (project.departmentName) {
+        infoAnswers.push({
+          questionId: "department",
+          questionLabel: "Quel est le service demandeur ?",
+          value: project.departmentName,
+          answeredAt: now,
+        });
+      }
+      if (project.contactName) {
+        infoAnswers.push({
+          questionId: "contact_name",
+          questionLabel: "Qui est le responsable de cette demande ?",
+          value: project.contactName,
+          answeredAt: now,
+        });
+      }
+      if (project.contactEmail) {
+        infoAnswers.push({
+          questionId: "contact_email",
+          questionLabel: "Quel est l'email de contact ?",
+          value: project.contactEmail,
+          answeredAt: now,
+        });
+      }
+      if (project.needType) {
+        infoAnswers.push({
+          questionId: "need_type",
+          questionLabel: "Quel type de besoin souhaitez-vous exprimer ?",
+          value: project.needType,
+          answeredAt: now,
+        });
+      }
+      if (project.urgencyLevel) {
+        infoAnswers.push({
+          questionId: "urgency",
+          questionLabel: "Quel est le niveau d'urgence ?",
+          value: project.urgencyLevel,
+          answeredAt: now,
+        });
+      }
+
+      // Build budget answers if available
+      const budgetAnswers: WizardAnswer[] = [];
+      if (project.budgetRange) {
+        budgetAnswers.push({
+          questionId: "budget_range",
+          questionLabel: "Quelle est votre fourchette budgétaire ?",
+          value: project.budgetRange,
+          answeredAt: now,
+        });
+      }
+
       // Create initial wizard state
+      const config = getWizardConfig();
+      const infoModule = config.modules.find(m => m.id === "info");
+      const infoQuestionsCount = infoModule?.questions.length ?? 6;
+
       const wizardState: WizardState = {
         currentModule: 0,
-        currentQuestion: 0,
-        startedAt: new Date().toISOString(),
-        lastActivityAt: new Date().toISOString(),
-        modules: {},
+        currentQuestion: Math.min(infoAnswers.length, infoQuestionsCount - 1),
+        startedAt: now,
+        lastActivityAt: now,
+        modules: {
+          info: {
+            status: infoAnswers.length >= infoQuestionsCount ? "completed" : infoAnswers.length > 0 ? "in_progress" : "pending",
+            startedAt: infoAnswers.length > 0 ? now : undefined,
+            answeredQuestions: infoAnswers.map(a => a.questionId),
+          },
+          ...(budgetAnswers.length > 0 && {
+            budget: {
+              status: "in_progress" as const,
+              startedAt: now,
+              answeredQuestions: budgetAnswers.map(a => a.questionId),
+            },
+          }),
+        },
       };
 
       // Create initial sections based on modules
-      const config = getWizardConfig();
-      const sections: DemandSection[] = config.modules.map((wizardModule, index) => ({
-        id: wizardModule.id,
-        title: wizardModule.title,
-        content: "",
-        isDefault: true,
-        isRequired: ["context", "description"].includes(wizardModule.id),
-        order: index,
-        answers: [],
-        generationCount: 0,
-      }));
+      const sections: DemandSection[] = config.modules.map((wizardModule, index) => {
+        let answers: WizardAnswer[] = [];
+        if (wizardModule.id === "info") {
+          answers = infoAnswers;
+        } else if (wizardModule.id === "budget") {
+          answers = budgetAnswers;
+        }
+
+        return {
+          id: wizardModule.id,
+          title: wizardModule.title,
+          content: "",
+          isDefault: true,
+          isRequired: ["context", "description"].includes(wizardModule.id),
+          order: index,
+          answers,
+          generationCount: 0,
+        };
+      });
 
       const [updated] = await ctx.db
         .update(demandProjects)
