@@ -55,6 +55,12 @@ export function DemandWorkspaceV2({ projectId, onSwitchToWizard }: DemandWorkspa
   // Fetch project data
   const { data: project, isLoading, error } = api.demandProjects.get.useQuery({ id: projectId });
 
+  // Fetch documents count for status
+  const { data: documentsData } = api.demandDocuments.list.useQuery({
+    demandProjectId: projectId,
+    documentType: "annexe",
+  });
+
   // Initialize sections when project is loaded
   const initializeSections = useCallback(() => {
     if (project) {
@@ -98,8 +104,8 @@ export function DemandWorkspaceV2({ projectId, onSwitchToWizard }: DemandWorkspa
                project.desiredDeliveryDate ? "in_progress" : "empty";
       }
       case "documents":
-        // Documents status will be updated when annexes are loaded
-        return "empty";
+        // Documents status based on annexes count
+        return (documentsData?.documents?.length ?? 0) > 0 ? "complete" : "empty";
       default:
         return "empty";
     }

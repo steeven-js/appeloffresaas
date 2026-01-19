@@ -3,7 +3,7 @@
 import { LayoutDashboard, MessageSquare, FileText, Columns } from "lucide-react";
 import { cn } from "~/lib/utils";
 
-export type ViewMode = "overview" | "chat" | "preview" | "split" | "edit";
+export type ViewMode = "overview" | "chat" | "preview" | "split" | "edit" | "documents";
 
 interface ZoneModeToggleProps {
   mode: ViewMode;

@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ZoneModeToggle, type ViewMode } from "./zone-mode-toggle";
 import { OverviewDashboard } from "./overview-dashboard";
 import { ModuleEditor } from "./module-editor";
+import { DocumentsView } from "./documents-view";
 import { DemandChatPanel } from "~/components/demands/demand-chat-panel";
 import { DocumentPreview } from "~/components/demands/document-preview";
 import type { DemandSection } from "~/server/db/schema";
@@ -78,8 +79,8 @@ export function CentralZone({
   // Handle module selection - switch view mode based on module
   useEffect(() => {
     if (activeModule === "documents") {
-      // Documents show overview (no editor for documents yet)
-      setViewMode("overview");
+      // Documents have their own dedicated view
+      setViewMode("documents");
     } else if (activeModule) {
       // Other modules switch to edit mode
       setViewMode("edit");
@@ -142,8 +143,8 @@ export function CentralZone({
 
   return (
     <div className={cn("flex flex-col h-full", className)}>
-      {/* Header with mode toggle - hide in edit mode */}
-      {viewMode !== "edit" && (
+      {/* Header with mode toggle - hide in edit and documents mode */}
+      {viewMode !== "edit" && viewMode !== "documents" && (
         <div className="flex items-center justify-between px-4 py-3 border-b bg-muted/30">
           <ZoneModeToggle mode={viewMode} onModeChange={handleModeChange} />
           {activeModule && viewMode !== "overview" && (
@@ -171,6 +172,13 @@ export function CentralZone({
             onSave={handleSaveModule}
             onBack={handleBackFromEdit}
             isSaving={saveSection.isPending}
+          />
+        )}
+
+        {viewMode === "documents" && (
+          <DocumentsView
+            projectId={projectId}
+            onBack={handleBackFromEdit}
           />
         )}
 
