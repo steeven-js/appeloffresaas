@@ -29,7 +29,7 @@ export function GuidedChoicesPanel({
   onTextGenerated,
   onComplete,
 }: GuidedChoicesPanelProps) {
-  const hasInitialized = useRef(false);
+  const previousQuestionIdRef = useRef<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [localGeneratedText, setLocalGeneratedText] = useState<string | null>(null);
 
@@ -39,7 +39,6 @@ export function GuidedChoicesPanel({
     freeInputValue,
     generationCount,
     maxGenerations,
-    generatedText,
     isGeneratingChoices,
     isGeneratingAnswer,
     canGenerateMore,
@@ -51,6 +50,7 @@ export function GuidedChoicesPanel({
     setFreeInput,
     addFreeInputAsChoice,
     generateAnswer,
+    reset,
   } = useGuidedChoices({
     projectId,
     moduleId,
@@ -59,14 +59,16 @@ export function GuidedChoicesPanel({
     previousAnswers,
   });
 
-  // Generate initial choices on mount
+  // Reset state when question changes
   useEffect(() => {
-    if (!hasInitialized.current && choices.length === 0) {
-      hasInitialized.current = true;
-      void generateInitialChoices();
+    if (previousQuestionIdRef.current !== null && previousQuestionIdRef.current !== questionId) {
+      // Question changed - reset everything
+      reset();
+      setShowResult(false);
+      setLocalGeneratedText(null);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    previousQuestionIdRef.current = questionId;
+  }, [questionId, reset]);
 
   // Handle generate answer
   const handleGenerateAnswer = async () => {
@@ -197,11 +199,57 @@ export function GuidedChoicesPanel({
       {/* Choices Area */}
       <div className="flex-1 min-h-0 overflow-y-auto p-4">
         {isGeneratingChoices && choices.length === 0 ? (
+          // Loading state
           <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
             <Loader2 className="h-8 w-8 animate-spin mb-2" />
             <p>Génération des suggestions...</p>
           </div>
+        ) : choices.length === 0 && generationCount === 0 ? (
+          // Initial empty state - no choices generated yet
+          <div className="flex flex-col items-center justify-center h-full text-center p-4">
+            <Sparkles className="h-12 w-12 text-muted-foreground/30 mb-4" />
+            <p className="text-sm text-muted-foreground mb-4">
+              Cliquez sur le bouton ci-dessous pour générer des suggestions personnalisées basées sur votre contexte.
+            </p>
+            <Button
+              onClick={() => void generateInitialChoices()}
+              disabled={isLoading}
+              className="gap-2"
+            >
+              <Sparkles className="h-4 w-4" />
+              Générer des suggestions
+            </Button>
+
+            {/* Free input section - always available */}
+            <div className="w-full mt-6 pt-4 border-t space-y-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <PenLine className="h-4 w-4" />
+                <span>Ou ajoutez directement votre propre élément :</span>
+              </div>
+              <div className="flex gap-2">
+                <Textarea
+                  value={freeInputValue}
+                  onChange={(e) => setFreeInput(e.target.value)}
+                  onKeyDown={handleFreeInputKeyDown}
+                  placeholder="Saisissez un élément personnalisé..."
+                  className="min-h-[60px] max-h-[100px] resize-none text-sm"
+                  disabled={isLoading}
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={handleAddFreeInput}
+                  disabled={!freeInputValue.trim() || isLoading}
+                  className="h-[60px] w-[60px] flex-shrink-0"
+                  title="Ajouter"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
         ) : (
+          // Choices available
           <div className="space-y-4">
             {/* Instruction */}
             <p className="text-sm text-muted-foreground">
