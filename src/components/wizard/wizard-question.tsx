@@ -429,6 +429,15 @@ export function WizardQuestion({
   // Check if we're showing AI panel (needs full height layout)
   const isShowingAIPanel = showAIPanel && (isTextareaWithAI || isCheckboxWithAI);
 
+  // Check if we're showing GuidedChoicesPanel specifically (hide Suivant button)
+  const checkboxShowAIByDefaultForNav = (question.type === "checkbox")
+    ? (question as unknown as { showAIByDefault?: boolean }).showAIByDefault
+    : false;
+  const isShowingGuidedChoicesPanel = showAIPanel && useGuidedMode && projectId && moduleId && (
+    (question.type === "textarea" && isTextareaWithAI) ||
+    (question.type === "checkbox" && isCheckboxWithAI && checkboxShowAIByDefaultForNav)
+  );
+
   return (
     <div className="flex flex-col h-full">
       {/* Question Content */}
@@ -472,14 +481,17 @@ export function WizardQuestion({
           Précédent
         </Button>
 
-        <Button
-          onClick={onNext}
-          disabled={!canGoNext || !isAnswerValid() || isSaving}
-          className="gap-2"
-        >
-          {isSaving ? "Enregistrement..." : "Suivant"}
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+        {/* Hide Suivant when GuidedChoicesPanel is shown - user uses Continuer in panel */}
+        {!isShowingGuidedChoicesPanel && (
+          <Button
+            onClick={onNext}
+            disabled={!canGoNext || !isAnswerValid() || isSaving}
+            className="gap-2"
+          >
+            {isSaving ? "Enregistrement..." : "Suivant"}
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        )}
       </div>
     </div>
   );
