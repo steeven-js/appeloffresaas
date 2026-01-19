@@ -9,7 +9,6 @@ import {
   AlertTriangle,
   Banknote,
   Paperclip,
-  Pen,
 } from "lucide-react";
 
 import { api } from "~/trpc/react";
@@ -109,30 +108,17 @@ export function DemandWorkspaceV2({ projectId, onSwitchToWizard }: DemandWorkspa
     }
   };
 
-  // Build modules with status
+  // Build modules with status (no more "Sections Rédaction" - simplified view)
   const modules = baseModules.map((m) => ({
     ...m,
     status: getModuleStatus(m.id),
   }));
 
-  // Add section modules
-  // Uses hasRealContent to ignore placeholder text like [À compléter]
-  const sectionModules = sections.map((section) => ({
-    id: `section-${section.id}`,
-    label: section.title,
-    icon: Pen,
-    status: (hasRealContent(section.content) ? "complete" : "empty") as ModuleStatus,
-    category: "section" as const,
-  }));
-
-  const allModules = [...modules, ...sectionModules];
-
   // Calculate completion using unified calculation
   const calculateCompletion = () => {
     // Count completed modules for X/Y display
-    const completed = modules.filter((m) => m.status === "complete").length +
-                      sectionModules.filter((m) => m.status === "complete").length;
-    const total = allModules.length;
+    const completed = modules.filter((m) => m.status === "complete").length;
+    const total = modules.length;
 
     // Use unified percentage calculation (single source of truth)
     const percentage = project ? calculateCompletionPercentage({
@@ -222,12 +208,6 @@ export function DemandWorkspaceV2({ projectId, onSwitchToWizard }: DemandWorkspa
     router.push("/demandes");
   };
 
-  // Handle add section
-  const handleAddSection = () => {
-    // TODO: Implement add section dialog
-    console.log("Add section clicked");
-  };
-
   // Copilot action handlers - these set the active module
   // CentralZone will switch to chat mode when module changes
   const handleCopilotNavigate = (section: string) => {
@@ -268,12 +248,11 @@ export function DemandWorkspaceV2({ projectId, onSwitchToWizard }: DemandWorkspa
     <WorkspaceLayout
       sidebar={
         <ModuleSidebar
-          modules={allModules}
+          modules={modules}
           activeModule={activeModule}
           onModuleClick={handleModuleClick}
           completion={completion}
           onBack={handleBack}
-          onAddSection={handleAddSection}
           onWizard={onSwitchToWizard}
         />
       }
