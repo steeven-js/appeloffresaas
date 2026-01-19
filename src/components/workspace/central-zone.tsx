@@ -15,7 +15,6 @@ export type { ViewMode };
 
 // Module titles mapping
 const MODULE_TITLES: Record<string, string> = {
-  info: "Informations Générales",
   context: "Contexte & Justification",
   description: "Description du Besoin",
   constraints: "Contraintes",
@@ -78,8 +77,8 @@ export function CentralZone({
 
   // Handle module selection - switch view mode based on module
   useEffect(() => {
-    if (activeModule === "info" || activeModule === "documents") {
-      // Info and Documents show overview
+    if (activeModule === "documents") {
+      // Documents show overview (no editor for documents yet)
       setViewMode("overview");
     } else if (activeModule) {
       // Other modules switch to edit mode
@@ -122,7 +121,7 @@ export function CentralZone({
   // When clicking a card in overview, switch to edit mode for that module
   const handleCardClick = (moduleId: string) => {
     onModuleClick(moduleId);
-    if (moduleId !== "info" && moduleId !== "documents") {
+    if (moduleId !== "documents") {
       setViewMode("edit");
     }
   };

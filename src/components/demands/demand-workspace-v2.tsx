@@ -3,7 +3,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
-  FileText,
   MessageSquare,
   ClipboardList,
   AlertTriangle,
@@ -30,17 +29,16 @@ interface DemandWorkspaceV2Props {
   onSwitchToWizard?: () => void;
 }
 
-type ModuleId = "info" | "context" | "description" | "constraints" | "budget" | "documents";
+type ModuleId = "context" | "description" | "constraints" | "budget" | "documents";
 
 interface ModuleDefinition {
   id: ModuleId;
   label: string;
-  icon: typeof FileText;
+  icon: typeof MessageSquare;
   category?: "module" | "section";
 }
 
 const baseModules: ModuleDefinition[] = [
-  { id: "info", label: "Informations", icon: FileText },
   { id: "context", label: "Contexte", icon: MessageSquare },
   { id: "description", label: "Description", icon: ClipboardList },
   { id: "constraints", label: "Contraintes", icon: AlertTriangle },
@@ -86,9 +84,6 @@ export function DemandWorkspaceV2({ projectId, onSwitchToWizard }: DemandWorkspa
     if (!project) return "empty";
 
     switch (moduleId) {
-      case "info":
-        return project.title && project.departmentName ? "complete" :
-               project.title ? "in_progress" : "empty";
       case "context":
         return hasRealContent(project.context) ? "complete" : "empty";
       case "description":
