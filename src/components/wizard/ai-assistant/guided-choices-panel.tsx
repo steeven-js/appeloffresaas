@@ -68,13 +68,6 @@ export function GuidedChoicesPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Notify parent when text is generated
-  useEffect(() => {
-    if (generatedText) {
-      onTextGenerated(generatedText);
-    }
-  }, [generatedText, onTextGenerated]);
-
   // Handle generate answer
   const handleGenerateAnswer = async () => {
     try {
