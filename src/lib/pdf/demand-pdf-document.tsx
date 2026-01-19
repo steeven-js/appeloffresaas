@@ -780,10 +780,12 @@ function ContentPage({ data }: { data: DemandPdfData }) {
 
       {/* Sections */}
       {sortedSections.map((section, index) => (
-        <View key={section.id} id={`section-${section.id}`} style={styles.section} wrap={false}>
-          <Text style={styles.sectionTitle}>
-            {index + 1}. {section.title}
-          </Text>
+        <View key={section.id} id={`section-${section.id}`} style={styles.section}>
+          <View wrap={false}>
+            <Text style={styles.sectionTitle}>
+              {index + 1}. {section.title}
+            </Text>
+          </View>
           {section.content ? (
             <ContentRenderer content={section.content} />
           ) : (
@@ -796,10 +798,12 @@ function ContentPage({ data }: { data: DemandPdfData }) {
 
       {/* Annexes */}
       {data.annexes && data.annexes.length > 0 && (
-        <View id="section-annexes" style={styles.section} wrap={false}>
-          <Text style={styles.sectionTitle}>
-            {sortedSections.length + 1}. Annexes
-          </Text>
+        <View id="section-annexes" style={styles.section}>
+          <View wrap={false}>
+            <Text style={styles.sectionTitle}>
+              {sortedSections.length + 1}. Annexes
+            </Text>
+          </View>
           <View style={styles.annexesList}>
             {data.annexes.map((annexe, index) => (
               <View key={index} style={styles.annexeItem}>
