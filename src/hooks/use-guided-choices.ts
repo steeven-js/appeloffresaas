@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import { api } from "~/trpc/react";
 
 interface GeneratedChoice {
@@ -61,10 +61,19 @@ export function useGuidedChoices({
   const [freeInputValue, setFreeInputValue] = useState("");
   const [generationCount, setGenerationCount] = useState(0);
   const [generatedText, setGeneratedText] = useState<string | null>(null);
+  const [isGeneratingChoices, setIsGeneratingChoices] = useState(false);
+  const [isGeneratingAnswer, setIsGeneratingAnswer] = useState(false);
 
   // Mutations
   const generateChoicesMutation = api.aiAssistant.generateChoices.useMutation();
   const generateAnswerMutation = api.aiAssistant.generateAnswerFromChoices.useMutation();
+
+  // Refs for stable callbacks
+  const paramsRef = useRef({ projectId, moduleId, questionId, questionLabel, previousAnswers });
+  paramsRef.current = { projectId, moduleId, questionId, questionLabel, previousAnswers };
+
+  const mutationsRef = useRef({ generateChoicesMutation, generateAnswerMutation });
+  mutationsRef.current = { generateChoicesMutation, generateAnswerMutation };
 
   // Computed values
   const canGenerateMore = generationCount < maxGenerations;
@@ -83,14 +92,19 @@ export function useGuidedChoices({
 
   // Generate initial choices
   const generateInitialChoices = useCallback(async () => {
+    const params = paramsRef.current;
+    console.log("[GuidedChoices] Generating initial choices for:", params.questionLabel);
+    setIsGeneratingChoices(true);
     try {
-      const result = await generateChoicesMutation.mutateAsync({
-        projectId,
-        moduleId,
-        questionId,
-        questionLabel,
-        previousAnswers,
+      const result = await mutationsRef.current.generateChoicesMutation.mutateAsync({
+        projectId: params.projectId,
+        moduleId: params.moduleId,
+        questionId: params.questionId,
+        questionLabel: params.questionLabel,
+        previousAnswers: params.previousAnswers,
       });
+
+      console.log("[GuidedChoices] Got choices:", result.choices);
 
       const newChoices: GeneratedChoice[] = result.choices.map((label, index) => ({
         id: `choice_0_${index}`,
@@ -102,23 +116,27 @@ export function useGuidedChoices({
       setChoices(newChoices);
       setGenerationCount(1);
     } catch (error) {
-      console.error("Error generating initial choices:", error);
+      console.error("[GuidedChoices] Error generating initial choices:", error);
       throw error;
+    } finally {
+      setIsGeneratingChoices(false);
     }
-  }, [generateChoicesMutation, projectId, moduleId, questionId, questionLabel, previousAnswers]);
+  }, []);
 
   // Generate more choices
   const generateMoreChoices = useCallback(async () => {
     if (!canGenerateMore) return;
 
+    const params = paramsRef.current;
+    setIsGeneratingChoices(true);
     try {
-      const result = await generateChoicesMutation.mutateAsync({
-        projectId,
-        moduleId,
-        questionId,
-        questionLabel,
+      const result = await mutationsRef.current.generateChoicesMutation.mutateAsync({
+        projectId: params.projectId,
+        moduleId: params.moduleId,
+        questionId: params.questionId,
+        questionLabel: params.questionLabel,
         existingChoices: existingChoiceLabels,
-        previousAnswers,
+        previousAnswers: params.previousAnswers,
       });
 
       const newChoices: GeneratedChoice[] = result.choices.map((label, index) => ({
@@ -133,27 +151,26 @@ export function useGuidedChoices({
     } catch (error) {
       console.error("Error generating more choices:", error);
       throw error;
+    } finally {
+      setIsGeneratingChoices(false);
     }
   }, [
     canGenerateMore,
-    generateChoicesMutation,
-    projectId,
-    moduleId,
-    questionId,
-    questionLabel,
     existingChoiceLabels,
     generationCount,
-    previousAnswers,
   ]);
 
   // Toggle choice selection
   const toggleChoice = useCallback((choiceId: string) => {
+    console.log("[GuidedChoices] toggleChoice:", choiceId);
     setSelectedIds((prev) => {
       const newSet = new Set(prev);
       if (newSet.has(choiceId)) {
         newSet.delete(choiceId);
+        console.log("[GuidedChoices] Deselected:", choiceId);
       } else {
         newSet.add(choiceId);
+        console.log("[GuidedChoices] Selected:", choiceId);
       }
       return newSet;
     });
@@ -186,36 +203,39 @@ export function useGuidedChoices({
     const allSelectedLabels = [...selectedChoicesLabels];
     const freeInput = freeInputValue.trim() || undefined;
 
+    console.log("[GuidedChoices] generateAnswer called with:", { allSelectedLabels, freeInput });
+
     if (allSelectedLabels.length === 0 && !freeInput) {
+      console.warn("[GuidedChoices] No selections or free input, returning null");
       return null;
     }
 
+    const params = paramsRef.current;
+    setIsGeneratingAnswer(true);
     try {
-      const result = await generateAnswerMutation.mutateAsync({
-        projectId,
-        moduleId,
-        questionId,
-        questionLabel,
+      console.log("[GuidedChoices] Calling generateAnswerFromChoices mutation...");
+      const result = await mutationsRef.current.generateAnswerMutation.mutateAsync({
+        projectId: params.projectId,
+        moduleId: params.moduleId,
+        questionId: params.questionId,
+        questionLabel: params.questionLabel,
         selectedChoices: allSelectedLabels,
         freeInput,
-        previousAnswers,
+        previousAnswers: params.previousAnswers,
       });
 
+      console.log("[GuidedChoices] Generated text:", result.generatedText?.substring(0, 100) + "...");
       setGeneratedText(result.generatedText);
       return result.generatedText;
     } catch (error) {
-      console.error("Error generating answer:", error);
+      console.error("[GuidedChoices] Error generating answer:", error);
       throw error;
+    } finally {
+      setIsGeneratingAnswer(false);
     }
   }, [
-    generateAnswerMutation,
-    projectId,
-    moduleId,
-    questionId,
-    questionLabel,
     selectedChoicesLabels,
     freeInputValue,
-    previousAnswers,
   ]);
 
   // Reset state
@@ -225,6 +245,8 @@ export function useGuidedChoices({
     setFreeInputValue("");
     setGenerationCount(0);
     setGeneratedText(null);
+    setIsGeneratingChoices(false);
+    setIsGeneratingAnswer(false);
   }, []);
 
   return {
@@ -237,8 +259,8 @@ export function useGuidedChoices({
     generatedText,
 
     // Loading states
-    isGeneratingChoices: generateChoicesMutation.isPending,
-    isGeneratingAnswer: generateAnswerMutation.isPending,
+    isGeneratingChoices,
+    isGeneratingAnswer,
 
     // Computed
     canGenerateMore,

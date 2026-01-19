@@ -288,6 +288,22 @@ export function WizardQuestion({
 
         // Show only AI panel when showAIByDefault is true (options sent to AI as context)
         if (isCheckboxWithAI && showAIPanel && checkboxShowAIByDefault) {
+          // Use guided choices panel if in guided mode
+          if (useGuidedMode && projectId && moduleId) {
+            return (
+              <div className="h-full">
+                <GuidedChoicesPanel
+                  projectId={projectId}
+                  moduleId={moduleId}
+                  questionId={question.id}
+                  questionLabel={question.label}
+                  previousAnswers={previousAnswers}
+                  onTextGenerated={handleCheckboxAITextGenerated}
+                  onComplete={handleAIComplete}
+                />
+              </div>
+            );
+          }
           return (
             <div className="h-full">
               <AIChatPanel

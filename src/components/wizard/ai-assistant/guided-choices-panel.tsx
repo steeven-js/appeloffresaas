@@ -63,7 +63,8 @@ export function GuidedChoicesPanel({
       hasInitialized.current = true;
       void generateInitialChoices();
     }
-  }, [choices.length, generateInitialChoices]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Notify parent when text is generated
   useEffect(() => {
@@ -74,9 +75,18 @@ export function GuidedChoicesPanel({
 
   // Handle generate answer
   const handleGenerateAnswer = async () => {
-    const text = await generateAnswer();
-    if (text) {
-      onComplete();
+    try {
+      const text = await generateAnswer();
+      if (text) {
+        // Call onTextGenerated to save the answer, then onComplete to navigate
+        // The save is async, but handleNext in wizard-container has a delay to wait for it
+        onTextGenerated(text);
+        onComplete();
+      } else {
+        console.warn("generateAnswer returned null - no selections?");
+      }
+    } catch (error) {
+      console.error("Error in handleGenerateAnswer:", error);
     }
   };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
@@ -58,6 +58,9 @@ export function WizardContainer({ projectId }: WizardContainerProps) {
   const currentQuestion = currentModule?.questions[currentQuestionIndex];
   const isLastQuestionOfModule =
     currentModule && currentQuestionIndex === currentModule.questions.length - 1;
+
+  // Memoize previous answers for AI context
+  const previousAnswers = useMemo(() => getPreviousAnswers(), [getPreviousAnswers]);
   const isLastModule = config && currentModuleIndex === config.modules.length - 1;
   const isExportEnabled = overallProgress === 100;
 
@@ -83,6 +86,11 @@ export function WizardContainer({ projectId }: WizardContainerProps) {
     if (isLastQuestionOfModule) {
       // Check if module has content generation
       if (currentModule.assemblePrompt) {
+        // Wait for any pending save to complete before generating content
+        // This delay ensures the async save from AI assistant completes
+        // before we try to generate content from the answers
+        await new Promise(resolve => setTimeout(resolve, 600));
+
         // Generate content and show validation modal
         try {
           const result = await generateContent(currentModule.id);
@@ -210,7 +218,7 @@ export function WizardContainer({ projectId }: WizardContainerProps) {
               moduleId={currentModule.id}
               hasAIAssistant={!!currentModule.assemblePrompt}
               useGuidedMode={!!currentModule.assemblePrompt}
-              previousAnswers={getPreviousAnswers()}
+              previousAnswers={previousAnswers}
             />
           </div>
         </main>
