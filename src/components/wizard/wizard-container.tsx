@@ -125,12 +125,15 @@ export function WizardContainer({ projectId }: WizardContainerProps) {
       await validateModule(currentModule.id, content);
       setShowValidationModal(false);
 
-      // Move to next module
+      // Move to next module or redirect to export if last module
       if (!isLastModule) {
         goToNextModule();
+      } else {
+        // Last module completed - redirect to export
+        router.push(`/demandes/${projectId}?export=true`);
       }
     },
-    [currentModule, validateModule, isLastModule, goToNextModule]
+    [currentModule, validateModule, isLastModule, goToNextModule, router, projectId]
   );
 
   // Handle regenerate
