@@ -8,6 +8,7 @@ import { signIn } from "next-auth/react";
 
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { Separator } from "~/components/ui/separator";
 import {
   Form,
   FormControl,
@@ -108,6 +109,41 @@ export function LoginForm() {
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading ? "Connexion en cours..." : "Se connecter"}
         </Button>
+
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <Separator className="my-4" />
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full border-dashed border-orange-500 text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+              disabled={isLoading}
+              onClick={async () => {
+                setError(null);
+                setIsLoading(true);
+                try {
+                  const result = await signIn("credentials", {
+                    email: "jacques.steeven@gmail.com",
+                    password: "Password123",
+                    redirect: false,
+                  });
+                  if (result?.error) {
+                    setError("Connexion dev échouée - vérifiez que l'utilisateur existe");
+                  } else {
+                    router.push("/dashboard");
+                    router.refresh();
+                  }
+                } catch {
+                  setError("Erreur de connexion dev");
+                } finally {
+                  setIsLoading(false);
+                }
+              }}
+            >
+              🔧 Dev: Connexion Super Admin
+            </Button>
+          </>
+        )}
       </form>
     </Form>
   );
