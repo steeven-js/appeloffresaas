@@ -272,7 +272,10 @@ function createInfoRow(label: string, value: string): TableRow {
  * Create table of contents (manual - Word will auto-generate on update)
  */
 function createTableOfContents(data: DemandDocxData): Paragraph[] {
-  const sortedSections = [...data.sections].sort((a, b) => a.order - b.order);
+  // Filter out metadata-only sections (like "info") - their data is in the header
+  const sortedSections = [...data.sections]
+    .filter((s) => s.id !== "info")
+    .sort((a, b) => a.order - b.order);
   const hasAnnexes = data.annexes && data.annexes.length > 0;
 
   const elements: Paragraph[] = [
@@ -514,7 +517,10 @@ function createContentParagraphs(content: string): Paragraph[] {
  * Create section content
  */
 function createSections(data: DemandDocxData): (Paragraph | Table)[] {
-  const sortedSections = [...data.sections].sort((a, b) => a.order - b.order);
+  // Filter out metadata-only sections (like "info") - their data is in the header
+  const sortedSections = [...data.sections]
+    .filter((s) => s.id !== "info")
+    .sort((a, b) => a.order - b.order);
   const elements: (Paragraph | Table)[] = [];
 
   sortedSections.forEach((section, index) => {
@@ -572,7 +578,10 @@ function createAnnexesSection(data: DemandDocxData): Paragraph[] {
     return [];
   }
 
-  const sortedSections = [...data.sections].sort((a, b) => a.order - b.order);
+  // Filter out metadata-only sections (like "info") for correct numbering
+  const sortedSections = [...data.sections]
+    .filter((s) => s.id !== "info")
+    .sort((a, b) => a.order - b.order);
   const elements: Paragraph[] = [];
 
   // Section heading
