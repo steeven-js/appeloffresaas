@@ -105,6 +105,7 @@ const contextModule: WizardModule = {
       hint: "Exemple : Le service dispose actuellement de 8 postes informatiques acquis en 2018...",
       required: true,
       rows: 4,
+      showAIByDefault: true,
     },
     {
       id: "problems",
@@ -124,6 +125,7 @@ const contextModule: WizardModule = {
       hint: "Soyez concret : fréquence des incidents, temps perdu, risques encourus...",
       required: false,
       rows: 3,
+      showAIByDefault: true,
     },
     {
       id: "why_now",
@@ -150,6 +152,7 @@ const contextModule: WizardModule = {
       placeholder: "Date limite, événement prévu, conséquences si non réalisé...",
       required: false,
       rows: 2,
+      showAIByDefault: true,
     },
   ],
   assemblePrompt: `Tu es un rédacteur expert en dossiers de marchés publics français.
@@ -189,6 +192,7 @@ const descriptionModule: WizardModule = {
       hint: "Listez 2-4 objectifs clairs et mesurables si possible",
       required: true,
       rows: 4,
+      showAIByDefault: true,
     },
     {
       id: "scope",
@@ -197,6 +201,7 @@ const descriptionModule: WizardModule = {
       placeholder: "Nombre d'utilisateurs, de postes, de sites, surface concernée...",
       required: true,
       rows: 3,
+      showAIByDefault: true,
     },
   ],
   conditionalQuestions: [
@@ -220,12 +225,14 @@ const descriptionModule: WizardModule = {
           hint: "Exemple pour un PC: processeur i5 min, 16Go RAM, SSD 512Go...",
           required: true,
           rows: 5,
+          showAIByDefault: true,
         },
         {
           id: "compatibility_requirements",
           type: "checkbox",
           label: "Avec quoi doit être compatible le matériel ?",
           allowOther: true,
+          showAIByDefault: true,
           options: [
             { value: "existing_software", label: "Logiciels existants (préciser)" },
             { value: "existing_hardware", label: "Matériel existant (préciser)" },
@@ -258,6 +265,7 @@ const descriptionModule: WizardModule = {
           placeholder: "Nature de la prestation, périmètre d'intervention...",
           required: true,
           rows: 5,
+          showAIByDefault: true,
         },
         {
           id: "deliverables",
@@ -267,6 +275,7 @@ const descriptionModule: WizardModule = {
           hint: "Listez les livrables concrets attendus à la fin de la mission",
           required: true,
           rows: 4,
+          showAIByDefault: true,
         },
         {
           id: "duration",
@@ -281,6 +290,7 @@ const descriptionModule: WizardModule = {
           label: "Quel profil d'intervenant recherchez-vous ?",
           placeholder: "Expérience requise, certifications, compétences...",
           rows: 3,
+          showAIByDefault: true,
         },
         {
           id: "work_location",
@@ -306,6 +316,7 @@ const descriptionModule: WizardModule = {
           placeholder: "À l'issue de la formation, les participants seront capables de...",
           required: true,
           rows: 4,
+          showAIByDefault: true,
         },
         {
           id: "target_audience",
@@ -314,6 +325,7 @@ const descriptionModule: WizardModule = {
           placeholder: "Profils, niveau actuel, nombre de personnes...",
           required: true,
           rows: 3,
+          showAIByDefault: true,
         },
         {
           id: "participant_count",
@@ -384,6 +396,7 @@ const descriptionModule: WizardModule = {
           placeholder: "Listez les fonctionnalités obligatoires...",
           required: true,
           rows: 5,
+          showAIByDefault: true,
         },
         {
           id: "features_optional",
@@ -391,6 +404,7 @@ const descriptionModule: WizardModule = {
           label: "Quelles fonctionnalités seraient un plus ?",
           placeholder: "Fonctionnalités souhaitées mais non bloquantes...",
           rows: 3,
+          showAIByDefault: true,
         },
         {
           id: "integrations",
@@ -398,6 +412,7 @@ const descriptionModule: WizardModule = {
           label: "Avec quels systèmes doit-il s'intégrer ?",
           placeholder: "ERP, CRM, messagerie, annuaire LDAP, SSO...",
           rows: 3,
+          showAIByDefault: true,
         },
         {
           id: "hosting_preference",
@@ -446,6 +461,7 @@ const constraintsModule: WizardModule = {
       type: "checkbox",
       label: "Quelles contraintes techniques s'appliquent ?",
       allowOther: true,
+      showAIByDefault: true,
       options: [
         { value: "compatibility", label: "Compatibilité avec l'existant" },
         { value: "performance", label: "Exigences de performance minimales" },
@@ -461,12 +477,14 @@ const constraintsModule: WizardModule = {
       label: "Précisez les contraintes techniques",
       placeholder: "Détails sur les exigences techniques spécifiques...",
       rows: 3,
+      showAIByDefault: true,
     },
     {
       id: "regulatory_constraints",
       type: "checkbox",
       label: "Quelles contraintes réglementaires s'appliquent ?",
       allowOther: true,
+      showAIByDefault: true,
       options: [
         { value: "rgpd", label: "RGPD (données personnelles)" },
         { value: "hds", label: "HDS (hébergement données santé)" },
@@ -482,6 +500,7 @@ const constraintsModule: WizardModule = {
       type: "checkbox",
       label: "Quelles contraintes organisationnelles ?",
       allowOther: true,
+      showAIByDefault: true,
       options: [
         { value: "working_hours", label: "Intervention uniquement en heures ouvrées" },
         { value: "off_hours", label: "Intervention hors heures ouvrées" },
@@ -498,6 +517,7 @@ const constraintsModule: WizardModule = {
       label: "Autres contraintes à mentionner ?",
       placeholder: "Contraintes budgétaires spécifiques, délais impératifs, etc.",
       rows: 3,
+      showAIByDefault: true,
     },
   ],
   assemblePrompt: `Tu es un rédacteur expert en dossiers de marchés publics français.
@@ -586,6 +606,7 @@ const budgetModule: WizardModule = {
       label: "Justification du délai (si date impérative)",
       placeholder: "Pourquoi cette date ? Échéance réglementaire, projet dépendant...",
       rows: 2,
+      showAIByDefault: true,
     },
   ],
   assemblePrompt: `Tu es un rédacteur expert en dossiers de marchés publics français.
