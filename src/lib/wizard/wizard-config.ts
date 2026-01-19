@@ -472,14 +472,6 @@ const constraintsModule: WizardModule = {
       ],
     },
     {
-      id: "technical_details",
-      type: "textarea",
-      label: "Précisez les contraintes techniques",
-      placeholder: "Détails sur les exigences techniques spécifiques...",
-      rows: 3,
-      showAIByDefault: true,
-    },
-    {
       id: "regulatory_constraints",
       type: "checkbox",
       label: "Quelles contraintes réglementaires s'appliquent ?",
@@ -525,7 +517,6 @@ Rédige une section CONTRAINTES claire et exhaustive.
 
 INFORMATIONS FOURNIES:
 - Contraintes techniques: {technical_constraints}
-- Détails techniques: {technical_details}
 - Contraintes réglementaires: {regulatory_constraints}
 - Contraintes organisationnelles: {organizational_constraints}
 - Autres contraintes: {other_constraints}
