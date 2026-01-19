@@ -131,8 +131,11 @@ export function DocumentPreview({
     return () => content?.removeEventListener("scroll", handleScroll);
   }, [zoom, pageCount]);
 
-  // Sort sections by order
-  const sortedSections = [...sections].sort((a, b) => a.order - b.order);
+  // Sort sections by order and filter out metadata-only sections (like "info")
+  // The "info" module contains metadata displayed in the header grid, not document content
+  const sortedSections = [...sections]
+    .filter((s) => s.id !== "info")
+    .sort((a, b) => a.order - b.order);
 
   return (
     <div
@@ -316,7 +319,7 @@ export function DocumentPreview({
                     </h2>
                     {hasRealContent(section.content) ? (
                       <div
-                        className="prose prose-sm max-w-none"
+                        className="prose prose-sm max-w-none prose-headings:font-semibold prose-h2:text-base prose-h3:text-sm prose-h4:text-sm prose-h5:text-sm prose-h6:text-sm"
                         dangerouslySetInnerHTML={{ __html: transformPlaceholders(markdownToHtml(section.content)) }}
                       />
                     ) : (

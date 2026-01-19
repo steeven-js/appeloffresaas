@@ -646,7 +646,10 @@ function CoverPage({ data }: { data: DemandPdfData }) {
  * Table of Contents Page component
  */
 function TableOfContentsPage({ data }: { data: DemandPdfData }) {
-  const sortedSections = [...data.sections].sort((a, b) => a.order - b.order);
+  // Filter out metadata-only sections (like "info") - their data is in the header
+  const sortedSections = [...data.sections]
+    .filter((s) => s.id !== "info")
+    .sort((a, b) => a.order - b.order);
   const hasAnnexes = data.annexes && data.annexes.length > 0;
 
   return (
@@ -712,7 +715,10 @@ function TableOfContentsPage({ data }: { data: DemandPdfData }) {
  * Content Page component
  */
 function ContentPage({ data }: { data: DemandPdfData }) {
-  const sortedSections = [...data.sections].sort((a, b) => a.order - b.order);
+  // Filter out metadata-only sections (like "info") - their data is in the header
+  const sortedSections = [...data.sections]
+    .filter((s) => s.id !== "info")
+    .sort((a, b) => a.order - b.order);
 
   return (
     <Page size="A4" style={styles.page}>
