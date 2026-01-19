@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { Sparkles, RefreshCw, Plus, Check, Loader2, PenLine } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Sparkles, RefreshCw, Plus, Check, Loader2, PenLine, CheckCircle2, Edit3, ArrowRight } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
@@ -30,6 +30,8 @@ export function GuidedChoicesPanel({
   onComplete,
 }: GuidedChoicesPanelProps) {
   const hasInitialized = useRef(false);
+  const [showResult, setShowResult] = useState(false);
+  const [localGeneratedText, setLocalGeneratedText] = useState<string | null>(null);
 
   const {
     choices,
@@ -78,16 +80,26 @@ export function GuidedChoicesPanel({
     try {
       const text = await generateAnswer();
       if (text) {
-        // Call onTextGenerated to save the answer, then onComplete to navigate
-        // The save is async, but handleNext in wizard-container has a delay to wait for it
+        // Save the answer and show the result
         onTextGenerated(text);
-        onComplete();
+        setLocalGeneratedText(text);
+        setShowResult(true);
       } else {
         console.warn("generateAnswer returned null - no selections?");
       }
     } catch (error) {
       console.error("Error in handleGenerateAnswer:", error);
     }
+  };
+
+  // Handle edit - go back to selection mode
+  const handleEdit = () => {
+    setShowResult(false);
+  };
+
+  // Handle continue to next question
+  const handleContinue = () => {
+    onComplete();
   };
 
   // Handle add free input
@@ -108,6 +120,74 @@ export function GuidedChoicesPanel({
   const remainingGenerations = maxGenerations - generationCount;
   const isLoading = isGeneratingChoices || isGeneratingAnswer;
 
+  // Show result view after generation
+  if (showResult && localGeneratedText) {
+    return (
+      <div className="flex flex-col h-full min-h-0 bg-background rounded-lg border">
+        {/* Header - Success state */}
+        <div className="flex items-center justify-between p-4 border-b bg-green-50 dark:bg-green-950/30 flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-500" />
+            <span className="font-medium text-green-700 dark:text-green-400">Réponse enregistrée</span>
+          </div>
+        </div>
+
+        {/* Generated text content */}
+        <div className="flex-1 min-h-0 overflow-y-auto p-4">
+          <div className="space-y-4">
+            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+              Texte généré :
+            </p>
+            <div className="p-4 bg-muted/30 rounded-lg border">
+              <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                {localGeneratedText}
+              </p>
+            </div>
+
+            {/* Selection summary */}
+            {selectedChoicesLabels.length > 0 && (
+              <div className="pt-4 border-t">
+                <p className="text-xs font-medium text-muted-foreground mb-2">
+                  Basé sur vos sélections ({selectedChoicesLabels.length}) :
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {selectedChoicesLabels.map((label, index) => (
+                    <span
+                      key={index}
+                      className="inline-flex items-center px-2 py-1 rounded-full bg-primary/10 text-primary text-xs"
+                    >
+                      {label.length > 40 ? label.substring(0, 40) + "..." : label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Footer - Edit and Continue buttons */}
+        <div className="p-4 border-t bg-muted/10 flex-shrink-0 space-y-2">
+          <Button
+            onClick={handleContinue}
+            className="w-full gap-2"
+          >
+            <ArrowRight className="h-4 w-4" />
+            Continuer
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleEdit}
+            className="w-full gap-2"
+          >
+            <Edit3 className="h-4 w-4" />
+            Modifier ma réponse
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Selection view (default)
   return (
     <div className="flex flex-col h-full min-h-0 bg-background rounded-lg border">
       {/* Header */}
