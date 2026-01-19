@@ -276,3 +276,58 @@
 .prose-sm ol {
   @apply mb-2;
 }
+
+/* Markdown Editor (@uiw/react-md-editor) Custom Styles */
+.w-md-editor {
+  @apply !bg-background !border-input !rounded-md !shadow-sm;
+  --md-editor-font-family: inherit;
+}
+
+.w-md-editor-toolbar {
+  @apply !bg-muted/50 !border-b !border-input !rounded-t-md;
+  padding: 6px 8px !important;
+}
+
+.w-md-editor-toolbar ul > li > button {
+  @apply !text-muted-foreground hover:!text-foreground hover:!bg-muted !rounded;
+}
+
+.w-md-editor-toolbar ul > li.active > button {
+  @apply !text-primary !bg-primary/10;
+}
+
+.w-md-editor-text-input,
+.w-md-editor-text-pre > code,
+.w-md-editor-text {
+  @apply !text-foreground !text-base;
+  font-family: inherit !important;
+}
+
+.w-md-editor-text-input::placeholder {
+  @apply !text-muted-foreground;
+}
+
+.w-md-editor-content {
+  @apply !bg-background;
+}
+
+.w-md-editor-preview {
+  @apply !bg-muted/30 !p-4;
+}
+
+.w-md-editor-preview .wmde-markdown {
+  @apply !bg-transparent !text-foreground;
+}
+
+/* Dark mode overrides */
+[data-color-mode="dark"] .w-md-editor {
+  @apply !bg-background !border-input;
+}
+
+[data-color-mode="dark"] .w-md-editor-toolbar {
+  @apply !bg-muted/30;
+}
+
+[data-color-mode="dark"] .wmde-markdown {
+  @apply !bg-transparent;
+}

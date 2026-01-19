@@ -1,6 +1,6 @@
 "use client";
 
-import { Textarea } from "~/components/ui/textarea";
+import { MarkdownEditor } from "~/components/ui/markdown-editor";
 import type { TextareaQuestion, AnswerValue } from "~/lib/wizard/wizard-types";
 
 interface QuestionTextareaProps {
@@ -10,21 +10,17 @@ interface QuestionTextareaProps {
 }
 
 export function QuestionTextarea({ question, value, onChange }: QuestionTextareaProps) {
+  // Calculate min height based on rows prop (default 8 rows, ~40px per row)
+  const minHeight = Math.max(300, (question.rows ?? 8) * 40);
+
   return (
-    <div className="space-y-2">
-      <Textarea
-        value={value ?? ""}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={question.placeholder}
-        maxLength={question.maxLength}
-        rows={question.rows ?? 4}
-        className="text-base resize-none"
-      />
-      {question.maxLength && (
-        <div className="text-xs text-muted-foreground text-right">
-          {(value ?? "").length} / {question.maxLength}
-        </div>
-      )}
-    </div>
+    <MarkdownEditor
+      value={value ?? ""}
+      onChange={(val) => onChange(val)}
+      placeholder={question.placeholder}
+      maxLength={question.maxLength}
+      minHeight={minHeight}
+      preview="edit"
+    />
   );
 }
