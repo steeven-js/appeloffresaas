@@ -427,6 +427,7 @@ export function RichTextEditor({
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const editor = useEditor({
+    immediatelyRender: false, // Avoid SSR hydration mismatch
     extensions: [
       StarterKit.configure({
         heading: {
