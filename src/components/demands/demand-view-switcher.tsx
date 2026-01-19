@@ -13,12 +13,15 @@ interface DemandViewSwitcherProps {
   initialView?: "wizard" | "dashboard";
 }
 
+// Content modules that need to be validated (have real content)
+const CONTENT_MODULES = ["context", "description", "constraints", "budget"];
+
 /**
  * DemandViewSwitcher - Intelligent view switching between Wizard and Dashboard
  *
  * Logic:
- * - If wizard is 100% complete → default to dashboard
- * - If wizard is in progress → default to wizard
+ * - If all 4 content modules are validated (have content) → default to dashboard
+ * - If any content module is missing → default to wizard
  * - User can switch views via URL param ?view=wizard or ?view=dashboard
  * - Export param (?export=true) is treated as dashboard view for backwards compatibility
  */
@@ -33,27 +36,16 @@ export function DemandViewSwitcher({ projectId, initialView }: DemandViewSwitche
     { staleTime: 30000 } // Cache for 30 seconds
   );
 
-  // Fetch wizard config to calculate progress
-  const { data: config } = api.wizard.getConfig.useQuery(undefined, {
-    staleTime: Infinity, // Config doesn't change
-  });
+  // Check if all content modules have been validated with real content
+  const areAllModulesComplete = (): boolean => {
+    if (!wizardData?.sections) return false;
 
-  // Calculate overall progress
-  const calculateOverallProgress = (): number => {
-    if (!config || !wizardData?.wizardState) return 0;
-
-    let totalQuestions = 0;
-    let answeredQuestions = 0;
-
-    for (const wizardModule of config.modules) {
-      totalQuestions += wizardModule.questions.length;
-      const moduleState = wizardData.wizardState.modules[wizardModule.id];
-      if (moduleState?.answeredQuestions) {
-        answeredQuestions += moduleState.answeredQuestions.length;
-      }
-    }
-
-    return totalQuestions > 0 ? Math.round((answeredQuestions / totalQuestions) * 100) : 0;
+    // Check each content module has been validated
+    return CONTENT_MODULES.every((moduleId) => {
+      const section = wizardData.sections.find((s) => s.id === moduleId);
+      // Module is complete if it has validatedAt timestamp (means user validated the generated content)
+      return section?.validatedAt;
+    });
   };
 
   // Determine initial view based on URL params and completion status
@@ -81,22 +73,13 @@ export function DemandViewSwitcher({ projectId, initialView }: DemandViewSwitche
       return;
     }
 
-    // Auto-detect based on wizard completion
-    const overallProgress = calculateOverallProgress();
-    const isWizardComplete = overallProgress === 100;
-
-    // Check if all modules have been validated (have content)
-    const allModulesValidated = wizardData?.sections?.every(
-      (section) => section.id === "info" || section.validatedAt
-    ) ?? false;
-
-    // Default to dashboard if wizard is complete AND all modules validated
-    if (isWizardComplete && allModulesValidated) {
+    // Auto-detect: show dashboard if all 4 content modules are validated
+    if (areAllModulesComplete()) {
       setCurrentView("dashboard");
     } else {
       setCurrentView("wizard");
     }
-  }, [isLoading, searchParams, wizardData, config, initialView]);
+  }, [isLoading, searchParams, wizardData, initialView]);
 
   // Function to switch views (can be called from child components)
   const switchView = (view: "wizard" | "dashboard") => {
