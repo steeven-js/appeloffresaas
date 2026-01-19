@@ -3,8 +3,6 @@
 import dynamic from "next/dynamic";
 import { useTheme } from "next-themes";
 import { cn } from "~/lib/utils";
-import "@uiw/react-md-editor/markdown-editor.css";
-import "@uiw/react-markdown-preview/markdown.css";
 
 // Dynamic import to avoid SSR issues
 const MDEditor = dynamic(() => import("@uiw/react-md-editor"), {
