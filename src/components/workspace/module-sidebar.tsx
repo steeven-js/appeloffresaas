@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Plus, Wand2 } from "lucide-react";
+import { ArrowLeft, Plus, Wand2, LayoutDashboard } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
@@ -28,8 +28,10 @@ interface ModuleSidebarProps {
   onModuleClick: (moduleId: string) => void;
   completion: CompletionData;
   onBack: () => void;
+  onOverview?: () => void;
   onAddSection?: () => void;
   onWizard?: () => void;
+  isOverviewActive?: boolean;
   className?: string;
 }
 
@@ -39,8 +41,10 @@ export function ModuleSidebar({
   onModuleClick,
   completion,
   onBack,
+  onOverview,
   onAddSection,
   onWizard,
+  isOverviewActive = false,
   className,
 }: ModuleSidebarProps) {
   // Split modules by category
@@ -73,6 +77,22 @@ export function ModuleSidebar({
       {/* Modules List */}
       <div className="flex-1 overflow-y-auto">
         <div className="p-3">
+          {/* Overview Button */}
+          {onOverview && (
+            <button
+              onClick={onOverview}
+              className={cn(
+                "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors mb-4",
+                isOverviewActive
+                  ? "bg-primary/10 text-primary"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              Vue d'ensemble
+            </button>
+          )}
+
           {/* Main Modules */}
           <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-2">
             Modules

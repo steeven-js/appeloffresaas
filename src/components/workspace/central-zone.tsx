@@ -48,6 +48,7 @@ interface CentralZoneProps {
   sections: DemandSection[];
   activeModule: string | null;
   onModuleClick: (moduleId: string) => void;
+  onViewModeChange?: (mode: ViewMode) => void;
   className?: string;
 }
 
@@ -57,9 +58,15 @@ export function CentralZone({
   sections,
   activeModule,
   onModuleClick,
+  onViewModeChange,
   className,
 }: CentralZoneProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("overview");
+
+  // Notify parent of view mode changes
+  useEffect(() => {
+    onViewModeChange?.(viewMode);
+  }, [viewMode, onViewModeChange]);
 
   // Mutation for saving section content
   const utils = api.useUtils();
@@ -69,9 +76,13 @@ export function CentralZone({
     },
   });
 
-  // Switch to edit mode when a module is clicked from the sidebar
+  // Handle module selection - switch view mode based on module
   useEffect(() => {
-    if (activeModule && activeModule !== "info" && activeModule !== "documents") {
+    if (activeModule === "info" || activeModule === "documents") {
+      // Info and Documents show overview
+      setViewMode("overview");
+    } else if (activeModule) {
+      // Other modules switch to edit mode
       setViewMode("edit");
     }
   }, [activeModule]);

@@ -18,6 +18,7 @@ import {
   CentralZone,
   CopilotPanel,
   type ModuleStatus,
+  type ViewMode,
 } from "~/components/workspace";
 import type { DemandSection } from "~/server/db/schema";
 import { getDefaultSections } from "./section-editor";
@@ -50,6 +51,7 @@ const baseModules: ModuleDefinition[] = [
 export function DemandWorkspaceV2({ projectId, onSwitchToWizard }: DemandWorkspaceV2Props) {
   const router = useRouter();
   const [activeModule, setActiveModule] = useState<string | null>(null);
+  const [currentViewMode, setCurrentViewMode] = useState<ViewMode>("overview");
   const [sections, setSections] = useState<DemandSection[]>([]);
 
   // Fetch project data
@@ -203,6 +205,17 @@ export function DemandWorkspaceV2({ projectId, onSwitchToWizard }: DemandWorkspa
     setActiveModule(moduleId);
   };
 
+  // Handle overview button click
+  const handleOverview = () => {
+    setActiveModule(null);
+    setCurrentViewMode("overview");
+  };
+
+  // Handle view mode change from CentralZone
+  const handleViewModeChange = useCallback((mode: ViewMode) => {
+    setCurrentViewMode(mode);
+  }, []);
+
   // Handle back navigation
   const handleBack = () => {
     router.push("/demandes");
@@ -253,6 +266,8 @@ export function DemandWorkspaceV2({ projectId, onSwitchToWizard }: DemandWorkspa
           onModuleClick={handleModuleClick}
           completion={completion}
           onBack={handleBack}
+          onOverview={handleOverview}
+          isOverviewActive={currentViewMode === "overview" && !activeModule}
           onWizard={onSwitchToWizard}
         />
       }
@@ -282,6 +297,7 @@ export function DemandWorkspaceV2({ projectId, onSwitchToWizard }: DemandWorkspa
           sections={sections}
           activeModule={activeModule}
           onModuleClick={handleModuleClick}
+          onViewModeChange={handleViewModeChange}
         />
       }
       copilot={
