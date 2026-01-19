@@ -27,6 +27,7 @@ import { calculateCompletionPercentage } from "~/lib/utils/completeness";
 
 interface DemandWorkspaceV2Props {
   projectId: string;
+  onSwitchToWizard?: () => void;
 }
 
 type ModuleId = "info" | "context" | "description" | "constraints" | "budget" | "documents";
@@ -47,7 +48,7 @@ const baseModules: ModuleDefinition[] = [
   { id: "documents", label: "Documents", icon: Paperclip },
 ];
 
-export function DemandWorkspaceV2({ projectId }: DemandWorkspaceV2Props) {
+export function DemandWorkspaceV2({ projectId, onSwitchToWizard }: DemandWorkspaceV2Props) {
   const router = useRouter();
   const [activeModule, setActiveModule] = useState<string | null>(null);
   const [sections, setSections] = useState<DemandSection[]>([]);
@@ -273,6 +274,7 @@ export function DemandWorkspaceV2({ projectId }: DemandWorkspaceV2Props) {
           completion={completion}
           onBack={handleBack}
           onAddSection={handleAddSection}
+          onWizard={onSwitchToWizard}
         />
       }
       main={

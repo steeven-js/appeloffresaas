@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { Loader2 } from "lucide-react";
 
-import { WizardContainer } from "~/components/wizard";
-import { DemandWorkspaceV2 } from "~/components/demands/demand-workspace-v2";
+import { DemandViewSwitcher } from "~/components/demands/demand-view-switcher";
 
 interface DemandePageProps {
   params: Promise<{ id: string }>;
@@ -16,18 +17,24 @@ export async function generateMetadata({ params }: DemandePageProps) {
   };
 }
 
-export default async function DemandWorkspacePage({ params, searchParams }: DemandePageProps) {
+function LoadingState() {
+  return (
+    <div className="flex items-center justify-center h-full">
+      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+    </div>
+  );
+}
+
+export default async function DemandWorkspacePage({ params }: DemandePageProps) {
   const { id } = await params;
-  const search = await searchParams;
 
   if (!id) {
     notFound();
   }
 
-  // Show workspace view when export=true (wizard completed)
-  if (search.export === "true") {
-    return <DemandWorkspaceV2 projectId={id} />;
-  }
-
-  return <WizardContainer projectId={id} />;
+  return (
+    <Suspense fallback={<LoadingState />}>
+      <DemandViewSwitcher projectId={id} />
+    </Suspense>
+  );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Check, Download } from "lucide-react";
+import { ArrowLeft, Check, Download, LayoutDashboard } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
 import { Progress } from "~/components/ui/progress";
@@ -21,6 +21,7 @@ interface WizardSidebarProps {
   onModuleClick: (index: number) => void;
   onBack: () => void;
   onExport?: () => void;
+  onDashboard?: () => void;
   isExportEnabled: boolean;
   className?: string;
 }
@@ -33,6 +34,7 @@ export function WizardSidebar({
   onModuleClick,
   onBack,
   onExport,
+  onDashboard,
   isExportEnabled,
   className,
 }: WizardSidebarProps) {
@@ -159,6 +161,26 @@ export function WizardSidebar({
             )}
           </div>
         </button>
+
+        {/* Dashboard Button */}
+        {onDashboard && (
+          <button
+            onClick={onDashboard}
+            className="w-full flex items-center gap-3 p-3 rounded-lg text-left transition-colors hover:bg-muted/50 cursor-pointer mt-1"
+          >
+            <div className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center bg-blue-500/20 text-blue-600">
+              <LayoutDashboard className="h-3.5 w-3.5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-sm font-medium text-foreground">
+                Tableau de bord
+              </div>
+              <span className="text-xs text-muted-foreground">
+                Vue d&apos;ensemble
+              </span>
+            </div>
+          </button>
+        )}
 
       </div>
 

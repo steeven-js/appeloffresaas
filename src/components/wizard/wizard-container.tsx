@@ -14,9 +14,10 @@ import type { AnswerValue } from "~/lib/wizard/wizard-types";
 
 interface WizardContainerProps {
   projectId: string;
+  onSwitchToDashboard?: () => void;
 }
 
-export function WizardContainer({ projectId }: WizardContainerProps) {
+export function WizardContainer({ projectId, onSwitchToDashboard }: WizardContainerProps) {
   const router = useRouter();
   const [showValidationModal, setShowValidationModal] = useState(false);
   const [generatedContent, setGeneratedContent] = useState("");
@@ -189,6 +190,7 @@ export function WizardContainer({ projectId }: WizardContainerProps) {
             onModuleClick={navigateToModule}
             onBack={handleBack}
             onExport={handleExport}
+            onDashboard={onSwitchToDashboard}
             isExportEnabled={isExportEnabled}
           />
         </aside>
