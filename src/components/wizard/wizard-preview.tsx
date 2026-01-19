@@ -3,6 +3,7 @@
 import { FileText, Clock } from "lucide-react";
 import { Progress } from "~/components/ui/progress";
 import { cn } from "~/lib/utils";
+import { markdownToHtml } from "~/lib/utils/markdown-parser";
 import type { WizardAnswer, DemandSection } from "~/server/db/schema/demands";
 
 interface WizardPreviewProps {
@@ -65,10 +66,11 @@ export function WizardPreview({
       {/* Content */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {hasValidatedContent ? (
-          // Show validated content
-          <div className="prose prose-sm max-w-none">
-            <p className="whitespace-pre-wrap text-sm">{section?.content}</p>
-          </div>
+          // Show validated content with markdown rendering
+          <div
+            className="prose prose-sm max-w-none dark:prose-invert"
+            dangerouslySetInnerHTML={{ __html: markdownToHtml(section?.content ?? "") }}
+          />
         ) : answers.length > 0 ? (
           // Show answers summary
           <>
