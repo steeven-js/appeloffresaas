@@ -144,7 +144,7 @@ export function ModuleEditor({
           onChange={handleContentChange}
           placeholder={`Saisissez le contenu pour "${moduleTitle}"...`}
           minHeight={500}
-          preview="edit"
+          preview="live"
           className="h-full"
         />
       </div>
