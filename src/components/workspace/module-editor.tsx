@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { ArrowLeft, Save, Loader2, CheckCircle } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
-import { MarkdownEditor } from "~/components/ui/markdown-editor";
+import { WysiwygEditor } from "~/components/ui/wysiwyg-editor";
 import { cn } from "~/lib/utils";
 
 interface ModuleEditorProps {
@@ -139,13 +139,12 @@ export function ModuleEditor({
 
       {/* Editor */}
       <div className="flex-1 overflow-hidden p-4">
-        <MarkdownEditor
+        <WysiwygEditor
           value={localContent}
           onChange={handleContentChange}
           placeholder={`Saisissez le contenu pour "${moduleTitle}"...`}
-          minHeight={500}
-          preview="live"
           className="h-full"
+          editorClassName="min-h-[400px]"
         />
       </div>
 
