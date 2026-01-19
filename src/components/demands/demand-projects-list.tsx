@@ -83,7 +83,7 @@ import { Progress } from "~/components/ui/progress";
 import { Checkbox } from "~/components/ui/checkbox";
 import { Label } from "~/components/ui/label";
 import { api } from "~/trpc/react";
-import { cn, stripHtmlTags, hasRealContent } from "~/lib/utils";
+import { cn, stripHtmlTags, stripMarkdown, hasRealContent } from "~/lib/utils";
 import { demandTemplates, type DemandTemplate } from "~/lib/demand-templates";
 
 const demandProjectSchema = z.object({
@@ -854,7 +854,7 @@ function ProjectCard({ project, onEdit, onRefresh }: ProjectCardProps) {
 
             {/* Description preview - only show if has real content (not just placeholders) */}
             {hasRealContent(project.description) && (
-              <p className="line-clamp-2 text-muted-foreground">{stripHtmlTags(project.description)}</p>
+              <p className="line-clamp-2 text-muted-foreground">{stripMarkdown(project.description)}</p>
             )}
 
             {/* Completion percentage */}

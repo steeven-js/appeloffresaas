@@ -14,6 +14,45 @@ export function stripHtmlTags(html: string | null | undefined): string {
 }
 
 /**
+ * Strip markdown syntax from a string and return plain text
+ * Removes headers, bold, italic, links, lists, code blocks, etc.
+ */
+export function stripMarkdown(markdown: string | null | undefined): string {
+  if (!markdown) return "";
+
+  return markdown
+    // Remove code blocks
+    .replace(/```[\s\S]*?```/g, "")
+    // Remove inline code
+    .replace(/`([^`]+)`/g, "$1")
+    // Remove headers (### Header -> Header)
+    .replace(/^#{1,6}\s+/gm, "")
+    // Remove bold (**text** or __text__)
+    .replace(/\*\*([^*]+)\*\*/g, "$1")
+    .replace(/__([^_]+)__/g, "$1")
+    // Remove italic (*text* or _text_)
+    .replace(/\*([^*]+)\*/g, "$1")
+    .replace(/_([^_]+)_/g, "$1")
+    // Remove links [text](url)
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    // Remove images ![alt](url)
+    .replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1")
+    // Remove blockquotes
+    .replace(/^>\s+/gm, "")
+    // Remove horizontal rules
+    .replace(/^[-*_]{3,}$/gm, "")
+    // Remove list markers (-, *, 1.)
+    .replace(/^[\s]*[-*+]\s+/gm, "")
+    .replace(/^[\s]*\d+\.\s+/gm, "")
+    // Remove highlight markers ==text==
+    .replace(/==([^=]+)==/g, "$1")
+    // Clean up extra whitespace
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
  * Check if content has real data vs just placeholder text
  * Placeholders are text wrapped in brackets like [À compléter], [Nombre], etc.
  * Returns true if content has meaningful data filled in
